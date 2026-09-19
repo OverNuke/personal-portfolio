@@ -2,15 +2,18 @@
 
 Static portfolio site, deployed via GitHub Pages using GitHub Actions.
 
-## Status
+## About `index.html`
 
-Scaffold only — section placeholders in `index.html` are stand-ins for a
-Claude Design project (`Main Page`, `Profile Section`, `Distinction Section`,
-`Cell Fusion Section`, `Projects Section`, `Contact Section`, `Ink Flow
-Background`, `Design Guidelines`). The design import is pending (needs a
-`claudeusercontent.com` bundle URL or `/design-login`); once available, drop
-the real markup/styles/scripts into the matching `TODO` spots in
-`index.html`, `css/styles.css`, `js/image-slot.js`, and `js/support.js`.
+This is a self-contained export from Claude Design: a small static shell
+plus inline `<script type="__bundler/manifest">` / `<script
+type="__bundler/template">` data blocks that unpack into the real page
+(HTML, CSS, JS, images) client-side on load. Everything — including
+`image-slot.js` and `support.js` — is bundled inside this one file; there
+are no separate `css/`/`js`/`assets` folders.
+
+Don't hand-edit the manifest/template blocks — they're generated data, not
+authored markup. To update the site, re-export from the Claude Design
+project and replace `index.html` wholesale.
 
 ## Deploy
 

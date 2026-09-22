@@ -1,0 +1,294 @@
+/*
+ * Distinctions screen -- weighted-Voronoi certification colony + crayon
+ * doodle overlay + certificate lightbox. Every value here is read directly
+ * from docs/_decoded/distinction-section-v4-standalone/template.html unless
+ * a comment says otherwise -- see docs/02, docs/04, docs/05, docs/07.
+ *
+ * Note on the dropped outer header strip: the decoded standalone file wraps
+ * its colony stage in an outer `max-width:1440px` flex column with a thin
+ * (empty, no real content -- verified) breadcrumb-style header row above
+ * it. This app's persistent pill-nav (Shell-level chrome, not per-page) has
+ * already replaced that role, matching the precedent Profile/Contact/
+ * Projects already established (none of them reproduce a redundant
+ * per-page header either) -- so `.distinctions-stage` fills this screen's
+ * entire 1440x900 stage directly, judgment call disclosed in the final
+ * report.
+ */
+
+.distinctions-screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--color-paper-bg);
+  color: var(--color-ink);
+  font-family: 'Manrope', system-ui, sans-serif;
+}
+
+/* The colony's own background is dark ink, not the page's paper tone --
+   this is what makes the gaps between cells (and the ink stroke on each
+   cell path, stroke-width 0.9) read as a crisp grid rather than the cells
+   floating on the same paper tone as their own fill. */
+.distinctions-stage {
+  position: absolute;
+  inset: 0;
+  background: var(--color-ink);
+  overflow: hidden;
+}
+
+.distinctions-cells-svg,
+.distinctions-doodle-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.distinctions-doodle-svg {
+  pointer-events: none;
+  overflow: visible;
+}
+
+.distinctions-cell {
+  outline-offset: -6px;
+}
+
+.distinctions-cell:focus-visible {
+  outline: 2px solid var(--color-ink);
+}
+
+.distinctions-labels-layer {
+  position: absolute;
+  inset: 0;
+  width: 1440px;
+  height: 900px;
+  pointer-events: none;
+}
+
+.distinctions-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  color: var(--color-ink);
+}
+
+.distinctions-label--title {
+  gap: 14px;
+}
+
+.distinctions-heading {
+  margin: 0;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 72px;
+  line-height: 0.88;
+  letter-spacing: -0.015em;
+  color: inherit;
+}
+
+.distinctions-intro {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: inherit;
+  opacity: 0.74;
+  text-wrap: pretty;
+}
+
+.distinctions-label--cert {
+  gap: 7px;
+}
+
+.distinctions-label__number {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  opacity: 0.55;
+}
+
+.distinctions-label__name {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  line-height: 1.02;
+  color: inherit;
+  text-wrap: pretty;
+}
+
+.distinctions-label__meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.66;
+}
+
+.distinctions-label--eye {
+  display: block;
+}
+
+.distinctions-eye-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  transform-origin: 50% 58%;
+}
+
+/* Note on prefers-reduced-motion: the Voronoi field's own breathing and the
+   doodle's per-frame boil are both driven imperatively in JS
+   (VoronoiCellField.tsx short-circuits the rAF loop entirely under reduced
+   motion, per docs/05) -- there's no CSS animation/transition to neutralize
+   here for the colony. The lightbox's decorative eye is simplified from the
+   decoded source's opacity-crossfade-on-fill to a plain conditional render
+   (shown only when a cell has no scan image at all), so it needs no
+   transition to gate under reduced motion either -- its own internal
+   blink/iris motion is already gated in ScanModal.tsx's effect. */
+
+/* ---- Lightbox (ScanModal) ------------------------------------------- */
+
+.distinctions-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(10, 10, 10, 0.88);
+  display: grid;
+  place-items: center;
+  padding: 40px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  cursor: zoom-out;
+}
+
+.distinctions-modal {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  max-height: 100%;
+  min-height: 0;
+  background: var(--color-paper-surface);
+  padding: 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: var(--color-ink);
+  box-shadow: 0 40px 90px rgba(0, 0, 0, 0.6);
+  cursor: default;
+  border-radius: 28px;
+}
+
+.distinctions-modal__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 6px 10px 0;
+}
+
+.distinctions-modal__title {
+  margin: 0;
+  max-width: 460px;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 38px;
+  line-height: 1;
+  color: var(--color-ink);
+  text-wrap: pretty;
+}
+
+.distinctions-modal__meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(20, 21, 15, 0.72);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.distinctions-modal__plate {
+  position: relative;
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 200px;
+  background: #e4e1d8;
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.distinctions-modal__scan {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.distinctions-modal__placeholder-text {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  padding: 8px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(20, 21, 15, 0.6);
+}
+
+.distinctions-modal__eye {
+  position: absolute;
+  inset: 0;
+  width: 46%;
+  min-width: 180px;
+  margin: auto;
+  overflow: visible;
+}
+
+.distinctions-modal__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px 6px;
+}
+
+.distinctions-modal__footer-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(20, 21, 15, 0.72);
+}
+
+.distinctions-modal__close {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid rgba(20, 21, 15, 0.35);
+  border-radius: 999px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  cursor: pointer;
+  transition:
+    background var(--ease-house, ease) 0.2s,
+    color var(--ease-house, ease) 0.2s;
+}
+
+.distinctions-modal__close:hover,
+.distinctions-modal__close:focus-visible {
+  background: var(--color-ink);
+  color: var(--color-paper-bg);
+}
+
+.distinctions-modal__close:focus-visible {
+  outline: 2px solid var(--color-distinctions-accent);
+  outline-offset: 2px;
+}

@@ -1,0 +1,91 @@
+@import 'tailwindcss';
+@import './fonts.css';
+
+/*
+ * Shared tokens -- house ease (docs/07) and per-screen palette (docs/02).
+ * Every hex value here is copied verbatim from 02_DESIGN_SYSTEM.MD's
+ * per-screen palette table (already-corrected values where a fix applies,
+ * e.g. Home's ink and the pill-nav active accent -- see that doc's
+ * "Corrected Contrast Pairings" section). Screen-specific tokens are
+ * intentionally not collapsed into one flat palette, per that doc's own
+ * explicit correction against the old flat-palette doc.
+ */
+:root {
+  /* Motion (docs/07) */
+  --ease-house: cubic-bezier(0.2, 0.85, 0.2, 1);
+  --ease-house-overshoot: cubic-bezier(0.24, 1.15, 0.32, 1);
+
+  /* Home -- corrected 2026-09-21: the real Ink Flow Background layer (its
+     own nested ext_resource, not one of the six top-level decoded mockup
+     files -- see docs/11's dated correction) is opaque cream paper, not the
+     app shell's #0e0f0b. Ink is the decoded literal #14150f -- the earlier
+     "Fix 1" near-white correction assumed ink sat directly on #0e0f0b and is
+     retired; see docs/02_DESIGN_SYSTEM.MD. */
+  --color-home-bg: #f6f4ea;
+  --color-home-ink: #14150f;
+  --color-home-accent: #6f7f45;
+  --color-home-accent-pill-active: #8b9c56;
+
+  /* Profile */
+  --color-profile-bg: linear-gradient(
+    97deg,
+    #f6f3e9 0%,
+    #f2eee1 22%,
+    #dfdaca 40%,
+    #a9a59a 47%,
+    #33332d 55%,
+    #101010 64%,
+    #0a0a09 100%
+  );
+  --color-profile-accent: #8b9c56;
+
+  /* Shared paper tones (Distinctions/Projects) */
+  --color-paper-bg: #f6f4ea;
+  --color-paper-surface: #f4f1e6;
+  --color-ink: #14150f;
+
+  /* Distinctions */
+  --color-distinctions-accent: #586a30;
+  /* App-shell override of the standalone doodle default (#2b39c7) -- see
+     docs/01_ART_DIRECTION.MD / docs/02_DESIGN_SYSTEM.MD's resolved
+     discrepancy note. Referenced here for documentation completeness; the
+     doodle/geometry math modules (doodleStrokes.ts, ScanModal.tsx) still
+     hardcode the value as a plain string since they're DOM-free and can't
+     do a CSS custom-property lookup. */
+  --color-distinctions-doodle: #e0452b;
+
+  /* Projects */
+  --color-projects-accent: #586a30;
+  --color-projects-hot: #c9351d;
+
+  /* Contact */
+  --color-contact-bg: #0a0a0a;
+  --color-contact-accent: #6f7f45;
+  --color-contact-github-bg: #4f5c2f;
+  --color-contact-headline: #f3f2ef;
+  --color-contact-secondary: #9c9b94;
+
+  /* Letterbox bars around the fixed 1440x900 stage (docs/00) -- not
+     specified by any doc as an exact value; chosen as a neutral near-black
+     consistent with the darkest screens (Home/Contact), see final report. */
+  --stage-letterbox-bg: #050505;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--stage-letterbox-bg);
+  font-family:
+    'Space Grotesk',
+    system-ui,
+    sans-serif;
+}

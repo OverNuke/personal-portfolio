@@ -1,0 +1,129 @@
+/*
+ * Shell chrome: the letterboxed stage, the persistent pill nav, and the
+ * REFORM/ENTER route-change crossfade (docs/00, docs/03, docs/14).
+ */
+
+.stage-viewport {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--stage-letterbox-bg, #050505);
+}
+
+.stage {
+  position: relative;
+  width: 1440px;
+  height: 900px;
+  flex: none;
+  overflow: hidden;
+  background: #0a0a0a;
+  transform: scale(var(--stage-scale, 1));
+  transform-origin: center center;
+}
+
+/* Persistent pill nav -- exact values verified against
+   docs/_decoded/index/template.html line ~544 and docs/02's Fix 2 corrected
+   active-state accent (#8b9c56, not the raw #6f7f45 default -- see
+   02_DESIGN_SYSTEM.MD's Corrected Contrast Pairings). */
+.pill-nav {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  z-index: 9000;
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  background: rgba(10, 10, 9, 0.55);
+  backdrop-filter: blur(6px);
+  border-radius: 20px;
+}
+
+.pill-nav__button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: transparent;
+  color: #f3f2ef;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.pill-nav__button[data-active] {
+  background: var(--color-home-accent-pill-active, #8b9c56);
+  color: #14150f;
+}
+
+/* Explicit focus treatment, matching this repo's established convention
+   (every other real interactive element defines one rather than relying on
+   the UA default) -- confirmed via keyboard screenshot during the
+   accessibility pass that Chromium's bare default outline happens to remain
+   visible here, but it shouldn't be load-bearing given the pill's own
+   `border-radius` and semi-transparent `backdrop-filter` background. */
+.pill-nav__button:focus-visible {
+  outline: 2px solid #f3f2ef;
+  outline-offset: 2px;
+}
+
+/* REFORM/ENTER crossfade (docs/14) -- opacity only, no transform/scale/blur,
+   no shared element. 120ms exit / 140ms enter, house ease. CSS @keyframes
+   (not a JS/rAF loop) specifically because it's genuinely stopped by the
+   prefers-reduced-motion override below, per docs/06/07's stated reason for
+   preferring CSS wherever an effect doesn't need per-frame pixel control. */
+.screen-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.screen-layer--enter {
+  animation: screen-enter-fade 140ms var(--ease-house, cubic-bezier(0.2, 0.85, 0.2, 1));
+}
+
+.screen-layer--reform {
+  animation: screen-reform-fade 120ms var(--ease-house, cubic-bezier(0.2, 0.85, 0.2, 1)) forwards;
+}
+
+@keyframes screen-enter-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes screen-reform-fade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen-layer--enter,
+  .screen-layer--reform {
+    animation: none;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

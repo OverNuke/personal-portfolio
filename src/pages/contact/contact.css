@@ -1,0 +1,427 @@
+/*
+ * Contact screen -- background photo/gradient/dot-grid treatment, headline,
+ * "open to work" badge, magnetic dock cards, closing quote. Every value here
+ * is read directly from
+ * docs/_decoded/contact-section-v2-standalone/template.html (lines 374-517)
+ * unless a comment says otherwise -- see docs/02, docs/04, docs/05, docs/07.
+ */
+
+.contact-screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--color-contact-bg, #0a0a0a);
+  color: var(--color-contact-headline, #f3f2ef);
+  font-family: 'Manrope', system-ui, sans-serif;
+}
+
+/* Background photo + gradients + dot grid -- one decorative subtree, fully
+   aria-hidden per docs/05 (never partially). The source photo is a
+   full-color illustration; the dim/desaturate/contrast treatment is applied
+   here as CSS, not pre-baked into the asset, so it stays tunable
+   (docs/13_ASSET_SPEC.md). */
+.contact-bg {
+  position: absolute;
+  inset: 0;
+}
+
+.contact-bg__photo {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: 50% 34%;
+  filter: grayscale(1) contrast(1.32) brightness(0.52);
+  opacity: 0.3;
+  z-index: 1;
+}
+
+.contact-bg__gradient-vertical {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+    180deg,
+    #0a0a0a 0%,
+    rgba(10, 10, 10, 0.72) 26%,
+    rgba(10, 10, 10, 0.1) 52%,
+    rgba(10, 10, 10, 0.86) 100%
+  );
+  z-index: 2;
+}
+
+.contact-bg__gradient-radial {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(120% 88% at 50% 52%, transparent 24%, rgba(10, 10, 10, 0.55) 66%, #0a0a0a 100%);
+  z-index: 3;
+}
+
+.contact-bg__dots {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.13) 1px, transparent 1.2px);
+  background-size: 24px 24px;
+  z-index: 4;
+  pointer-events: none;
+}
+
+/* Headline block ("Reach out") */
+.contact-header {
+  position: absolute;
+  left: 96px;
+  top: 80px;
+  width: 392px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.contact-rule {
+  display: block;
+  width: 44px;
+  height: 1px;
+  background: rgba(243, 242, 239, 0.34);
+}
+
+.contact-headline {
+  margin: 0;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 92px;
+  line-height: 0.9;
+  letter-spacing: -0.015em;
+  color: var(--color-contact-headline, #f3f2ef);
+}
+
+/* "Open to work" status -- the pulsing dot is decorative, the text label is
+   real content and stays out of the aria-hidden tree (docs/05). */
+.contact-status {
+  position: absolute;
+  right: 96px;
+  top: 88px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.contact-status__dot {
+  width: 14px;
+  height: 14px;
+  background: var(--color-contact-accent, #6f7f45);
+  animation: livePulse 2.4s ease-in-out infinite;
+}
+
+.contact-status__label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-contact-headline, #f3f2ef);
+}
+
+/* Closing quote -- real content (docs/05: a decorative layer can never be
+   the only place information lives; this is the inverse case, real text
+   that simply doesn't need pointer interaction). */
+.contact-quote {
+  position: absolute;
+  left: 91px;
+  top: 766px;
+  width: 452px;
+  margin: 0;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 30px;
+  line-height: 1.28;
+  color: var(--color-contact-headline, #f3f2ef);
+  z-index: 20;
+  pointer-events: none;
+}
+
+.contact-footer-rule {
+  position: absolute;
+  left: 96px;
+  bottom: 40px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 20;
+}
+
+.contact-footer-rule .contact-rule {
+  width: 28px;
+  background: rgba(243, 242, 239, 0.28);
+}
+
+/* Magnetic dock -- this wrapper must keep its own `position` + `z-index` so
+   it forms its own stacking context: per-card z-index values written by
+   useMagneticDock (10-22) only reorder cards against each other, they never
+   compete with the header/status/quote layers above (z-index:20), exactly
+   matching the decoded template's own nesting. */
+.contact-dock {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+}
+
+.contact-dock__card {
+  --card-ink: var(--color-ink, #14150f);
+  --card-index-color: rgba(20, 21, 15, 0.5);
+  --card-detail-color: rgba(20, 21, 15, 0.72);
+  --card-divider-color: rgba(20, 21, 15, 0.22);
+  --card-cta-color: rgba(20, 21, 15, 0.6);
+  --card-corner-color: rgba(20, 21, 15, 0.55);
+  --card-badge-bg: var(--color-contact-accent, #6f7f45);
+  --card-badge-arrow-color: #f6f4ea;
+
+  position: absolute;
+  transform-origin: 50% 50%;
+  transition:
+    transform 0.24s var(--ease-house, cubic-bezier(0.2, 0.85, 0.2, 1)),
+    box-shadow 0.24s ease;
+  will-change: transform;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 22px 20px;
+  background: var(--color-paper-surface, #f4f1e6);
+  color: var(--card-ink);
+  text-decoration: none;
+  outline-offset: 4px;
+}
+
+.contact-dock__card:hover,
+.contact-dock__card:focus-visible {
+  box-shadow: 0 30px 56px rgba(0, 0, 0, 0.66);
+}
+
+/* Keyboard-only affordance (docs/05): the mouse-proximity lift is an
+   enhancement, not the only way a card's "this is the active one" state is
+   perceptible. Reuses the same shadow boost as :hover, plus a real visible
+   outline for users who can't trigger the pointer effect at all. */
+.contact-dock__card:focus-visible {
+  outline: 3px solid var(--color-contact-headline, #f3f2ef);
+}
+
+.contact-dock__card--accent {
+  --card-ink: #f6f4ea;
+  --card-index-color: #f6f4ea;
+  --card-detail-color: #f6f4ea;
+  --card-divider-color: rgba(246, 244, 234, 0.34);
+  --card-cta-color: #f6f4ea;
+  --card-corner-color: rgba(246, 244, 234, 0.6);
+  --card-badge-bg: #f6f4ea;
+  --card-badge-arrow-color: var(--color-ink, #14150f);
+
+  background: var(--color-contact-github-bg, #4f5c2f);
+}
+
+.contact-dock__card--disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  font: inherit;
+  border: none;
+  text-align: inherit;
+}
+
+/* Per-card position/size, verified against the decoded template's inline
+   styles (lines 407, 429, 451, 475, 497). */
+.contact-dock__card--email {
+  left: 96px;
+  top: 300px;
+  width: 216px;
+  height: 318px;
+}
+
+.contact-dock__card--github {
+  left: 374px;
+  top: 275px;
+  width: 168px;
+  height: 428px;
+}
+
+.contact-dock__card--whatsapp {
+  left: 864px;
+  top: 276px;
+  width: 204px;
+  height: 336px;
+}
+
+.contact-dock__card--linkedin {
+  left: 1128px;
+  top: 214px;
+  width: 216px;
+  height: 282px;
+}
+
+.contact-dock__card--book-a-call {
+  left: 1132px;
+  top: 578px;
+  width: 216px;
+  height: 196px;
+}
+
+/* Corner-bracket "reticle" motif -- pure decoration (docs/04). */
+.contact-dock__corner {
+  position: absolute;
+  width: 15px;
+  height: 15px;
+}
+
+.contact-dock__corner--tl {
+  left: 9px;
+  top: 9px;
+  border-left: 1.5px solid var(--card-corner-color);
+  border-top: 1.5px solid var(--card-corner-color);
+}
+
+.contact-dock__corner--tr {
+  right: 9px;
+  top: 9px;
+  border-right: 1.5px solid var(--card-corner-color);
+  border-top: 1.5px solid var(--card-corner-color);
+}
+
+.contact-dock__corner--bl {
+  left: 9px;
+  bottom: 9px;
+  border-left: 1.5px solid var(--card-corner-color);
+  border-bottom: 1.5px solid var(--card-corner-color);
+}
+
+.contact-dock__corner--br {
+  right: 9px;
+  bottom: 9px;
+  border-right: 1.5px solid var(--card-corner-color);
+  border-bottom: 1.5px solid var(--card-corner-color);
+}
+
+.contact-dock__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.contact-dock__label {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  line-height: 1;
+  color: var(--card-ink);
+}
+
+.contact-dock__index {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--card-index-color);
+}
+
+.contact-dock__qr {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  align-self: flex-start;
+  background: #e9e7e0;
+}
+
+.contact-dock__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.contact-dock__detail {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  color: var(--card-detail-color);
+  word-break: break-all;
+}
+
+.contact-dock__divider {
+  height: 1px;
+  background: var(--card-divider-color);
+}
+
+.contact-dock__cta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.contact-dock__cta-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--card-cta-color);
+}
+
+.contact-dock__badge {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.contact-dock__badge::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--card-badge-bg);
+  animation: cellWobble 3.2s ease-in-out infinite;
+  animation-delay: inherit;
+}
+
+.contact-dock__badge-arrow {
+  position: relative;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--card-badge-arrow-color);
+}
+
+@keyframes cellWobble {
+  0%,
+  100% {
+    border-radius: 58% 42% 46% 54% / 50% 55% 45% 50%;
+  }
+  50% {
+    border-radius: 44% 56% 55% 45% / 54% 45% 55% 46%;
+  }
+}
+
+/* Verified literally against this screen's own decoded <style> block
+   (line 379) -- note this is 1.22, not the 1.24 docs/07 describes for
+   Profile's badge; Contact's own source is the tie-breaker for Contact. */
+@keyframes livePulse {
+  0%,
+  100% {
+    transform: scale(1);
+    border-radius: 60% 40% 55% 45% / 45% 55% 40% 60%;
+  }
+  50% {
+    transform: scale(1.22);
+    border-radius: 45% 55% 40% 60% / 60% 40% 55% 45%;
+  }
+}
+
+/* Both keyframes above are purely ambient/decorative (badge wobble, status
+   pulse) -- stop them under reduced motion per docs/07's general governance
+   rule, even though neither is one of the 5 named effects in docs/05's
+   summary table. */
+@media (prefers-reduced-motion: reduce) {
+  .contact-dock__badge::before,
+  .contact-status__dot {
+    animation: none;
+  }
+}

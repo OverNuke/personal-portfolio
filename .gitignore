@@ -1,3 +1,22 @@
 .DS_Store
 Thumbs.db
 *.log
+
+node_modules
+dist
+dist-ssr
+*.local
+*.tsbuildinfo
+
+# Vite
+.vite
+
+# Testing
+coverage
+playwright-report
+test-results
+blob-report
+
+# Reset scratch state (see _quarantine/, docs/_decoded/ in CLAUDE.md)
+_quarantine/
+docs/_decoded/

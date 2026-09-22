@@ -1,0 +1,338 @@
+/*
+ * Home screen -- Ink Flow Background, "Kevin." wordmark, EN/ES toggle,
+ * numbered nav list. Every layout value here is read directly from
+ * docs/_decoded/index/template.html (lines 489-505) unless a comment says
+ * otherwise -- see docs/11_HANDOFF_HOME.md, docs/02, docs/04, docs/05.
+ */
+
+.home-screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  /* docs/02's dated correction: the real base surface is opaque cream paper,
+     composited by the Ink Flow Background layer below -- this app shell's
+     own #0e0f0b never actually shows through it. */
+  background: var(--color-home-bg, #f6f4ea);
+  color: var(--color-home-ink, #14150f);
+  font-family:
+    'Space Grotesk',
+    system-ui,
+    sans-serif;
+}
+
+/* Ink Flow Background -- z-index:0, fills the whole 1440x900 stage, fully
+   decorative (see InkFlowBackground.tsx for the per-layer source citation). */
+.ink-flow {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: #f6f4ea;
+}
+
+.ink-flow__anim {
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+/* `animate=false` (prop) or `prefers-reduced-motion: reduce` -- freeze every
+   layer on its current frame rather than removing it (docs/05: decorative
+   effects degrade to static, not blank). */
+.ink-flow[data-static] .ink-flow__anim {
+  animation-play-state: paused;
+}
+
+/* ink mass: the black field, wavy-edged, weighted to the lower-left */
+.ink-flow__mass {
+  position: absolute;
+  inset: -6%;
+  background-image:
+    radial-gradient(64% 52% at 8% 96%, var(--if-black, #0c0d0a) 0 46%, transparent 78%),
+    radial-gradient(46% 40% at 40% 104%, var(--if-black, #0c0d0a) 0 40%, transparent 76%),
+    radial-gradient(38% 46% at -4% 54%, var(--if-black, #0c0d0a) 0 34%, transparent 74%),
+    radial-gradient(30% 26% at 62% 108%, var(--if-black, #0c0d0a) 0 40%, transparent 78%);
+  animation-name: ifDrift;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.ink-flow[data-static] .ink-flow__mass {
+  animation-play-state: paused;
+}
+
+/* dark ring field: black contour lines over the paper */
+.ink-flow__dark-rings {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: multiply;
+  -webkit-mask-image: linear-gradient(38deg, #000 4%, rgba(0, 0, 0, 0.9) 40%, rgba(0, 0, 0, 0.35) 68%, transparent 92%);
+  mask-image: linear-gradient(38deg, #000 4%, rgba(0, 0, 0, 0.9) 40%, rgba(0, 0, 0, 0.35) 68%, transparent 92%);
+}
+
+/* light ring field: the same swirl geometry reversed out inside the black mass */
+.ink-flow__light-rings {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: screen;
+  opacity: 0.9;
+  -webkit-mask-image: radial-gradient(70% 58% at 14% 92%, #000 22%, transparent 72%);
+  mask-image: radial-gradient(70% 58% at 14% 92%, #000 22%, transparent 72%);
+}
+
+/* halftone dust in the mid-tone band */
+.ink-flow__dust {
+  position: absolute;
+  inset: -10%;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  opacity: 0.4;
+  transform: rotate(-8deg);
+  background-image: radial-gradient(circle at 50% 50%, rgba(20, 21, 15, 0.7) 0 0.7px, transparent 1px);
+  background-size: 4px 4px;
+  -webkit-mask-image: radial-gradient(58% 48% at 34% 62%, #000 10%, transparent 74%);
+  mask-image: radial-gradient(58% 48% at 34% 62%, #000 10%, transparent 74%);
+}
+
+/* paper lift highlight */
+.ink-flow__lift {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+/* static print grain overlay */
+.ink-flow__grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  opacity: 0.1;
+  background-size: 220px 220px;
+}
+
+@keyframes ifDrift {
+  0% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-1.4%, 1.1%);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes ifA {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.14) rotate(5deg) translate(1.2%, -1.6%);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes ifB {
+  0% {
+    transform: scale(1.1) rotate(3deg);
+  }
+  50% {
+    transform: scale(0.94) rotate(-4deg) translate(-1.6%, 1.2%);
+  }
+  100% {
+    transform: scale(1.1) rotate(3deg);
+  }
+}
+
+@keyframes ifC {
+  0% {
+    transform: scale(0.98) rotate(-2deg);
+  }
+  50% {
+    transform: scale(1.2) rotate(7deg) translate(2%, 1%);
+  }
+  100% {
+    transform: scale(0.98) rotate(-2deg);
+  }
+}
+
+@keyframes ifD {
+  0% {
+    transform: scale(1.06) rotate(6deg) translate(-1%, 0);
+  }
+  50% {
+    transform: scale(0.92) rotate(-6deg) translate(1.4%, -1.4%);
+  }
+  100% {
+    transform: scale(1.06) rotate(6deg) translate(-1%, 0);
+  }
+}
+
+/* z-index:10 real content column -- right-anchored, nothing left of it
+   (docs/11: "the entire left ~900px of the stage is given to the Ink Flow
+   Background alone"). */
+.home-content {
+  position: absolute;
+  right: 80px;
+  top: 104px;
+  width: 520px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 52px;
+  text-align: right;
+}
+
+/* Wordmark + EN/ES toggle row -- row-reverse renders the toggle visually on
+   the left despite the wordmark being first in DOM/markup order (matches
+   the decoded source's own child order exactly). */
+.home-header-row {
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-direction: row-reverse;
+}
+
+.home-wordmark {
+  margin: 0;
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 76px;
+  line-height: 0.88;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+  color: inherit;
+}
+
+.home-lang-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 2px solid var(--color-home-ink, #14150f);
+  padding: 0;
+  flex: none;
+}
+
+.home-lang-toggle__cell {
+  padding: 7px 12px 8px;
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  background: transparent;
+  color: var(--color-home-ink, #14150f);
+  border: none;
+  margin: 0;
+}
+
+/* Accessibility pass fix (docs/05): this real `<button>` had NO focus
+   indicator at all -- verified via a keyboard-driven screenshot diff
+   (focused vs. blurred renders were pixel-identical) during the phase's
+   required keyboard-only traversal. Root cause: the plain `border: none`
+   above suppresses the outline's usual visual context, and this element
+   sits inside `.home-lang-toggle`'s own 2px ink border, which visually
+   swallows the browser's thin default ring. Given a real, explicit
+   `:focus-visible` treatment, matching this repo's established convention
+   (every other real interactive element -- chambers, distinctions cells,
+   contact cards, the repo-link pill -- defines one explicitly rather than
+   relying on the UA default). */
+.home-lang-toggle__cell:focus-visible {
+  outline: 2px solid var(--color-home-accent-pill-active, #8b9c56);
+  outline-offset: 2px;
+}
+
+.home-lang-toggle__cell[data-active] {
+  background: #14150f;
+  color: #f6f4ea;
+}
+
+.home-lang-toggle__divider {
+  width: 2px;
+  align-self: stretch;
+  background: var(--color-home-ink, #14150f);
+}
+
+.home-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* One real <Link> per row (docs/05: real activation is Tab + Enter or a
+   click, independent of the simulated arrow-key highlight below). */
+.home-nav-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 18px;
+  padding: 11px 0 13px;
+  border-bottom: 2px solid rgba(20, 21, 15, 0.4);
+  text-decoration: none;
+  color: var(--color-home-ink, #14150f);
+  transform: translateX(0);
+  transition:
+    transform 0.22s var(--ease-house, cubic-bezier(0.2, 0.85, 0.2, 1)),
+    color 0.22s ease;
+}
+
+.home-nav-item[data-focused] {
+  color: var(--color-home-accent, #6f7f45);
+  transform: translateX(10px);
+}
+
+/* Accessibility pass fix (docs/05): same missing-focus-indicator bug as
+   `.home-lang-toggle__cell` above, confirmed the same way (pixel-identical
+   focused/blurred screenshots). `[data-focused]`'s color+translateX shift is
+   a SIMULATED highlight driven by hover/arrow-key state (see
+   useNavFocusCycle.ts) -- it is not tied to real DOM focus at all, so a
+   sighted keyboard user tabbing to item 3 while item 1 still shows the
+   simulated highlight had no visual confirmation of where real keyboard
+   focus actually was. This real `:focus-visible` outline is independent of
+   that simulated state and always reflects true focus. */
+.home-nav-item:focus-visible {
+  outline: 2px solid var(--color-home-ink, #14150f);
+  outline-offset: 6px;
+}
+
+.home-nav-item__number {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  /* Always ink, regardless of focus state -- docs/11: "this span sets its
+     own explicit color, not inherited from the <a>... there is no accent
+     variant for the number in the source." */
+  color: var(--color-home-ink, #14150f);
+}
+
+.home-nav-item__label {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 34px;
+  line-height: 1;
+  letter-spacing: -0.028em;
+  text-transform: uppercase;
+  color: inherit;
+}
+
+.home-nav-item__arrow {
+  width: 22px;
+  flex: none;
+  font-size: 19px;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  color: inherit;
+}
+
+.home-nav-item[data-focused] .home-nav-item__arrow {
+  opacity: 1;
+}

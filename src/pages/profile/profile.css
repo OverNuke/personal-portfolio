@@ -1,0 +1,392 @@
+/*
+ * Profile screen -- diagonal paper->dark gradient, ink-bloom canvas
+ * backdrop, headline/bio, "looking for an opportunity" badge, and the 4
+ * goo-filter chambers. Every value here is read directly from
+ * docs/_decoded/profile-section-v4-standalone/template.html (lines 335-393)
+ * unless a comment says otherwise -- see docs/02, docs/04, docs/05, docs/07.
+ */
+
+.profile-screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Manrope', system-ui, sans-serif;
+  background: var(--color-profile-bg);
+}
+
+/* Ink-bloom canvas + its radial-glow overlay -- one fully decorative
+   subtree, aria-hidden per docs/05 (never partially). */
+.profile-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+.profile-ink-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  mix-blend-mode: exclusion;
+  pointer-events: none;
+}
+
+.profile-bg__glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(128% 96% at 22% 44%, rgba(246, 243, 233, 0.34) 0%, transparent 46%);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Left column -- headline, bio, footer CTA. */
+.profile-intro {
+  position: absolute;
+  left: 104px;
+  top: 0;
+  height: 900px;
+  width: 516px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.profile-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #4d4c44;
+}
+
+.profile-eyebrow__rule {
+  width: 46px;
+  height: 1px;
+  background: rgba(20, 21, 15, 0.45);
+}
+
+.profile-headline {
+  margin: 26px 0 0;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 88px;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  color: #14150f;
+  text-wrap: balance;
+}
+
+.profile-bio {
+  margin: 40px 0 0;
+  max-width: 452px;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: 0.002em;
+  color: #25241e;
+  text-wrap: pretty;
+}
+
+.profile-footer {
+  margin-top: 54px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.profile-footer__rule {
+  width: 46px;
+  height: 1px;
+  background: rgba(20, 21, 15, 0.4);
+}
+
+.profile-footer__note {
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #4d4c44;
+}
+
+/* No transition declared in the decoded source for this link's hover swap
+   (only a `style-hover` override with no `transition` property) -- an
+   instant color/border swap, carried forward as-is per docs/07's existing
+   convention for un-timed binary state changes (Home's EN/ES toggle). */
+.profile-footer__cta {
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #14150f;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(20, 21, 15, 0.4);
+  padding: 4px 0 5px;
+}
+
+.profile-footer__cta:hover,
+.profile-footer__cta:focus-visible {
+  color: #5c6a38;
+  border-bottom: 1px solid #5c6a38;
+}
+
+.profile-footer__cta:focus-visible {
+  outline: 1px solid #5c6a38;
+  outline-offset: 4px;
+}
+
+/* "Looking for an opportunity" -- the pulsing dot is decorative, the label
+   text is real content and stays out of the aria-hidden tree (docs/05). */
+.profile-status {
+  position: absolute;
+  right: 68px;
+  top: 92px;
+  z-index: 24;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #f3f1e8;
+}
+
+.profile-status__dot {
+  width: 11px;
+  height: 11px;
+  background: var(--color-profile-accent);
+  animation: livePulse 2.4s ease-in-out infinite;
+}
+
+/* Chamber column. */
+.profile-chambers {
+  position: absolute;
+  left: 812px;
+  top: 0;
+  height: 900px;
+  width: 560px;
+  z-index: 22;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 30px;
+}
+
+.profile-chamber {
+  position: relative;
+  width: 560px;
+  height: 132px;
+  border-top: 1px solid rgba(243, 241, 232, 0.22);
+  cursor: pointer;
+  outline: none;
+}
+
+/* Prefer :focus-visible over the decoded source's `style-focus` (which
+   applies to any focus, mouse-triggered or not) -- matches this repo's
+   established Contact/Projects convention of using :focus-visible for real
+   interactive elements. */
+.profile-chamber:focus-visible {
+  outline: 1px solid #b9c98a;
+  outline-offset: 8px;
+}
+
+.profile-chamber__dots {
+  position: absolute;
+  inset: 0;
+  filter: url(#profileGoo);
+  pointer-events: none;
+}
+
+.profile-chamber__dot-wrap {
+  position: absolute;
+}
+
+.profile-chamber__dot {
+  display: block;
+  border-radius: 50%;
+  transition:
+    transform 0.9s var(--ease-house-overshoot),
+    background 0.7s ease;
+}
+
+.profile-chamber__zone {
+  position: absolute;
+  top: 0;
+  height: 100%;
+}
+
+.profile-chamber__meta {
+  position: absolute;
+  left: 0;
+  top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  pointer-events: none;
+}
+
+.profile-chamber__index {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: #b5b2a6;
+}
+
+.profile-chamber__labels {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  transition: opacity 0.4s ease;
+}
+
+.profile-chamber__label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #f3f1e8;
+}
+
+.profile-chamber__fused {
+  position: absolute;
+  left: 0;
+  top: 48px;
+  max-width: 160px;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 34px;
+  line-height: 1;
+  color: #f3f1e8;
+  pointer-events: none;
+  transition:
+    opacity 0.5s ease 0.2s,
+    transform 0.6s var(--ease-house-overshoot) 0.16s;
+}
+
+.profile-chamber__status {
+  position: absolute;
+  right: 0;
+  top: 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #d6d3c8;
+  pointer-events: none;
+}
+
+@keyframes livePulse {
+  0%,
+  100% {
+    transform: scale(1);
+    border-radius: 60% 40% 55% 45% / 45% 55% 40% 60%;
+  }
+  50% {
+    transform: scale(1.24);
+    border-radius: 45% 55% 40% 60% / 60% 40% 55% 45%;
+  }
+}
+
+@keyframes cellWobA {
+  0%,
+  100% {
+    border-radius: 56% 44% 48% 52% / 52% 56% 44% 48%;
+  }
+  50% {
+    border-radius: 46% 54% 57% 43% / 46% 44% 56% 54%;
+  }
+}
+
+@keyframes cellWobB {
+  0%,
+  100% {
+    border-radius: 48% 52% 59% 41% / 44% 57% 43% 56%;
+  }
+  50% {
+    border-radius: 58% 42% 43% 57% / 57% 43% 57% 43%;
+  }
+}
+
+@keyframes cellWobC {
+  0%,
+  100% {
+    border-radius: 52% 48% 42% 58% / 57% 45% 55% 43%;
+  }
+  50% {
+    border-radius: 44% 56% 56% 44% / 45% 58% 42% 55%;
+  }
+}
+
+@keyframes driftA {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  33% {
+    transform: translate(6px, -5px);
+  }
+  66% {
+    transform: translate(-4px, 4px);
+  }
+}
+
+@keyframes driftB {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  33% {
+    transform: translate(-5px, 5px);
+  }
+  66% {
+    transform: translate(5px, 3px);
+  }
+}
+
+@keyframes driftC {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  30% {
+    transform: translate(7px, 6px);
+  }
+  70% {
+    transform: translate(-6px, -6px);
+  }
+}
+
+/* docs/05: the chambers' own dot-fusion transition is a state-change
+   animation on functional UI, not ambient decoration -- under reduced
+   motion it collapses to an instant/near-instant state swap (no eased
+   transform, no cellWob-family or drift-family keyframe wobble), it does
+   not disappear, since the fusion result is the information being
+   conveyed.
+   Note: this comment previously named the two keyframe families joined by
+   a slash right after an asterisk, which is the two-character CSS
+   comment-close token -- that accidentally terminated this comment early
+   and corrupted the remainder into invalid CSS, breaking the Tailwind
+   build for the entire app, not just Profile. Fixed here, outside Home's
+   own files, only because it made every route -- including Home --
+   completely unable to build or serve; discovered during this phase's
+   required 5-route end-to-end click-through. */
+@media (prefers-reduced-motion: reduce) {
+  .profile-status__dot,
+  .profile-chamber__dot-wrap,
+  .profile-chamber__dot {
+    animation: none;
+  }
+
+  .profile-chamber__dot,
+  .profile-chamber__fused,
+  .profile-chamber__labels {
+    transition-duration: 0.01ms;
+    transition-delay: 0s;
+  }
+}

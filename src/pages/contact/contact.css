@@ -9,7 +9,12 @@
 .contact-screen {
   position: relative;
   width: 100%;
-  height: 100%;
+  /* 900px FLOOR, never `height` and never lower (spec `continuous-scroll-layout`
+     MUST #1): every child of this root is absolutely positioned, so its
+     natural height is 0 -- without an explicit floor the section collapses.
+     900 is the design height the content was laid out against; heights below
+     it are unsupported. */
+  min-height: 900px;
   overflow: hidden;
   background: var(--color-contact-bg, #0a0a0a);
   color: var(--color-contact-headline, #f3f2ef);
@@ -125,11 +130,29 @@
 
 /* Closing quote -- real content (docs/05: a decorative layer can never be
    the only place information lives; this is the inverse case, real text
-   that simply doesn't need pointer interaction). */
+   that simply doesn't need pointer interaction).
+
+   Vertical anchoring (verify W4): the original `top: 766px` was tuned to the
+   fixed 900px canvas. Once the cards went percentage-anchored (below) that
+   literal left the quote behind -- clipped by `.contact-screen`'s
+   `overflow: hidden` at short heights and painted over the email/GitHub
+   cards at tall ones. It is now bottom-anchored (a closing line hugs the
+   bottom edge like a footer, keeping its gap to `.contact-footer-rule` at any
+   height), which is measured pixel-identical at 900 (2 lines, 76.78px tall,
+   57.22px from the bottom = the old top of 766px).
+   The `clamp` handles short heights only: the GitHub card (x 374-542 sits
+   inside the quote's x 91-543, so horizontal separation does not help)
+   shrinks proportionally while the quote is a fixed-size block, and its
+   hover-lifted/scaled bottom edge (~83.3% of height - 9px) would otherwise
+   reach the quote below ~750px. The preferred value (16.7% - 93px) keeps the
+   quote's ~25px baseline gap to that hover edge, floored at 44px so it never
+   crosses the footer rule (bottom: 40px). Coupled to the GitHub card's
+   top/height % and the 1.22 scale / 9px lift in useMagneticDock. At H >= 900
+   the upper bound wins, so this is the plain bottom anchor. */
 .contact-quote {
   position: absolute;
   left: 91px;
-  top: 766px;
+  bottom: clamp(44px, calc(16.7% - 93px), 57.22px);
   width: 452px;
   margin: 0;
   font-family: 'Instrument Serif', serif;
@@ -229,41 +252,50 @@
   text-align: inherit;
 }
 
-/* Per-card position/size, verified against the decoded template's inline
-   styles (lines 407, 429, 451, 475, 497). */
+/* Per-card position/size. `left`/`width` stay in px against the decoded
+   template's inline styles (lines 407, 429, 451, 475, 497) -- width stays a
+   fixed 1440px per docs/00_PROJECT_VISION.MD, only section *height* goes
+   fluid. `top`/`height` are re-expressed as percentages of the original
+   900px baseline (300/900=33.333% etc, per
+   sdd/continuous-scroll-and-doodles/spec's "Contact falloff across full
+   rendered height" scenario) so the 5 cards redistribute proportionally
+   across the container's actual rendered height instead of staying pinned
+   to literal px tuned for a fixed 900px canvas. At a 900px container these
+   resolve back to the exact original px values -- no visual change at
+   baseline. */
 .contact-dock__card--email {
   left: 96px;
-  top: 300px;
+  top: 33.333%;
   width: 216px;
-  height: 318px;
+  height: 35.333%;
 }
 
 .contact-dock__card--github {
   left: 374px;
-  top: 275px;
+  top: 30.556%;
   width: 168px;
-  height: 428px;
+  height: 47.556%;
 }
 
 .contact-dock__card--whatsapp {
   left: 864px;
-  top: 276px;
+  top: 30.667%;
   width: 204px;
-  height: 336px;
+  height: 37.333%;
 }
 
 .contact-dock__card--linkedin {
   left: 1128px;
-  top: 214px;
+  top: 23.778%;
   width: 216px;
-  height: 282px;
+  height: 31.333%;
 }
 
 .contact-dock__card--book-a-call {
   left: 1132px;
-  top: 578px;
+  top: 64.222%;
   width: 216px;
-  height: 196px;
+  height: 21.778%;
 }
 
 /* Corner-bracket "reticle" motif -- pure decoration (docs/04). */

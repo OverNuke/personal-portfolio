@@ -21,7 +21,12 @@
 .projects-screen {
   position: relative;
   width: 100%;
-  height: 100%;
+  /* 900px FLOOR, never `height` and never lower (spec `continuous-scroll-layout`
+     MUST #1): every child of this root is absolutely positioned, so its
+     natural height is 0 -- without an explicit floor the section collapses.
+     900 is the design height the content was laid out against; heights below
+     it are unsupported. */
+  min-height: 900px;
   overflow: hidden;
   background: var(--color-paper-bg, #f6f4ea);
   background-image:

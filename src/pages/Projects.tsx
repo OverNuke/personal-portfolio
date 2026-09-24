@@ -28,7 +28,7 @@ function Projects() {
   const { containerRef, valuesRef, handlePointerOver, handlePointerOut, bindFocus } = useCardHover(PROJECT_IDS);
 
   return (
-    <main data-testid="screen-projects" className="projects-screen">
+    <div data-testid="screen-projects" className="projects-screen">
       <h2 data-screen-heading tabIndex={-1} className="projects-sr-heading">
         Projects
       </h2>
@@ -53,7 +53,7 @@ function Projects() {
       </div>
 
       <CrayonMascot containerRef={containerRef} valuesRef={valuesRef} blueColor={DOODLE_COLOR} hotColor={HOT_COLOR} />
-    </main>
+    </div>
   );
 }
 

@@ -6,10 +6,11 @@
  * orchestration layer: it launches Chromium, collects real bounding boxes
  * from the rendered app, and feeds them through these functions.
  *
- * Rebuilt for the React port's real shell (docs/00, docs/03, docs/14): a
- * fixed, non-responsive 1440x900 stage, letterboxed/scaled via
- * `transform: scale()` on smaller viewports (src/shell/useStageScale.ts),
- * not a responsively-reflowing layout. The predicates below are unchanged
+ * Rebuilt for the React port's real shell (docs/00, docs/03): a
+ * non-responsive, 1440px-wide stage of five stacked sections (one continuously
+ * scrolling page), uniformly scaled by `transform: scale()` from the viewport
+ * WIDTH alone on narrower viewports (src/shell/useStageScale.ts) -- not a
+ * responsively-reflowing layout. The geometry predicates below are unchanged
  * from the quarantined version (`_quarantine/scripts/audit-checks.mjs`) --
  * the geometry math (rotation reconstruction, intersection, clipping,
  * target-size) is stack-agnostic and still correct. What changed is which
@@ -20,13 +21,13 @@
 // Sub-pixel/scrollbar rounding tolerance, in CSS px.
 const EPSILON = 1;
 
-// Widths swept ONLY for the letterbox/overflow check (see audit.mjs) -- the
-// old meaning of "does content reflow correctly at this width" no longer
+// Widths swept ONLY for the horizontal-containment check (see audit.mjs) --
+// the old meaning of "does content reflow correctly at this width" no longer
 // applies (docs/00: fixed stage, no responsive redesign), so these no
 // longer drive the occlusion/target-size/clipped-text checks at all. Kept
 // as the same four reference widths as the old responsive-era sweep for
-// continuity/comparability, now repurposed to answer "does the letterboxed
-// stage ever leak a scrollbar at this viewport size".
+// continuity/comparability, now repurposed to answer "does the scaled stage
+// ever leak horizontally at this viewport width".
 export const VIEWPORT_WIDTHS = [1440, 1280, 1100, 390];
 export const VIEWPORT_HEIGHT = 900;
 
@@ -35,8 +36,10 @@ export const VIEWPORT_HEIGHT = 900;
 // `getBoundingClientRect()` reports real, unscaled design pixels. Running
 // these checks at any other viewport would measure the *scaled* stage
 // instead (WCAG 2.5.8 is about CSS px as rendered, so a smaller viewport's
-// letterbox-shrunk targets would produce findings that have nothing to do
+// scaled-down targets would produce findings that have nothing to do
 // with a real layout defect -- see audit.mjs's `assertNativeScale`).
+// 1440x900 is also exactly one section tall, so every section can be scrolled
+// flush to the viewport top for its pass.
 export const STAGE_WIDTH = 1440;
 export const STAGE_HEIGHT = 900;
 
@@ -67,6 +70,32 @@ export function meetsMinTargetSize(rect, min = MIN_TARGET_SIZE) {
 /** True if scrollWidth exceeds clientWidth by more than rounding noise. */
 export function hasHorizontalOverflow(scrollWidth, clientWidth, epsilon = EPSILON) {
   return scrollWidth - clientWidth > epsilon;
+}
+
+/**
+ * The contract on `.stage-viewport`'s COMPUTED overflow (src/shell/shell.css:
+ * `overflow-x: clip`): a STATIC guard that pins the shipped task-7.1 contract.
+ * It is defense in depth, not the no-horizontal-scroll invariant itself --
+ * measured: with `overflow-x: visible` Chromium does NOT scroll horizontally
+ * for the transformed 1440px stage (the scaled extent is what counts toward
+ * scrollable overflow), so the document-width and painted-stage checks in
+ * audit.mjs stay silent and this predicate is the only thing that notices.
+ * Rejecting `visible`/`auto`/`scroll` is therefore a policy choice (the wrapper
+ * must keep clipping horizontally so a future wide, non-transformed child can't
+ * leak a scrollbar), not an observed defect.
+ *
+ * `clip` rather than `hidden` is load-bearing: `hidden` (or `auto` / `scroll`)
+ * on one axis promotes a `visible` other axis to `auto`, turning the wrapper
+ * into a scroll container that would capture the document's vertical scroll
+ * (the shell is one continuously scrolling page). Hence y must stay `visible`
+ * or `clip`. The accepted computed pair is `clip/visible` (shipped) or
+ * `clip/clip`. `null`/`undefined` (nothing measured) never passes.
+ *
+ * Replaces the pre-continuous-scroll `hidden/hidden` expectation, which the
+ * shipped layout deliberately no longer satisfies.
+ */
+export function meetsStageViewportOverflowContract(overflowX, overflowY) {
+  return overflowX === 'clip' && (overflowY === 'visible' || overflowY === 'clip');
 }
 
 /**

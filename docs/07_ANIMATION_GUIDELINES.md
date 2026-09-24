@@ -1,8 +1,12 @@
 # 07. Animation Guidelines
 
 > Written 2026-09-21 (Phase 6). Covers motion **philosophy and per-effect
-> timing** only — the shared-element/route-transition contract is a separate
-> doc, `14_REFORM_MOTION.md`, per this doc set's existing split. Every
+> timing** only — the screen-transition contract is a separate doc,
+> `14_REFORM_MOTION.md`, per this doc set's existing split. **Updated
+> 2026-09-23:** that doc's REFORM/ENTER route crossfade is SUPERSEDED (the
+> five screens are now stacked scroll sections; nothing mounts/unmounts on
+> navigation) — the only shell transition left is the pill's active-state swap,
+> see the Home pill-nav bullet below and `14_REFORM_MOTION.md`. Every
 > duration/easing value below is read directly from
 > `docs/_decoded/*/template.html` (inline `transition:`/`animation:` CSS or
 > the per-frame JS driving a `<canvas>`/SVG effect) — none are invented or
@@ -59,6 +63,18 @@ fusion metaphor it was built for) — don't apply it generally.
   color .2s ease` (`docs/_decoded/index/template.html` line 623) — plain
   `ease`, not the house curve; this is chrome, not content, and reads
   correctly as a slightly softer, less "designed" transition.
+  > **Corrected 2026-09-23 (task 8.1, spec `screen-transitions`): the
+  > decoded value above was deliberately REPLACED, not ported.** The shipped
+  > pill (`.pill-nav__button` in `src/shell/shell.css`) uses `background
+  > 120ms` and `color 120ms` on the house ease (`--ease-house`,
+  > `cubic-bezier(.2,.85,.2,1)`), with `transition: none` under
+  > `prefers-reduced-motion: reduce` (the pill had no reduced-motion handling
+  > before). Reason: the REFORM/ENTER route crossfade that owned the 120ms
+  > timing was retired when the screens became scroll sections, and the spec
+  > redefines that timing as the pill's own active-state transition
+  > (`14_REFORM_MOTION.md`). The pill's change is purely visual and never
+  > delays scroll or focus. The `.2s ease` figure and the "plain `ease`, not
+  > the house curve" rationale above are historical.
 - The EN/ES toggle's active/inactive swap has **no transition declared at
   all** in the decoded source — it's an instant background/color swap.
   Carry this forward as-is; don't add easing that isn't in the source for a
@@ -117,6 +133,14 @@ fusion metaphor it was built for) — don't apply it generally.
   — reproducible jitter, not true randomness, so the same frame index
   always produces the same offset. This is what makes the crayon mascot's
   lines look hand-redrawn rather than vector-static.
+  **Added 2026-09-23:** the five molecular/health doodles
+  (`molecularDoodles.ts`) reuse this exact technique and cadence — the same
+  seeded noise (`perturbPoints` in `strokeMath.ts`), a new noise frame every
+  `floor(t · 7.5)` (1/7.5 s), amplitude 1.3px (the mascot uses 1.1–1.6), 3.2px
+  line width — driven by the same single `requestAnimationFrame` loop that
+  drives the cells and the mascot (no second loop). Under
+  `prefers-reduced-motion: reduce` the noise is dropped and each doodle is a
+  frozen resting pose.
 - **Lightbox/eye opacity:** `transition: opacity .2s` on both the
   certificate image-slot and the lightbox's blinking-eye character — a
   short, plain-`ease` fade, no house-curve override.
@@ -189,5 +213,5 @@ This doc owns per-effect timing/easing values and the "mechanical, not
 playful" house-ease convention. It does not own the accessibility contract
 per effect (decorative-vs-real classification, keyboard behavior — that's
 `05_ACCESSIBILITY.MD`), each effect's component/prop/state-machine contract
-(`04_COMPONENT_RULES.MD`), or the screen-to-screen route-change transition
-(`14_REFORM_MOTION.md`).
+(`04_COMPONENT_RULES.MD`), or the pill nav's active-state transition (`14_REFORM_MOTION.md`; the
+former screen-to-screen route-change transition no longer exists).

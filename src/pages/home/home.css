@@ -8,7 +8,12 @@
 .home-screen {
   position: relative;
   width: 100%;
-  height: 100%;
+  /* 900px FLOOR, never `height` and never lower (spec `continuous-scroll-layout`
+     MUST #1): every child of this root is absolutely positioned, so its
+     natural height is 0 -- without an explicit floor the section collapses.
+     900 is the design height the content was laid out against; heights below
+     it are unsupported. */
+  min-height: 900px;
   overflow: hidden;
   /* docs/02's dated correction: the real base surface is opaque cream paper,
      composited by the Ink Flow Background layer below -- this app shell's
@@ -21,7 +26,7 @@
     sans-serif;
 }
 
-/* Ink Flow Background -- z-index:0, fills the whole 1440x900 stage, fully
+/* Ink Flow Background -- z-index:0, fills the whole stage (1440px wide, fluid height), fully
    decorative (see InkFlowBackground.tsx for the per-layer source citation). */
 .ink-flow {
   position: absolute;

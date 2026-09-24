@@ -7,11 +7,11 @@ interface LangContextValue {
   toggleLang: () => void;
 }
 
-// Held at the shell level (App.tsx), above <Routes>, per docs/03: both the
+// Held at the shell level (App.tsx), above <Shell/>, per docs/03: both the
 // decoded mockup's own `state.lang` and the old quarantined Shell.tsx kept
 // this above any individual screen so toggling it survives navigation.
-// Context (not a prop) because route elements are rendered by React Router
-// via <Outlet/>, which can't pass a prop down from the layout route.
+// Context (not a prop) because the shell renders the five screens as opaque
+// components (no router any more), so it can't pass a prop to each one.
 export const LangContext = createContext<LangContextValue | null>(null);
 
 export function useLang(): LangContextValue {

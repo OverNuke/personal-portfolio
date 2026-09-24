@@ -23,6 +23,7 @@
 //   component only needs to know it's closing.
 import { useEffect, useRef } from 'react';
 import type { MouseEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { usePrefersReducedMotion } from '../../shell/usePrefersReducedMotion';
 import { blink } from './strokeMath';
 
@@ -184,7 +185,11 @@ function ScanModal({ isOpen, title, meta, imageSrc, imageAlt, onClose }: ScanMod
     event.stopPropagation();
   }
 
-  return (
+  // Portaled to <body>: this overlay is `position: fixed`, and inside the
+  // scrolling stage's `transform: scale()` a fixed element is positioned
+  // against that transformed ancestor (the whole ~4500px stack of sections),
+  // not the viewport -- the dialog would centre around y~2250, off-screen.
+  return createPortal(
     <div className="distinctions-modal-overlay" onClick={handleOverlayClick}>
       <div
         ref={dialogRef}
@@ -249,7 +254,8 @@ function ScanModal({ isOpen, title, meta, imageSrc, imageAlt, onClose }: ScanMod
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

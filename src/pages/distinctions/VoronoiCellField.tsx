@@ -18,7 +18,7 @@
 // decorative "colony eye" cells `count`/`span`) get `role="presentation"
 // tabIndex={-1}`, matching the decoded `renderVals()`'s own
 // `interactive = c.kind === 'rec'` gate exactly.
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent, MouseEvent } from 'react';
 import { usePrefersReducedMotion } from '../../shell/usePrefersReducedMotion';
 import {
@@ -27,15 +27,17 @@ import {
   DEFAULT_GAP,
   DEFAULT_HOVER_GROWTH,
   DEFAULT_ROUNDNESS,
+  DESIGN_HEIGHT,
   HOVER_LERP,
-  STAGE_HEIGHT,
   STAGE_WIDTH,
   computeCellGeometry,
   computeLiveSeeds,
 } from './voronoi';
 import type { CellGeometry } from './voronoi';
 import { CERTIFICATIONS_BY_ID, TITLE_CELL } from './distinctionsData';
-import { buildDoodleStrokes, DOODLE_PATH_IDS } from './doodleStrokes';
+import { computeLabelSizing } from './labelSizing';
+import { buildAllDoodleStrokes } from './doodleFrame';
+import DoodleLayer from './DoodleLayer';
 import { blink } from './strokeMath';
 import eyeLeftPaper from '../../assets/doodle/eye-left-paper.png';
 import eyeRight from '../../assets/doodle/eye-right.png';
@@ -92,39 +94,55 @@ function VoronoiCellField({ onOpenCell }: VoronoiCellFieldProps) {
   const hoverValuesRef = useRef<Record<string, number>>(Object.fromEntries(CERT_CELL_IDS.map((id) => [id, 0])));
   const pointerRef = useRef<{ x: number; y: number } | null>(null);
 
-  // Label box width / cert-name font-size are derived from each cell's
-  // RESTING area (breathe: false, no hover growth) computed once, not
-  // recomputed on every frame or on every state change like the decoded
-  // source's own `sizeLabels()` -- deliberate simplification (disclosed in
-  // the final report): this stage never resizes at runtime (the shell's
-  // `useStageScale` scales the whole 1440x900 box via a CSS transform, not
-  // a layout resize the way the standalone decoded page's own
-  // `ResizeObserver` had to defend against), so a one-time measurement
-  // already satisfies docs/07's "breathing never reflows copy" intent
-  // without re-deriving it every frame.
-  const labelSizing = useMemo(() => {
-    const restSeeds = computeLiveSeeds(0, { breathe: false, hoverGrowth: 0, hoverValues: {} });
-    const restCells = computeCellGeometry(restSeeds, { gap: DEFAULT_GAP, roundness: DEFAULT_ROUNDNESS });
-    const sizing: Record<string, { width: number; fontSize: number }> = {};
-    restCells.forEach((cell) => {
-      const isEye = cell.id === 'count' || cell.id === 'span';
-      const s = Math.sqrt(cell.area || 10000);
-      const widthFactor = isEye ? 0.95 : 0.74;
-      const width = Math.round(clamp(120, isEye ? 400 : 330, s * widthFactor));
-      const fontSize = Math.round(clamp(15, 27, s / 13.5));
-      sizing[cell.id] = { width, fontSize };
-    });
-    return sizing;
+  // Section height is no longer the fixed STAGE_HEIGHT=900 constant that
+  // voronoi.ts used to export -- once the shell reflows to fluid content
+  // height (`sdd/continuous-scroll-and-doodles` Phase 7), this container
+  // renders at whatever height its content naturally takes. Seeded with
+  // DESIGN_HEIGHT (900) so the very first render matches today's shipped
+  // layout instead of collapsing to 0 before the first measurement.
+  // `clientHeight` (not `getBoundingClientRect`, which `paint()` below uses
+  // for a DIFFERENT purpose -- pointer un-projection) deliberately excludes
+  // the Shell's own outer uniform `transform: scale()`, so this stays in
+  // the same 1440-wide "design space" coordinate frame computeCellGeometry
+  // and the SVG viewBoxes below both use -- mixing a post-transform size
+  // into a pre-transform coordinate space is exactly the kind of
+  // non-uniform-stretch bug this fixes (task 1.3).
+  const [height, setHeight] = useState(DESIGN_HEIGHT);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const measure = () => {
+      const next = container.clientHeight;
+      if (next > 0) setHeight((prev) => (prev === next ? prev : next));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(container);
+    return () => observer.disconnect();
   }, []);
+
+  // Label box width / cert-name font-size are derived from each cell's
+  // RESTING area (breathe: false, no hover growth), recomputed only when
+  // `height` changes -- not on every animation frame, matching docs/07's
+  // "breathing never reflows copy" intent. Before Phase 1
+  // (`sdd/continuous-scroll-and-doodles`), this stage never resized at
+  // runtime (the shell's `useStageScale` scaled the whole fixed 1440x900
+  // box via a CSS transform, not a layout resize), so a one-time
+  // measurement was sufficient; now that the section's actual height is
+  // measured via ResizeObserver (above, in preparation for Phase 7's fluid
+  // -height shell), this recomputes on the rare occasions `height` itself
+  // changes, same as `paint` below.
+  const labelSizing = useMemo(() => computeLabelSizing(height), [height]);
 
   const paint = useCallback(
     (t: number, jitterOn: boolean) => {
-      const liveSeeds = computeLiveSeeds(t, {
+      const liveSeeds = computeLiveSeeds(t, height, {
         breathe: jitterOn,
         hoverGrowth: DEFAULT_HOVER_GROWTH,
         hoverValues: hoverValuesRef.current,
       });
-      const cells: CellGeometry[] = computeCellGeometry(liveSeeds, {
+      const cells: CellGeometry[] = computeCellGeometry(liveSeeds, height, {
         gap: DEFAULT_GAP,
         roundness: DEFAULT_ROUNDNESS,
       });
@@ -166,11 +184,12 @@ function VoronoiCellField({ onOpenCell }: VoronoiCellFieldProps) {
       });
 
       const doodleColor = DOODLE_COLOR;
-      const strokes = buildDoodleStrokes({
+      const strokes = buildAllDoodleStrokes({
         t,
         jitterOn,
         hoverValues: hoverValuesRef.current,
         cells,
+        height,
         color: doodleColor,
       });
       strokes.forEach((stroke) => {
@@ -182,7 +201,7 @@ function VoronoiCellField({ onOpenCell }: VoronoiCellFieldProps) {
         node.setAttribute('stroke-width', String(stroke.w));
       });
     },
-    [],
+    [height],
   );
 
   useEffect(() => {
@@ -191,7 +210,11 @@ function VoronoiCellField({ onOpenCell }: VoronoiCellFieldProps) {
 
     // Paint once synchronously so cells aren't invisible/mis-sized on the
     // very first frame (matches the decoded source's own "paint positions
-    // synchronously -- no first-frame pile-up").
+    // synchronously -- no first-frame pile-up"). `paint` already closes
+    // over the latest `height` (useCallback dep above), and the
+    // useLayoutEffect measuring `height` runs before this passive effect,
+    // so this reflects the real measured height, not the DESIGN_HEIGHT
+    // fallback, except on the very first commit before layout has run.
     paint(0, !reducedMotion);
 
     if (reducedMotion) {
@@ -275,7 +298,15 @@ function VoronoiCellField({ onOpenCell }: VoronoiCellFieldProps) {
 
   return (
     <div ref={containerRef} className="distinctions-stage">
-      <svg viewBox={`0 0 ${STAGE_WIDTH} ${STAGE_HEIGHT}`} preserveAspectRatio="none" className="distinctions-cells-svg">
+      {/* viewBox height is the REAL measured `height` state, not a fixed
+          900 -- the CSS box (distinctions.css's width:100%/height:100% on
+          `.distinctions-cells-svg`) is always exactly `STAGE_WIDTH x
+          height` in this same pre-Shell-transform coordinate frame, so the
+          viewBox and the actual box now always share the same aspect
+          ratio. `preserveAspectRatio="none"` is kept for defensive
+          idempotence (a same-aspect-ratio viewBox is a no-op stretch
+          either way), not because it's doing the scaling work here. */}
+      <svg viewBox={`0 0 ${STAGE_WIDTH} ${height}`} preserveAspectRatio="none" className="distinctions-cells-svg">
         {CELL_SEEDS.map((seed) => {
           const interactive = seed.kind === 'rec';
           const cert = interactive ? CERTIFICATIONS_BY_ID[seed.id] : undefined;
@@ -365,27 +396,7 @@ function VoronoiCellField({ onOpenCell }: VoronoiCellFieldProps) {
         ))}
       </div>
 
-      <svg
-        viewBox={`0 0 ${STAGE_WIDTH} ${STAGE_HEIGHT}`}
-        preserveAspectRatio="none"
-        className="distinctions-doodle-svg"
-        aria-hidden="true"
-        focusable="false"
-      >
-        {DOODLE_PATH_IDS.map((id) => (
-          <path
-            key={id}
-            ref={(el) => {
-              if (el) doodlePathRefs.current.set(id, el);
-            }}
-            d=""
-            fill="none"
-            stroke="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        ))}
-      </svg>
+      <DoodleLayer height={height} pathRefs={doodlePathRefs} />
     </div>
   );
 }

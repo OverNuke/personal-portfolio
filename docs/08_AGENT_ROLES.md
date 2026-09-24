@@ -36,13 +36,20 @@ Reads:
 
 Responsibilities:
 
-- maintain the navigation model (pill nav, Home's keyboard arrow-cycling,
-  the five-route table) and its reconciliation with `react-router-dom`
-- prevent normal scrolling-website patterns from creeping back in — this is
-  a fixed 1440×900 stage with peer screens, not a scrolling page
-- flag any change that would silently turn the fixed stage into a responsive
-  layout — that requires a new decision recorded in `00_PROJECT_VISION.MD`
-  first, not a quiet fix
+- maintain the navigation model (pill-nav scroll, Home's keyboard
+  arrow-cycling scoped to the active Home section, the five-section hash
+  table and hash deep links). **Updated 2026-09-23:** this used to read
+  "the five-route table and its reconciliation with `react-router-dom`" —
+  there is no router or route table any more (`03_UX_ARCHITECTURE.MD`)
+- keep the layout model honest: one continuously scrollable page of five
+  stacked sections at a fixed 1440px design width with a 900px design floor
+  (`min-height: 900px`), scaled by viewport width alone
+  (`00_PROJECT_VISION.MD`). **Updated 2026-09-23:** this used to read "a fixed
+  1440×900 stage with peer screens, not a scrolling page"
+- flag any change that would silently turn the fixed-width stage into a
+  responsive layout (breakpoints, reflow), or that lets a section drop below
+  the 900px floor — that requires a new decision recorded in
+  `00_PROJECT_VISION.MD` first, not a quiet fix
 
 ---
 
@@ -99,11 +106,14 @@ Reads:
 
 Responsibilities:
 
-- implement screen-to-screen transitions — including whatever replaces the
-  old `Crease`/`PageLayer` overlay animation now that all five screens are
-  peers rather than one persistent Home with overlays on top (see
-  `03_UX_ARCHITECTURE.MD`'s explicit deferral of this question to these two
-  docs)
+- own the shell's motion — **Updated 2026-09-23:** this used to read
+  "implement screen-to-screen transitions, including whatever replaces the
+  old `Crease`/`PageLayer` overlay animation". The answer that was deferred
+  to these two docs turned out to be: nothing, because there are no
+  screen-to-screen transitions any more (sections are stacked and scroll;
+  `14_REFORM_MOTION.md`'s REFORM/ENTER crossfade is SUPERSEDED). The only
+  shell transition left is the pill's 120ms active-state swap on the house
+  ease, with a reduced-motion override
 - preserve performance on the canvas/SVG-heavy effects (ink-bloom, goo
   chambers, Voronoi breathing, stroke-glyph jitter, magnetic dock) — CSS
   custom properties and native browser APIs only, no animation library

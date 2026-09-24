@@ -10,6 +10,14 @@ import { useEffect, useState } from 'react';
 //
 //   componentDidMount() attaches a window-level keydown listener, removed in
 //   componentWillUnmount() -- i.e. active only while Home is mounted.
+//
+// Updated for the continuous-scroll shell (sdd/continuous-scroll-and-doodles):
+// Home is now ALWAYS mounted (all 5 sections are stacked in one scrolling
+// page), so "only while Home is mounted" no longer scopes anything -- left
+// as-is the listener would preventDefault every arrow key on every section
+// and kill native keyboard scrolling page-wide. `enabled` re-creates the
+// original scope: Home passes "Home is the active section", and the listener
+// is only attached (and only swallows keys) while it is.
 //   ArrowRight/ArrowDown -> move(+1); ArrowLeft/ArrowUp -> move(-1); both
 //   preventDefault(). move(d) advances with wraparound:
 //   focus = (focus + d + ORDER.length) % ORDER.length.
@@ -23,10 +31,12 @@ import { useEffect, useState } from 'react';
 // discrete keydown/hover events, so a normal re-render per change is fine
 // and keeps the three CSS-driven visual properties (color, translateX,
 // arrow opacity) simple to express as plain JSX/CSS in Home.tsx.
-export function useNavFocusCycle(itemCount: number) {
+export function useNavFocusCycle(itemCount: number, enabled = true) {
   const [focusIndex, setFocusIndex] = useState(0);
 
   useEffect(() => {
+    if (!enabled) return;
+
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
         event.preventDefault();
@@ -39,7 +49,7 @@ export function useNavFocusCycle(itemCount: number) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [itemCount]);
+  }, [itemCount, enabled]);
 
   return [focusIndex, setFocusIndex] as const;
 }

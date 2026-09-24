@@ -11,8 +11,9 @@
 >
 > Cross-references: `02_DESIGN_SYSTEM.MD` owns the actual hex values and
 > contrast math (including the 3 corrected pairings restated below);
-> `03_UX_ARCHITECTURE.MD` owns the pill-nav/routing/keyboard-navigation model
-> this doc's keyboard rules must stay consistent with; `04_COMPONENT_RULES.MD`
+> `03_UX_ARCHITECTURE.MD` owns the pill-nav/hash-deep-link/keyboard-navigation
+> model (there is no routing since 2026-09-23) this doc's keyboard rules must
+> stay consistent with; `04_COMPONENT_RULES.MD`
 > owns each effect's component contract (props, state machine, bucket
 > placement) — this doc owns *why* each effect is accessible or not, and the
 > concrete a11y contract layered on top of those component contracts.
@@ -49,6 +50,21 @@ here):
    must also have that name and role as real DOM text, reachable without ever
    seeing or running the animation. A decorative effect can never be the only
    place information lives.
+
+> **Added 2026-09-23 — always-mounted screens.** "For as long as its host
+> screen is mounted" used to mean "while that screen is the one showing".
+> With the continuous-scroll shell (`03_UX_ARCHITECTURE.MD`) all five
+> screens are mounted at all times, so every decorative loop below — Home's
+> ink flow, Profile's ink-bloom canvas (the goo chambers are functional UI,
+> not decorative, but their ambient wobble also runs off-screen), Distinctions'
+> Voronoi + doodle layer, Projects' mascot and glyph title, Contact's dock —
+> runs whether or not its section is on screen. The accessibility clauses are
+> unaffected (still fully `aria-hidden`, never a tab stop, real content
+> independent). The cost is performance, not a11y: it is **unmeasured**, and
+> nothing pauses off-screen loops today; pausing loops for sections outside
+> the viewport is a recorded candidate follow-up, not shipped behavior.
+> Under `prefers-reduced-motion: reduce` the same per-effect fallbacks apply
+> to all five simultaneously.
 
 The rest of this doc is that pattern applied, effect by effect, to the five
 new decorative or partially-decorative effects this rebuild introduces.
@@ -146,6 +162,44 @@ Two effects, two different accessibility treatments — do not conflate them.
   user needs — the cell it's "pointing at" is already independently
   identified by that cell's own `aria-label`. `aria-hidden="true"`, never a
   tab stop, regardless of how much visual attention it draws.
+- **The molecular / health doodles are fully decorative — same contract as
+  the mascot, worked example (added 2026-09-23,
+  `continuous-scroll-and-doodles`).** Five hand-drawn strokes — DNA helix,
+  flask, molecule, pill capsule, microscope
+  (`src/pages/distinctions/molecularDoodles.ts`, driven per frame by
+  `doodleFrame.ts`, rendered by `DoodleLayer.tsx`) — are atmosphere: they
+  carry no information a screen-reader user needs, and they are not the only
+  place any information lives (the certificates are the real cells and their
+  labels, below). The whole layer is one `<svg>`, checked against the code:
+  - `aria-hidden="true"` on the `<svg>` itself — the entire subtree, not just
+    the moving paths — plus `focusable="false"` (the legacy IE/Edge quirk
+    where an SVG root can take focus).
+  - No `tabindex` anywhere in the layer and no interactive descendants at all
+    (only pooled `<path>`s, `fill="none"`, drawn imperatively by the shared
+    animation loop); it can never become a tab stop.
+  - `pointer-events: none` on `.distinctions-doodle-svg`
+    (`distinctions.css`), so it never intercepts hover/click/keyboard
+    interaction on the cells beneath it. It is a sibling overlay above the
+    cells and label layer, not a wrapper around anything interactive.
+  - **Reduced motion:** under `prefers-reduced-motion: reduce` the animation
+    loop is not started; `paint(0, false)` draws each doodle once with the
+    noise dropped — a frozen, noise-free resting pose (no boil). Doodle
+    geometry is deterministic (seeded noise), not random.
+  - **Real content is independent.** The certificate cells keep their real
+    `role="button"`, `tabindex`, and per-cell `aria-label`; the label text
+    ("number / title / meta") is real DOM text. The doodles are placed in
+    the corridor between label rows so they don't cover any certificate
+    label (asserted by `molecularDoodles.test.ts` at 700/800/900/1100/1400px).
+  - **Verified in a real browser (Phase 6 probe, 2026-09-23):** at 700/900/1400
+    with motion on and off the layer's `aria-hidden` is `true`,
+    `pointer-events` is `none`, 0 descendants carry `tabindex`, and the
+    accessibility snapshot of the section contains only the 9 "Open scan"
+    cell buttons and the heading — no doodle appears. Unit-level guards:
+    `DoodleLayer.test.tsx`, `VoronoiCellField.test.tsx`.
+  - **No contrast pairing is claimed or added** for the doodle ink
+    (`#e0452b`, resolved by `VoronoiCellField.tsx`): it is decorative and
+    non-informational, so it is not part of the contrast tables in
+    `02_DESIGN_SYSTEM.MD`.
 - **The cells themselves are real interactive targets, not decorative
   shapes.** Verified directly from `docs/_decoded/
   distinction-section-v4-standalone/template.html` line ~395: each cell is
@@ -175,11 +229,24 @@ Two effects, two different accessibility treatments — do not conflate them.
   - **On close, focus returns to the triggering cell** — the cell that
     opened the lightbox, not the top of the document and not wherever focus
     happens to land by default. This mirrors the one-directional
-    focus-restoration behavior `03_UX_ARCHITECTURE.MD` documents for the old
-    `Shell.tsx`/`usePageTurn` pattern (restore on close, not on open) — same
-    intent, applied here to a modal rather than a route.
+    focus-restoration behavior `03_UX_ARCHITECTURE.MD` documents (as history)
+    for the old `Shell.tsx`/`usePageTurn` pattern (restore on close, not on
+    open) — same intent, applied here to a modal rather than a route.
   - Clicking the overlay outside the dialog also closes it; a click on the
     dialog itself stops propagation so it doesn't self-close.
+  - **Portal and stacking (added 2026-09-23, verified in
+    `ScanModal.tsx` / `distinctions.css`).** Because the whole stage is a
+    CSS-transformed element, a `position: fixed` overlay rendered inside it
+    would be positioned against the stage, not the viewport. The dialog is
+    therefore rendered with `createPortal(..., document.body)`, so it sits in
+    the root stacking context, outside `.stage`. Its overlay is
+    `z-index: 9100`, deliberately **above the fixed pill nav (`9000`)**: at
+    the earlier `z-index: 40` the scrim rendered *under* the nav, so a pill
+    could be clicked (and the page scrolled away) while an `aria-modal`
+    dialog was open. Verified with a browser probe: `elementFromPoint` over
+    the pill hits the overlay, and Escape restores focus to the trigger cell.
+    Note the rest of the page is not made `inert` while the dialog is open;
+    the focus trap and the overlay are what contain interaction.
 - **`prefers-reduced-motion`:** the Voronoi field's own sinusoidal
   "breathing" (position jitter via `Math.cos(t*0.37+phase)*7`,
   `Math.sin(t*0.31+phase*1.3)*7`, weight jitter via `Math.sin(t*0.55+phase)`
@@ -298,7 +365,7 @@ Phase 8 component counts as done (`09_IMPLEMENTATION_ROADMAP.md` Phase 9).
 | Ink Flow Background | Home | `animate` prop forced `false` → static single frame | Yes — real text no longer depends on it for contrast at all (Fix 1) |
 | Ink-bloom canvas | Profile | Static single frame, or no canvas mounted | Yes — purely atmospheric, zero functional role |
 | Goo-filter chamber transitions | Profile | Instant/near-instant state swap, no eased transform or `cellWob*`/`drift*` keyframe wobble | Yes — fusion state, `aria-pressed`, and keyboard activation are all independent of the transition's duration |
-| Voronoi breathing + doodle boil | Distinctions | Cells settle to resting (non-jittered) shape; doodle pinned to one static pose | Yes — cell hit-targets, labels, click/keyboard activation, and the lightbox are all independent of the jitter |
+| Voronoi breathing + doodle boil (crayon mascot **and** the 5 molecular doodles, added 2026-09-23) | Distinctions | Cells settle to resting (non-jittered) shape; every doodle pinned to one static, noise-free pose | Yes — cell hit-targets, labels, click/keyboard activation, and the lightbox are all independent of the jitter |
 | Magnetic dock (Gaussian follow) | Contact | `pointermove` listener not attached; cards at rest `translateY(0) scale(1)` | Yes — all 5 cards stay real, focusable, activatable links; `:focus-visible` gives the same affordance the hover lift would have |
 
 ## Keyboard mapping — consistency with `03_UX_ARCHITECTURE.MD`
@@ -309,14 +376,14 @@ one table covers every keyboard interaction in the app:
 
 | Context | Keys | Behavior |
 |---|---|---|
-| Pill nav (persistent chrome, all screens) | `Tab` to reach a button, `Enter`/`Space` to activate | Real focus, real activation — navigates via `navigate(path)` |
-| Home's numbered list — **real** activation | `Tab` to reach a list item, `Enter` to activate | Real focus, real activation — navigates via `navigate(path)` |
-| Home's numbered list — **simulated** highlight | `ArrowRight`/`ArrowDown` (+1), `ArrowLeft`/`ArrowUp` (−1), window-level listener while Home is mounted | **Does not move real keyboard focus** — only re-renders which item is visually highlighted (color + `translateX(10px)` + arrow reveal). See `03_UX_ARCHITECTURE.MD`'s explicit flag: this is a known gap between the simulated highlight and real Tab focus, carried forward as-is from the mockup, not silently fixed here — a build agent must not describe arrow-key cycling as "keyboard navigation of the list" without this caveat |
+| Pill nav (persistent chrome, all screens) | `Tab` to reach a button, `Enter`/`Space` to activate | Real focus, real activation — **scrolls** to the section (`goToSection`; was `navigate(path)` before 2026-09-23), pushes the `#hash`, moves focus to that section's heading, announces it. (DOM order: the nav follows `<main>`, so Tab reaches it after the sections' focusables — see `03_UX_ARCHITECTURE.MD`.) |
+| Home's numbered list — **real** activation | `Tab` to reach a list item, `Enter` to activate | Real focus, real activation — same `goToSection` path (scroll + hash push + heading focus + announce); the links are real `<a href="#profile">` etc. |
+| Home's numbered list — **simulated** highlight | `ArrowRight`/`ArrowDown` (+1), `ArrowLeft`/`ArrowUp` (−1), window-level listener **only while Home is the active section** (`enabled`; was "while Home is mounted" — Home is now always mounted) | **Does not move real keyboard focus** — only re-renders which item is visually highlighted (color + `translateX(10px)` + arrow reveal). See `03_UX_ARCHITECTURE.MD`'s explicit flag: this is a known gap between the simulated highlight and real Tab focus, carried forward as-is from the mockup, not silently fixed here — a build agent must not describe arrow-key cycling as "keyboard navigation of the list" without this caveat. **Known limitation, disclosed 2026-09-23:** while Home is the active section the cycling `preventDefault()`s ArrowUp/ArrowDown, so those keys do **not** scroll the page there (PageUp/PageDown, Space, Home/End and the pill nav still do). Inherited from the mockup; not resolved |
 | Profile chambers | `Tab` to reach, `Enter`/`Space` to toggle `bonded` | Real focus + real activation, `aria-pressed` reflects state |
 | Distinctions cells | `Tab` to reach, `Enter`/`Space` to open lightbox | Real focus + real activation, matches click behavior exactly (`keyOpen` handler) |
 | Distinctions lightbox | `Tab`/`Shift+Tab` trapped inside dialog, `Escape` closes | Focus moves to close button on open, returns to triggering cell on close |
 | Contact cards | `Tab` to reach, `Enter`/`Space` (native link/button activation) | Native elements — no custom handler needed; `:focus-visible` gives the hover-lift's visual affordance |
-| Route change (any screen → any screen) | n/a (not a keypress) | Focus moves to the destination screen's primary heading/landmark (stable `tabIndex={-1}` + `.focus()` on mount); `aria-live="polite"` region announces the destination screen by name — both per `03_UX_ARCHITECTURE.MD`'s new (not carried-forward) focus-management rule |
+| Explicit section navigation — pill / Home list / Profile CTA, **and** hash-driven navigation (load with a valid hash, Back/Forward, hand-edited hash). Replaces the old "Route change" row (2026-09-23; no routes exist) | n/a (not a keypress of its own) | Focus moves to the destination section's own heading (`[data-screen-heading]`, stable `tabIndex={-1}`, `focus({ preventScroll: true })`); `aria-live="polite"` region announces the section by name (`"Profile."`) — both fire in the same tick the scroll starts, per `03_UX_ARCHITECTURE.MD`. **Scroll-driven changes (wheel/touch/keyboard scrolling) and a load with no/empty/unknown hash move neither focus nor the announcement** — only the pill's visual active state follows the scroll |
 
 ## What this doc is not
 
@@ -324,6 +391,6 @@ This doc owns the accessibility contract — decorative-vs-real classification,
 keyboard behavior, reduced-motion fallbacks, and the resolved contrast
 values' rationale. It does not own the actual hex values or contrast
 arithmetic (`02_DESIGN_SYSTEM.MD` is the source of record for those), the
-routing/focus-management architecture itself (`03_UX_ARCHITECTURE.MD`), each
+navigation/focus-management architecture itself (`03_UX_ARCHITECTURE.MD`), each
 effect's component/prop contract (`04_COMPONENT_RULES.MD`), or motion timing
 and easing values (`07_ANIMATION_GUIDELINES.md` / `14_REFORM_MOTION.md`).

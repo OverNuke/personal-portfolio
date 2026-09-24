@@ -8,9 +8,16 @@
 ## Core
 
 - **React 19.3** (`react` / `react-dom` `^19.3.0`)
-- **react-router-dom 7.18** (`^7.18.4`) — kept deliberately, see
+- ~~**react-router-dom 7.18** (`^7.18.4`) — kept deliberately, see
   `03_UX_ARCHITECTURE.MD` for why routing is retained instead of the
-  mockup's bare local `state.screen`.
+  mockup's bare local `state.screen`.~~ **REMOVED 2026-09-23
+  (`continuous-scroll-and-doodles`, task 7.6).** The five screens are now
+  stacked sections of one scrolling page, so there is no routing:
+  `react-router-dom` is gone from `package.json` (`dependencies` is `react` +
+  `react-dom` only) and from the lockfile, and nothing in `src/`, `e2e/` or
+  config imports it. Sections are addressed by URL hash instead — see
+  `03_UX_ARCHITECTURE.MD`. Do not reintroduce a router without a new
+  navigation decision recorded there first.
 - **Vite 8.3** (`^8.3.0`) via `@vitejs/plugin-react` — dev server, build,
   and preview all go through Vite; no separate bundler.
 - **TypeScript 6.0** (`^6.0.3`), project-referenced (`tsc -b`) across
@@ -79,7 +86,10 @@ Not third-party dependencies, but part of the stack's actual build pipeline
 
 - `scripts/verify-pnpm.mjs` — the `preinstall` guard above.
 - `scripts/copy-404.mjs` — runs after `vite build`, part of the GitHub Pages
-  deploy shape.
+  deploy shape: it copies `dist/index.html` to `dist/404.html` so Pages
+  serves the app shell for an unmatched path. **Updated 2026-09-23:** with no
+  router, a path URL such as `/profile` therefore renders Home (deep links
+  are hashes, see `03_UX_ARCHITECTURE.MD`); the script itself is unchanged.
 - `scripts/decode-mockup.mjs` — one-time/repeatable decode step for
   `mockup/*.html` into `docs/_decoded/` (see the plan and
   `13_ASSET_SPEC.md`); not part of the production build, a reading/authoring

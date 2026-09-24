@@ -9,8 +9,13 @@
 
 ## Page / subfolder pattern
 
-One page component per screen, matching the five routes in
-`03_UX_ARCHITECTURE.MD`:
+One page component per screen, matching the five sections in
+`03_UX_ARCHITECTURE.MD` (**Updated 2026-09-23:** "routes" became stacked scroll
+sections — there is no router; `src/App.tsx` maps `PageId` to these
+components and `src/shell/Shell.tsx` mounts all five at once). Each page's
+root is a plain `<div>` (not `<main>`; the shell owns the one `<main>` and
+wraps each page in a named `<section>`) carrying an explicit
+`min-height: 900px` design floor, never `height`:
 
 ```
 src/pages/Home.tsx
@@ -101,6 +106,54 @@ habit:
    for the weighted-Voronoi half-plane-clipping math. Keeping it as a plain
    module with no React/DOM dependency is what makes it unit-testable
    without a browser environment.
+
+### Placement examples added by `continuous-scroll-and-doodles` (2026-09-23)
+
+The height-fluid / scroll-shell work produced more instances of the three
+buckets. Each is classified by what it actually is, not by where it happens
+to be exported from — several are **pure functions exported next to a hook**,
+which is the usual, deliberate way to make a hook's math testable without a
+browser rather than a fourth bucket:
+
+- **Bucket 2 (hook, render-only consumer), with the math extracted as a pure,
+  DOM-free function exported from the same module and unit-tested on its
+  own:**
+  - `useStageScale` (`src/shell/useStageScale.ts`) + `computeStageScale(width)
+    = width / 1440` (width only, uncapped; never viewport height).
+  - `useMagneticDock` (`src/pages/contact/useMagneticDock.ts`) +
+    `computeMagneticFalloff(pointer, cardCenter, containerHeight = 900)` (the
+    per-card Gaussian falloff; the vertical spread scales with the section's
+    real height, bit-for-bit identical at 900).
+  - `useNavFocusCycle(itemCount, enabled)` (`src/pages/home/`) — `enabled`
+    re-creates the old "only while Home is mounted" scope now that Home is
+    always mounted.
+  - `useActiveSection`, `useHashNavigation` (`src/shell/`) — hooks that own an
+    `IntersectionObserver` / the `popstate`+`hashchange` listeners; the
+    shell's single `navigateToSection` function is injected into
+    `useHashNavigation` so the hook decides only *when* to navigate.
+  - `useLayerHeight` (`src/pages/projects/useLayerHeight.ts`) — a hook
+    (`useLayoutEffect` + `ResizeObserver` on `clientHeight`, *not*
+    `getBoundingClientRect`, which includes the shell's scale) that hands the
+    Projects SVG layers their real design-space height.
+- **Bucket 3 (plain DOM-free module, render-only consumer):**
+  - `perturbPoints` (`src/pages/distinctions/strokeMath.ts`, the seeded-noise
+    point perturbation extracted from the mascot builder and reused by the
+    molecular doodles), `computeLabelSizing(height)` (`labelSizing.ts`),
+    `computeCellPolygons(seeds, height, gap)` (`voronoi.ts`),
+    `molecularDoodles.ts` + `doodleFrame.ts` (per-frame path data for the
+    doodles), `projectsLayout.ts` (`layerViewBox`, `resolveLayerHeight`,
+    `ambientY`), `src/shell/sectionHash.ts` (`sectionHash`, `pageIdFromHash`).
+  - **`ambientY(designY, height) = designY * height / 900` exists twice** —
+    in `src/pages/distinctions/voronoi.ts` and in
+    `src/pages/projects/projectsLayout.ts` (Projects kept its own
+    `ambientY`/`DESIGN_HEIGHT` copy rather than importing across screens).
+    Same rule, two definitions: a recorded, deferred cleanup (verify item
+    S1), not a design intent.
+- **Bucket 1 (component-internal), no hook:** Home's `ringHeight()` inside
+  `InkFlowBackground.tsx` (fixed-px ring heights instead of container %),
+  and the Distinctions doodle layer's `DoodleLayer.tsx`, which is
+  render-only (an SVG path pool) — its per-frame writes come from the
+  existing `VoronoiCellField` rAF loop, not a second effect.
 
 ## Effect contracts
 
@@ -208,6 +261,22 @@ habit:
   only** — it reacts to the same hover state as the cells (pointing at
   whichever cell is hovered) but must be `aria-hidden` and must never itself
   become a tab stop, per the CLAUDE.md decorative-animation pattern.
+- **The molecular / health doodles (added 2026-09-23) share that contract.**
+  DNA helix, flask, molecule, pill capsule, microscope
+  (`molecularDoodles.ts`, bucket 3; `doodleFrame.ts` builds mascot + spores +
+  molecular strokes from one clock; `DoodleLayer.tsx` is the render-only SVG
+  path pool, bucket-3 consumer) are point arrays, one continuous
+  noise-perturbed stroke each, reusing `strokeMath.ts` — not binary assets
+  and not a new perturbation algorithm. `DoodleLayer` must be `aria-hidden`,
+  `focusable="false"`, have no `tabindex`/interactive descendants, and be
+  `pointer-events: none`; the worked example is in `05_ACCESSIBILITY.MD`.
+  Its viewBox is exactly `1440 x <measured height>` (so `xMinYMin meet` is a
+  1:1 mapping) and every coordinate the layer emits must be height-aware
+  (`ambientY`/`yFraction`) or an SVG clip at heights below ~838 would hide it.
+- **The lightbox is portaled (2026-09-23).** `ScanModal` renders through
+  `createPortal(..., document.body)` (a `position: fixed` overlay inside the
+  transformed stage would be positioned against the stage) at `z-index: 9100`,
+  above the fixed pill nav (`9000`); see `05_ACCESSIBILITY.MD`.
 
 ### Projects — stroke-glyph title
 

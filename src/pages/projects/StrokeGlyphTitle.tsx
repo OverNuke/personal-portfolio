@@ -13,6 +13,8 @@
 // exact purpose (template.html line 383).
 import { useEffect, useRef } from 'react';
 import { getTitleStrokePaths } from './glyphStrokes';
+import { layerViewBox } from './projectsLayout';
+import { useLayerHeight } from './useLayerHeight';
 import { usePrefersReducedMotion } from '../../shell/usePrefersReducedMotion';
 
 const FRAME_RATE = 7.5; // Math.floor(t * 7.5), verified at template.html line 600.
@@ -23,6 +25,9 @@ interface StrokeGlyphTitleProps {
 
 function StrokeGlyphTitle({ color }: StrokeGlyphTitleProps) {
   const pathRefs = useRef(new Map<string, SVGPathElement>());
+  const svgRef = useRef<SVGSVGElement>(null);
+  // The overlay covers its parent (`.projects-screen`), not itself.
+  const layerHeight = useLayerHeight(() => svgRef.current?.parentElement);
   const reducedMotion = usePrefersReducedMotion();
   const initialPaths = getTitleStrokePaths(0, color);
 
@@ -51,7 +56,20 @@ function StrokeGlyphTitle({ color }: StrokeGlyphTitleProps) {
   }, [color, reducedMotion]);
 
   return (
-    <svg className="projects-title-glyphs" viewBox="0 0 1440 900" aria-hidden="true" focusable="false">
+    // viewBox tracks the real section height (1 unit = 1 CSS px, top-left
+    // anchored) so the default `meet` letterboxing can't shift or shrink the
+    // title once the section is no longer exactly 900px tall. The strokes
+    // themselves stay at their absolute design coordinates (TITLE_STROKES at
+    // (76, 74)) on purpose -- they pair with `.projects-eyebrow top:78px`,
+    // both top-anchored -- see projectsLayout.ts.
+    <svg
+      ref={svgRef}
+      className="projects-title-glyphs"
+      viewBox={layerViewBox(layerHeight)}
+      preserveAspectRatio="xMinYMin meet"
+      aria-hidden="true"
+      focusable="false"
+    >
       {initialPaths.map((datum) => (
         <path
           key={datum.id}

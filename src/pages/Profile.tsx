@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useSectionNav } from '../shell/SectionNavContext';
+import { sectionHash } from '../shell/sectionHash';
 import InkBloomCanvas from './profile/InkBloomCanvas';
 import Chamber from './profile/Chamber';
 import type { ChamberState } from './profile/Chamber';
@@ -12,7 +13,7 @@ import './profile/profile.css';
 // per-value citations. Heading level is h2, matching this repo's
 // established Contact/Projects precedent (both use h2 for their real
 // screen headline, one level below a document h1 that doesn't exist in this
-// single-page-per-route shell).
+// single-page scroll shell).
 //
 // Hover/bonded state lives here (bucket-2-adjacent: Chamber itself stays
 // render-only per docs/04, all state transitions are owned by the parent),
@@ -20,6 +21,7 @@ import './profile/profile.css';
 // locked }` (template.html line 398) split across React's per-screen state
 // instead of one class field.
 function Profile() {
+  const { goToSection } = useSectionNav();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [bonded, setBonded] = useState<Record<number, boolean>>({});
 
@@ -30,7 +32,7 @@ function Profile() {
   }
 
   return (
-    <main data-testid="screen-profile" className="profile-screen">
+    <div data-testid="screen-profile" className="profile-screen">
       {/* Ink-bloom canvas + its radial-glow overlay -- one fully decorative
           subtree per docs/05 (never partially aria-hidden). */}
       <div className="profile-bg" aria-hidden="true">
@@ -65,13 +67,20 @@ function Profile() {
           <span className="profile-footer__note">Always learning · open to travel</span>
           {/* Decoded source is a plain `<a href="#">` placeholder (a
               standalone mockup has nowhere real to link to) -- in this
-              routed app "Get in touch" has a real destination, so this is
-              ported as a real react-router Link to /contact rather than a
-              dead anchor, matching the Contact-build precedent of upgrading
+              scrolling app "Get in touch" has a real destination, so this is
+              ported as a real anchor to the Contact section (activated
+              through the shell's scroll-to-section) rather than a dead one, matching the Contact-build precedent of upgrading
               placeholder mockup affordances into real functional ones. */}
-          <Link to="/contact" className="profile-footer__cta">
+          <a
+            href={sectionHash('contact')}
+            onClick={(event) => {
+              event.preventDefault();
+              goToSection('contact');
+            }}
+            className="profile-footer__cta"
+          >
             Get in touch →
-          </Link>
+          </a>
         </div>
       </div>
 
@@ -109,7 +118,7 @@ function Profile() {
           />
         ))}
       </div>
-    </main>
+    </div>
   );
 }
 

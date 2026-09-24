@@ -18,6 +18,8 @@ import type { MutableRefObject, RefObject } from 'react';
 import { usePrefersReducedMotion } from '../../shell/usePrefersReducedMotion';
 import { buildMascotStrokes, MASCOT_PATH_IDS, MAXTAGS } from './mascotStrokes';
 import type { ProjectMeasure, Rect } from './mascotStrokes';
+import { layerViewBox } from './projectsLayout';
+import { useLayerHeight } from './useLayerHeight';
 
 interface CrayonMascotProps {
   containerRef: RefObject<HTMLDivElement | null>;
@@ -27,7 +29,7 @@ interface CrayonMascotProps {
 }
 
 // Converts a real, stage-scaled getBoundingClientRect back into the layer's
-// own unscaled 1440x900 logical space -- same correction
+// own unscaled 1440-wide, section-height-tall logical space -- same correction
 // src/pages/contact/useMagneticDock.ts already established for this repo's
 // scaled-stage shell (src/shell/useStageScale.ts).
 function measureRect(container: HTMLElement, node: HTMLElement): Rect {
@@ -66,6 +68,8 @@ function measureProjects(container: HTMLElement): Record<string, ProjectMeasure>
 function CrayonMascot({ containerRef, valuesRef, blueColor, hotColor }: CrayonMascotProps) {
   const pathRefs = useRef(new Map<string, SVGPathElement>());
   const reducedMotion = usePrefersReducedMotion();
+  // This overlay covers the same box as the cards layer (both `inset:0`).
+  const layerHeight = useLayerHeight(() => containerRef.current);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -80,6 +84,7 @@ function CrayonMascot({ containerRef, valuesRef, blueColor, hotColor }: CrayonMa
         measures,
         blue: blueColor,
         hot: hotColor,
+        height: layerHeight,
       });
       strokes.forEach((stroke) => {
         const node = pathRefs.current.get(stroke.id);
@@ -113,10 +118,21 @@ function CrayonMascot({ containerRef, valuesRef, blueColor, hotColor }: CrayonMa
     }
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [containerRef, valuesRef, blueColor, hotColor, reducedMotion]);
+  }, [containerRef, valuesRef, blueColor, hotColor, reducedMotion, layerHeight]);
 
   return (
-    <svg className="projects-mascot" viewBox="0 0 1440 900" aria-hidden="true" focusable="false">
+    // viewBox tracks the real section height (1 unit = 1 CSS px, top-left
+    // anchored) so measureRect()'s CSS-px rects land exactly on the cards
+    // they annotate -- a fixed 900-tall viewBox would letterbox-shift them
+    // at any other height. See projectsLayout.ts for why this is not a
+    // clipping risk here (overflow: visible + section overflow: hidden).
+    <svg
+      className="projects-mascot"
+      viewBox={layerViewBox(layerHeight)}
+      preserveAspectRatio="xMinYMin meet"
+      aria-hidden="true"
+      focusable="false"
+    >
       {MASCOT_PATH_IDS.map((id) => (
         <path
           key={id}

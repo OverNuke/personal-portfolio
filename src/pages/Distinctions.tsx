@@ -13,8 +13,8 @@ import './distinctions/distinctions.css';
 // docs/_decoded/distinction-section-v4-standalone/template.html in full --
 // see src/pages/distinctions/voronoi.ts, distinctionsData.ts,
 // doodleStrokes.ts, VoronoiCellField.tsx, and ScanModal.tsx for the
-// per-value citations. `data-screen-heading` (Shell.tsx's route-change
-// focus target) lives on the real "Distinctions" H2 inside
+// per-value citations. `data-screen-heading` (the heading Shell.tsx focuses on
+// explicit section activation) lives on the real "Distinctions" H2 inside
 // VoronoiCellField's title-cell label, matching this repo's established
 // Contact/Projects/Profile precedent of one real h2 per screen.
 //
@@ -42,7 +42,7 @@ function Distinctions() {
   const openCert = openCellId ? CERTIFICATIONS_BY_ID[openCellId] : null;
 
   return (
-    <main data-testid="screen-distinction" className="distinctions-screen">
+    <div data-testid="screen-distinction" className="distinctions-screen">
       <VoronoiCellField onOpenCell={handleOpenCell} />
       <ScanModal
         isOpen={openCert != null}
@@ -52,7 +52,7 @@ function Distinctions() {
         imageAlt={openCert ? `${openCert.title} certificate scan` : ''}
         onClose={handleClose}
       />
-    </main>
+    </div>
   );
 }
 

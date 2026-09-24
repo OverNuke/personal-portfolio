@@ -18,7 +18,12 @@
 .distinctions-screen {
   position: relative;
   width: 100%;
-  height: 100%;
+  /* 900px FLOOR, never `height` and never lower (spec `continuous-scroll-layout`
+     MUST #1): every child of this root is absolutely positioned, so its
+     natural height is 0 -- without an explicit floor the section collapses.
+     900 is the design height the content was laid out against; heights below
+     it are unsupported. */
+  min-height: 900px;
   overflow: hidden;
   background: var(--color-paper-bg);
   color: var(--color-ink);
@@ -62,7 +67,7 @@
   position: absolute;
   inset: 0;
   width: 1440px;
-  height: 900px;
+  /* height comes from `inset: 0` (the stage's real height), not a literal 900px. */
   pointer-events: none;
 }
 
@@ -151,7 +156,11 @@
 .distinctions-modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  /* Above the fixed pill nav (z-index 9000, shell.css): the dialog is
+     `aria-modal` and is portaled to <body>, so both sit in the root stacking
+     context. At 40 the scrim rendered UNDER the nav and a pill click could scroll
+     away while the dialog stayed open. */
+  z-index: 9100;
   background: rgba(10, 10, 10, 0.88);
   display: grid;
   place-items: center;

@@ -1,40 +1,74 @@
 import { useEffect, useRef } from 'react';
 
-const STAGE_WIDTH = 1440;
-const STAGE_HEIGHT = 900;
+export const STAGE_WIDTH = 1440;
 
 /**
- * Letterboxes the fixed 1440x900 stage to the viewport (docs/00: "letterboxed
- * / scaled fixed-size stage on smaller viewports", no responsive redesign).
- * Computes a uniform "contain" scale factor and writes it straight to a CSS
- * custom property (`--stage-scale`) on the returned ref's element instead of
- * driving it through React state -- avoids a re-render on every resize.
+ * The stage's uniform scale factor: viewport width over the 1440px design
+ * width, and nothing else. Viewport height must never enter this -- the stage
+ * is now one continuously-scrollable column of 5 stacked sections (spec
+ * `continuous-scroll-layout`), so a short window scrolls instead of shrinking
+ * the stage, and a tall one has more to scroll past instead of letterboxing.
+ * Uncapped on purpose: a viewport wider than 1440px scales the stage up so it
+ * always fills the width (there are no side bars any more).
+ */
+export function computeStageScale(viewportWidth: number): number {
+  return viewportWidth / STAGE_WIDTH;
+}
+
+/**
+ * Scales the 1440px-wide, natural-height stage to the viewport width (docs/00:
+ * fixed-width stage, no responsive redesign). Writes two CSS custom
+ * properties straight onto the returned `viewportRef` element instead of
+ * driving them through React state -- avoids a re-render on every resize:
  *
- * Interpretation note (docs/00 names two candidate mechanisms --
- * `aspect-ratio` or `transform: scale()` -- without picking one): this uses
- * `transform: scale()` on a fixed 1440x900 box centered by its flex-centered
- * parent, since flexbox centers the box's untransformed layout size and the
- * transform's default center origin keeps it centered after scaling.
+ *  - `--stage-scale`: `computeStageScale(width)`, applied by shell.css as
+ *    `transform: scale()` with a top-left origin on `.stage` (and on the fixed
+ *    pill nav, which lives outside the stage so it can stay put while the page
+ *    scrolls).
+ *  - `--stage-height`: the stage's natural, UNSCALED height in px (a
+ *    ResizeObserver on `stageRef`'s element, read from `offsetHeight` -- not
+ *    `getBoundingClientRect`, which would already include the scale). A CSS
+ *    transform doesn't change layout size, so the `.stage-scaler` wrapper needs
+ *    `stage-height * stage-scale` to make the document exactly as tall as the
+ *    scaled stage (no dead space below Contact) and `1440 * scale` wide (no
+ *    horizontal scrollbar).
+ *
+ * Width comes from `documentElement.clientWidth` (excludes the vertical
+ * scrollbar, which is always present now) with `innerWidth` as the fallback:
+ * scaling from `innerWidth` alone would overshoot by the scrollbar's width and
+ * force a horizontal scrollbar. The two are identical wherever scrollbars are
+ * overlaid.
  */
 export function useStageScale() {
-  const ref = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const element = ref.current;
-    if (!element) return;
+    const viewport = viewportRef.current;
+    const stage = stageRef.current;
+    if (!viewport || !stage) return;
 
-    // TS doesn't carry the non-null narrowing above across this nested
-    // function's boundary, even though `element` is a `const` -- assert it
-    // explicitly rather than re-checking on every resize event.
+    // TS doesn't carry the non-null narrowing above across these nested
+    // functions' boundary, even though both are `const`s -- assert them
+    // explicitly rather than re-checking on every event.
     function updateScale() {
-      const scale = Math.min(window.innerWidth / STAGE_WIDTH, window.innerHeight / STAGE_HEIGHT);
-      element!.style.setProperty('--stage-scale', String(scale));
+      const width = document.documentElement.clientWidth || window.innerWidth;
+      viewport!.style.setProperty('--stage-scale', String(computeStageScale(width)));
+    }
+    function updateHeight() {
+      viewport!.style.setProperty('--stage-height', String(stage!.offsetHeight));
     }
 
     updateScale();
+    updateHeight();
     window.addEventListener('resize', updateScale);
-    return () => window.removeEventListener('resize', updateScale);
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(stage);
+    return () => {
+      window.removeEventListener('resize', updateScale);
+      observer.disconnect();
+    };
   }, []);
 
-  return ref;
+  return { viewportRef, stageRef };
 }

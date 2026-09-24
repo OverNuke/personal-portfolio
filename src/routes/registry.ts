@@ -1,12 +1,19 @@
-// Five-entry route registry per docs/03_UX_ARCHITECTURE.MD's route table.
+// Five-entry section registry per docs/03_UX_ARCHITECTURE.MD's five-section table
+// (the entries are now stacked scroll sections, not router routes -- see `hash`).
 // Renames the old 4-entry registry's `certifications` PageId to `distinction`
 // (matching the mockup's own `screen: 'distinction'` naming) and adds the
 // `home` entry the old registry didn't need (Home was an implicit base
-// layer under the old overlay shell; it's a real peer route now).
+// layer under the old overlay shell; it's a real peer section now).
 export type PageId = 'home' | 'profile' | 'distinction' | 'projects' | 'contact';
 
 export interface RouteEntry {
-  path: string;
+  /**
+   * The section's deep-link URL hash (`#profile`). There are no per-screen
+   * paths any more: the site is one static, scrolling page (GitHub Pages can't
+   * rewrite `/profile` to the SPA), so a section is addressed by hash and
+   * `src/shell/sectionHash.ts` maps it to/from `pageId`.
+   */
+  hash: string;
   pageId: PageId;
   /**
    * Pill-nav label -- English only. The decoded mockup's `NAV` dictionary
@@ -23,15 +30,15 @@ export interface RouteEntry {
 }
 
 export const routes: RouteEntry[] = [
-  { path: '/', pageId: 'home', navLabel: 'Home' },
-  { path: '/profile', pageId: 'profile', navLabel: 'Profile', labelEn: 'Who me?', labelEs: '¿Yo?' },
+  { hash: '#home', pageId: 'home', navLabel: 'Home' },
+  { hash: '#profile', pageId: 'profile', navLabel: 'Profile', labelEn: 'Who me?', labelEs: '¿Yo?' },
   {
-    path: '/distinction',
+    hash: '#distinctions',
     pageId: 'distinction',
     navLabel: 'Distinctions',
     labelEn: 'Distinction',
     labelEs: 'Distinción',
   },
-  { path: '/projects', pageId: 'projects', navLabel: 'Projects', labelEn: 'Projects', labelEs: 'Proyectos' },
-  { path: '/contact', pageId: 'contact', navLabel: 'Contact', labelEn: 'Reach out', labelEs: 'Contacto' },
+  { hash: '#projects', pageId: 'projects', navLabel: 'Projects', labelEn: 'Projects', labelEs: 'Proyectos' },
+  { hash: '#contact', pageId: 'contact', navLabel: 'Contact', labelEn: 'Reach out', labelEs: 'Contacto' },
 ];

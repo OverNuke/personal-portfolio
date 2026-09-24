@@ -15,6 +15,33 @@ const DOCK_SPREAD = 260;
 // Anisotropic falloff -- the decoded template divides dy by spread*2.2, so
 // the effect is roughly twice as forgiving vertically as horizontally.
 const DOCK_SPREAD_Y_FACTOR = 2.2;
+// Height the DOCK_SPREAD/DOCK_SPREAD_Y_FACTOR tuning above was calibrated
+// against -- the original fixed 900px-tall contact-screen. Container
+// heights other than this baseline scale the vertical spread
+// proportionally so the falloff keeps responding across the section's
+// *actual* rendered height instead of clustering inside the old fixed-900
+// card band. See sdd/continuous-scroll-and-doodles/spec,
+// `continuous-scroll-layout` capability, "Contact falloff across full
+// rendered height" scenario.
+const DOCK_SPREAD_BASELINE_HEIGHT = 900;
+
+/**
+ * Pure Gaussian falloff for the magnetic-dock hover effect, extracted from
+ * `paint()` so it can be exercised without touching the DOM
+ * (useMagneticDock.test.ts). `containerHeight` defaults to the historical
+ * 900px baseline the constants above were tuned against, so callers that
+ * don't pass it reproduce the exact previously shipped response.
+ */
+export function computeMagneticFalloff(
+  pointer: { x: number; y: number },
+  cardCenter: { x: number; y: number },
+  containerHeight: number = DOCK_SPREAD_BASELINE_HEIGHT,
+): number {
+  const heightScale = containerHeight / DOCK_SPREAD_BASELINE_HEIGHT;
+  const dx = (pointer.x - cardCenter.x) / DOCK_SPREAD;
+  const dy = (pointer.y - cardCenter.y) / (DOCK_SPREAD * DOCK_SPREAD_Y_FACTOR * heightScale);
+  return Math.exp(-(dx * dx + dy * dy));
+}
 
 /**
  * A continuous, non-committing hover effect (same rationale the quarantined
@@ -51,6 +78,10 @@ export function useMagneticDock(cardCount: number) {
     let pointer: { x: number; y: number } | null = null;
 
     function paint() {
+      // Read the container's *actual* rendered height on every paint --
+      // once the shell rewrite (Phase 7) makes section height fluid, this
+      // is no longer a constant 900.
+      const containerHeight = container!.offsetHeight || DOCK_SPREAD_BASELINE_HEIGHT;
       cardRefs.current.forEach((card) => {
         if (!card) return;
         if (!pointer) {
@@ -58,11 +89,11 @@ export function useMagneticDock(cardCount: number) {
           card.style.zIndex = '1';
           return;
         }
-        const cx = card.offsetLeft + card.offsetWidth / 2;
-        const cy = card.offsetTop + card.offsetHeight / 2;
-        const dx = (pointer.x - cx) / DOCK_SPREAD;
-        const dy = (pointer.y - cy) / (DOCK_SPREAD * DOCK_SPREAD_Y_FACTOR);
-        const falloff = Math.exp(-(dx * dx + dy * dy));
+        const cardCenter = {
+          x: card.offsetLeft + card.offsetWidth / 2,
+          y: card.offsetTop + card.offsetHeight / 2,
+        };
+        const falloff = computeMagneticFalloff(pointer, cardCenter, containerHeight);
         card.style.transform =
           `translateY(${(-40 * DOCK_STRENGTH * falloff).toFixed(2)}px) ` +
           `scale(${(1 + DOCK_STRENGTH * falloff).toFixed(3)})`;

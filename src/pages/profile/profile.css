@@ -9,7 +9,12 @@
 .profile-screen {
   position: relative;
   width: 100%;
-  height: 100%;
+  /* 900px FLOOR, never `height` and never lower (spec `continuous-scroll-layout`
+     MUST #1): every child of this root is absolutely positioned, so its
+     natural height is 0 -- without an explicit floor the section collapses.
+     900 is the design height the content was laid out against; heights below
+     it are unsupported. */
+  min-height: 900px;
   overflow: hidden;
   font-family: 'Manrope', system-ui, sans-serif;
   background: var(--color-profile-bg);
@@ -40,12 +45,17 @@
   z-index: 3;
 }
 
-/* Left column -- headline, bio, footer CTA. */
+/* Left column -- headline, bio, footer CTA.
+   `top: 0; bottom: 0` (not a literal height) so the column spans whatever
+   height `.profile-screen` actually has and `justify-content: center`
+   centers within that real box -- the decoded source hard-coded 900px
+   because the stage was a fixed 900px canvas (continuous-scroll-layout
+   spec, "Profile column centering at non-900 height"). */
 .profile-intro {
   position: absolute;
   left: 104px;
   top: 0;
-  height: 900px;
+  bottom: 0;
   width: 516px;
   z-index: 20;
   display: flex;
@@ -164,12 +174,13 @@
   animation: livePulse 2.4s ease-in-out infinite;
 }
 
-/* Chamber column. */
+/* Chamber column -- same `top: 0; bottom: 0` sizing as `.profile-intro`
+   above, for the same reason. */
 .profile-chambers {
   position: absolute;
   left: 812px;
   top: 0;
-  height: 900px;
+  bottom: 0;
   width: 560px;
   z-index: 22;
   display: flex;

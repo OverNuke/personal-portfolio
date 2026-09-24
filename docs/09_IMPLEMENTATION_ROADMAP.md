@@ -124,9 +124,12 @@ and the decorative-animation worked examples in `05_ACCESSIBILITY.MD`.
 `docs/14_REFORM_MOTION.md` are all written. `docs/12_COLLAGE_SYSTEM.md`
 remains retired/superseded, confirmed, no further action.
 
-## Phase 7 — Scaffold shell + routing — **DONE**
+## Phase 7 — Scaffold shell + routing — **DONE** (routing half SUPERSEDED 2026-09-23)
 
-> Status updated 2026-09-21 (Phase 11 close-out).
+> Status updated 2026-09-21 (Phase 11 close-out). **Updated 2026-09-23:** the
+> "routing", "route switch" and "fixed 1440×900 stage" halves of this phase
+> were replaced by `continuous-scroll-and-doodles` (see the section at the end
+> of this doc): there is no router, and the stage is a scrolling stack.
 
 Confirmed built: `src/routes/registry.ts` has the 5-entry table
 (`/`, `/profile`, `/distinction`, `/projects`, `/contact`), the fixed
@@ -179,6 +182,15 @@ component styles, not just documented.
   against the new 5-route registry, and `pnpm run audit:collage` is
   re-enabled in `.github/workflows/ci.yml` (`Audit` step, after the
   Playwright-browser install step).
+- > **Updated 2026-09-23: this bullet is now stale.** `pnpm test` runs
+  > 21 files / 235 tests (Voronoi geometry, dock falloff, doodles, Projects
+  > layout, the scroll shell, hash navigation, …) added by
+  > `continuous-scroll-and-doodles`. Also stale: "`scripts/audit.mjs` runs
+  > clean (0 findings)" and "`e2e/smoke.spec.ts` was rewritten against the new
+  > 5-route registry" — `scripts/audit.mjs` still targets the removed
+  > route-per-screen model (see the follow-ups below), and `e2e/` was
+  > rewritten again against the scroll shell (55 tests). The original text is
+  > kept below as history.
 - **Honest gap, not glossed over:** `pnpm test` passes with **zero Vitest
   unit tests** in the rebuilt component tree — only Playwright e2e/a11y
   checks were performed during Phases 9/10. `vite.config.ts` sets
@@ -204,3 +216,70 @@ Several items surfaced during the reset plan's own close-out instructions
 were checked and found already accurate — no redundant notes added for
 those. This closes out the full reset plan
 (`drop-all-the-decision-mighty-pelican.md`).
+
+## Change `continuous-scroll-and-doodles` — continuous scroll + molecular doodles — **IMPLEMENTATION DONE, NOT YET ARCHIVED**
+
+> Recorded 2026-09-23. A spec-driven change (Strict TDD; artifacts in engram
+> under `sdd/continuous-scroll-and-doodles/*`), applied on top of Phases 1–11
+> above. Supersedes, in the docs, the discrete route-per-screen model.
+
+**What shipped (25/25 tasks):**
+
+- **Height-fluid effects (Phases 1–5):** Distinctions' Voronoi geometry,
+  Contact's magnetic dock, Profile's column centering, Projects' glyph/mascot
+  layout and Home's ink rings were made correct at any height ≥ 900
+  (built and tested at 700/900/1400; `computeCellPolygons`,
+  `computeMagneticFalloff`, `ambientY`, `useLayerHeight`, `ringHeight`).
+- **Molecular / health doodles (Phase 6):** DNA helix, flask, molecule, pill
+  capsule, microscope on Distinctions, fully `aria-hidden`
+  (`01_ART_DIRECTION.MD`, `05_ACCESSIBILITY.MD`).
+- **Scroll shell + nav model (Phase 7):** one scrolling page of five stacked
+  sections with a 900px design floor, scaled by width alone; pill nav
+  scrolls; hash deep links (`#home … #contact`); `react-router-dom` removed;
+  Home arrow-cycling scoped to the active section; `ScanModal` portaled
+  (`00`, `03`, `05`).
+- **Screen transitions (Phase 8.1):** the REFORM/ENTER route crossfade is
+  retired; the pill's own 120ms swap remains (`07`, `14`).
+- **Committed e2e layout guard (Phase 8.2):** `e2e/helpers.ts`,
+  `layout.spec.ts`, `scroll-nav.spec.ts`, rewritten `smoke.spec.ts` (55
+  tests).
+- **Docs reconciliation (Phase 9.1):** `00, 01, 03, 04, 05, 06, 07, 08, 09,
+  10, 11, 14`. `13_ASSET_SPEC.md` unchanged (no asset changed: the doodles
+  are code, not assets).
+
+**Gate numbers at close (2026-09-23):** `pnpm test` 21 files / 235 passed;
+`pnpm typecheck` and `pnpm lint` clean; e2e 55/55 (110/110 with
+`--repeat-each=2`) **against a throwaway dev-server config only**.
+
+**Open before archive:**
+
+1. A **fresh full verify** superseding the targeted verify (#471/#473).
+2. **`pnpm e2e` (build + `playwright test` against `pnpm preview`) has never
+   run.** The owner rule forbids running it locally; **CI would be its first
+   run.** Two known environment sensitivities to expect there: nominal-scale
+   assertions assume overlay scrollbars (headless Chromium), and Chromium is
+   the only engine covered.
+3. **`scripts/audit.mjs` FAILS and `ci.yml`'s `Audit` step is live — CI
+   would go red before it reaches E2E.** Measured 2026-09-23 by running
+   `pnpm run audit:collage` locally (it starts its own dev server; not a
+   build): exit 1, **20 findings**, all the same `horizontal-scroll` check
+   (5 routes x 4 widths): it asserts `.stage-viewport` is `overflow:
+   hidden/hidden` for the old "letterboxed 1440x900" stage, but the scroll
+   shell deliberately uses `overflow-x: clip` (`shell.css`). The script is
+   also structurally stale: `ROUTES = ['/', '/profile', '/distinction',
+   '/projects', '/contact']` (every entry now loads Home — path URLs are not
+   deep links) and it waits on `.screen-layer--enter
+   [data-screen-heading]`, a selector that no longer exists (that wait is
+   `.catch`-swallowed). `CLAUDE.md`/`AGENTS.md` still say the audit step is a
+   TODO; it is not — it is enabled in `ci.yml`. Options for the user: rebuild
+   `scripts/audit.mjs` for the scroll shell, or drop/disable the CI step in
+   the meantime. Not fixed here (out of scope for a docs task; the script is
+   being rebuilt post-reset).
+
+**Known limitations / decisions recorded (see the specs for wording):**
+heights below 900px unsupported; Contact clamps at the document bottom on
+windows with aspect ratio < 1.6:1 (no trailing spacer); path URLs are not
+deep links (they load Home); ArrowUp/ArrowDown do not scroll while Home is
+the active section; all five screens' effect loops run simultaneously,
+including off-screen (performance unmeasured — pausing off-screen loops is a
+candidate follow-up); Firefox/WebKit are unverified.

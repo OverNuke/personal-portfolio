@@ -8,7 +8,15 @@
 // math stays unit-testable per docs/04_COMPONENT_RULES.MD's pure-module
 // preference -- CrayonMascot.tsx owns the actual `getBoundingClientRect`
 // measurement and rAF loop.
+import { ambientY, DESIGN_HEIGHT } from './projectsLayout';
 import { ellipsePts, rnd, smooth } from './strokeMath';
+
+/** The mascot's resting y in the 900-tall design space (template.html). It
+ *  floats free of any card/CSS partner, so it re-anchors proportionally to
+ *  the real section height via `ambientY` -- unlike SWOOSH/SPARK/flag-ring,
+ *  which pair with top-px CSS (`.projects-flagship-badge top:250px`,
+ *  `.projects-eyebrow top:78px`) and stay absolute on purpose. */
+const GUY_DESIGN_Y = 812;
 
 export const GUY_BODY: number[][] = [
   [-30, -18],
@@ -102,6 +110,13 @@ export interface MascotParams {
   measures: Record<string, ProjectMeasure>;
   blue: string;
   hot: string;
+  /** Real rendered height of the layer the strokes paint into. Only the
+   *  free-floating ambient doodles (the mascot's resting y and the spores)
+   *  re-anchor to it; everything measured off the DOM already follows the
+   *  real cards, and the top-anchored doodles (swoosh, spark, flag ring)
+   *  stay pinned to their CSS-positioned partners. Defaults to the 900px
+   *  design height, which reproduces the originally shipped output. */
+  height?: number;
 }
 
 /** Builds this frame's full stroke list for the mascot + its annotation
@@ -109,7 +124,15 @@ export interface MascotParams {
  *  owns independently). Every id in `MASCOT_PATH_IDS` is always present in
  *  the output (empty `d` when idle) so the caller's SVG path pool never
  *  needs to add/remove nodes across frames. */
-export function buildMascotStrokes({ t, jitterOn, hov, measures, blue: B, hot: R }: MascotParams): PathDatum[] {
+export function buildMascotStrokes({
+  t,
+  jitterOn,
+  hov,
+  measures,
+  blue: B,
+  hot: R,
+  height = DESIGN_HEIGHT,
+}: MascotParams): PathDatum[] {
   const f = jitterOn ? Math.floor(t * 7.5) : 0;
   const out: PathDatum[] = [];
 
@@ -197,7 +220,7 @@ export function buildMascotStrokes({ t, jitterOn, hov, measures, blue: B, hot: R
   );
 
   const gx = 512;
-  const gy = 812 + (jitterOn ? Math.sin(t * 1.7) * 4 : 0);
+  const gy = ambientY(GUY_DESIGN_Y, height) + (jitterOn ? Math.sin(t * 1.7) * 4 : 0);
   const S = 1.2;
   push('ear-l', smooth(at(GUY_EAR_L, gx, gy, 2, 1.1, S), true), B, B, 2.6);
   push('ear-r', smooth(at(GUY_EAR_R, gx, gy, 3, 1.1, S), true), B, B, 2.6);
@@ -376,7 +399,7 @@ export function buildMascotStrokes({ t, jitterOn, hov, measures, blue: B, hot: R
 
   SPORES.forEach((s, i) => {
     const cx = s[0] + (jitterOn ? Math.cos(t * 0.28 + s[2]) * 34 : 0);
-    const cy = s[1] + (jitterOn ? Math.sin(t * 0.23 + s[2]) * 26 : 0);
+    const cy = ambientY(s[1], height) + (jitterOn ? Math.sin(t * 0.23 + s[2]) * 26 : 0);
     push(`spore-${i}`, smooth(at(ellipsePts(0, 0, 11, 9.5, 9, 0), cx, cy, 10 + i, 1.3), true), 'none', B, 2.4);
     push(
       `nuc-${i}`,

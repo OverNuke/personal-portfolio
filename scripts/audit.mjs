@@ -3,46 +3,64 @@
 /**
  * scripts/audit.mjs -- the collage audit gate (`pnpm run audit:collage`).
  *
- * Rebuilt against the React port's real shell (docs/00, docs/03, docs/14)
- * after the full-reset rebuild from the decoded mockups. Reuses the check
- * *logic* from `_quarantine/scripts/audit.mjs` /
+ * Rebuilt against the React port's real shell (docs/00, docs/03) after the
+ * full-reset rebuild from the decoded mockups, then updated for the
+ * continuous-scroll shell (change `continuous-scroll-and-doodles`). Reuses the
+ * check *logic* from `_quarantine/scripts/audit.mjs` /
  * `_quarantine/scripts/audit-checks.mjs` (occlusion, WCAG 2.5.8 target-size,
- * clipped-text, horizontal-scroll) but points it at the new routes/selectors
- * and adapts the viewport-sweep strategy to this app's real, load-bearing
- * difference from the old design:
+ * clipped-text, horizontal containment) and adapts the sweep strategy to this
+ * app's real, load-bearing difference from the old design:
  *
  *   The old shell was RESPONSIVE -- `.shell-frame`'s CSS Grid genuinely
  *   reflowed at each of 1440/1280/1100/390px, so sweeping all four widths
  *   for every check made sense: each width was a distinct layout to audit.
  *
- *   This shell is NOT responsive (docs/00's explicit decision, restated in
- *   `03_UX_ARCHITECTURE.MD`): every screen is a fixed 1440x900 stage that
- *   gets letterboxed and uniformly SCALED via `transform: scale()` on
- *   smaller viewports (src/shell/useStageScale.ts) -- the DOM layout inside
- *   `.stage` never reflows, it only shrinks or grows as a rigid image.
+ *   This shell is NOT responsive (docs/00's explicit decision): the five
+ *   screens are stacked `min-height: 900px` sections inside one 1440px-wide
+ *   `.stage`, which is uniformly SCALED via `transform: scale()` from the
+ *   viewport WIDTH alone (src/shell/useStageScale.ts). The page itself
+ *   scrolls; the DOM layout inside `.stage` never reflows, it only shrinks or
+ *   grows as a rigid image.
  *
- * Two consequences, both implemented below:
+ * Consequences, all implemented below:
  *
- *   1. Occlusion / target-size / clipped-text now run at exactly ONE
- *      viewport, `STAGE_WIDTH x STAGE_HEIGHT` (1440x900) -- the stage's own
- *      native size, where `--stage-scale` resolves to 1 and
+ *   0. There are no per-screen routes any more -- only URL hashes
+ *      (`#home #profile #distinctions #projects #contact`). The section list
+ *      is READ FROM src/routes/registry.ts (through Vite's module loader) so
+ *      it cannot drift, and each section is audited by loading its hash URL
+ *      on a FRESH page (a hash-only `goto` on a live page is a same-document
+ *      navigation, not a load) and waiting until that section's top edge has
+ *      landed at the viewport top.
+ *   1. Occlusion / target-size / clipped-text run once per section at exactly
+ *      ONE viewport, `STAGE_WIDTH x STAGE_HEIGHT` (1440x900) -- the stage's
+ *      own native size, where `--stage-scale` resolves to 1 and
  *      `getBoundingClientRect()` reports real, unscaled design pixels.
- *      Running these at e.g. 390px would just measure the same layout
- *      shrunk by `useStageScale`'s contain-fit factor -- every interactive
- *      element would "fail" WCAG 2.5.8 purely because the whole stage got
- *      smaller, which is a property of the letterbox, not a real target-size
- *      defect. `assertNativeScale` below makes this a hard precondition
- *      (exit code 2) rather than a silent assumption -- if `.stage` isn't
- *      measured at scale 1, the numbers this script would produce are
- *      meaningless, so it refuses to report findings from them.
- *   2. The old "horizontal-scroll at 390px" check becomes "the letterboxed
- *      stage never leaks a scrollbar at ANY viewport size" -- swept across
- *      the same four reference widths as before (1440/1280/1100/390) for
- *      continuity, but now asking a narrower, still-meaningful question:
- *      does `.stage-viewport`'s `overflow:hidden` + `useStageScale`'s
- *      contain-fit math actually hold at every size, rather than "does
- *      content reflow correctly", which no longer applies (content doesn't
- *      reflow at all).
+ *      (1440x900 is also exactly one section tall, so every section, Contact
+ *      included, can sit flush with the viewport top.) Running these at e.g.
+ *      390px would just measure the same layout shrunk by the width-derived
+ *      scale -- every interactive element would "fail" WCAG 2.5.8 purely
+ *      because the whole stage got smaller, which is a property of the scale,
+ *      not a real target-size defect. `assertNativeScale` below makes this a
+ *      hard precondition (exit code 2) rather than a silent assumption -- if
+ *      `.stage` isn't measured at scale 1, the numbers this script would
+ *      produce are meaningless, so it refuses to report findings from them.
+ *      Scope of each section's pass: that section's subtree PLUS the fixed
+ *      pill nav (it overlays whichever section is scrolled to the top, so it
+ *      is the one element that can genuinely occlude another section's
+ *      content). The other four sections are off-screen and excluded --
+ *      including them would re-report the same findings five times.
+ *   2. The old "horizontal-scroll at 390px" check becomes "the scaled stage
+ *      never leaks horizontally at ANY viewport width" -- swept across the
+ *      same four reference widths as before (1440/1280/1100/390) for every
+ *      section's hash URL. `.stage-viewport` ships `overflow-x: clip`, which
+ *      also hides a mis-scaled stage's overflow from the document's own
+ *      scrollWidth, so the check has three parts: (a) the document does not
+ *      overflow (the real invariant), (b) the PAINTED stage's right edge fits
+ *      inside the viewport (catches a broken scale, which the clip would
+ *      otherwise hide) and (c) `.stage-viewport` still satisfies the shipped
+ *      overflow contract (`meetsStageViewportOverflowContract`: clip on x,
+ *      never a scroll container on y) -- a static guard, defense in depth, not
+ *      a measured leak.
  *
  * Dropped from the quarantined version: the `keep-out` check
  * (`.profile-ink-field` doesn't exist in this rebuild -- Profile's ink-bloom
@@ -53,10 +71,10 @@
  * specific to the old overlay-dashboard shell.
  *
  * Self-contained invocation: this script brings up its own Vite dev server
- * and a headless Chromium instance (via @playwright/test, already a
- * devDependency) and tears both down before exiting. The `audit:collage`
- * npm script stays a bare `node scripts/audit.mjs` -- no `pnpm build`/
- * `pnpm preview` prerequisite.
+ * (ephemeral port) and a headless Chromium instance (via @playwright/test,
+ * already a devDependency) and tears both down before exiting. The
+ * `audit:collage` npm script stays a bare `node scripts/audit.mjs` -- no
+ * `pnpm build`/`pnpm preview` prerequisite, and no base-URL override.
  *
  * Exit codes: 0 = no findings, 1 = findings reported, 2 = tool/infra error
  * (so CI/tasks can tell "the gate ran and found problems" apart from
@@ -76,6 +94,7 @@ import {
   hasHorizontalOverflow,
   isTextClipped,
   meetsMinTargetSize,
+  meetsStageViewportOverflowContract,
   parseScale,
   rectsIntersect,
   unrotateElementRect,
@@ -83,10 +102,28 @@ import {
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-// Matches src/routes/registry.ts exactly -- kept as a literal list (not
-// imported) since this script runs standalone under plain Node, outside
-// Vite/TS module resolution.
-const ROUTES = ['/', '/profile', '/distinction', '/projects', '/contact'];
+// The section DOM id convention of src/shell/SectionNavContext.tsx's
+// `sectionDomId` (`section-${pageId}`). Mirrored, not imported: that module
+// pulls in React, and this is one template string.
+const sectionDomId = (pageId) => `section-${pageId}`;
+
+/**
+ * The audited sections, read from src/routes/registry.ts (single source of
+ * truth for hashes/pageIds) through Vite's own module loader, since this
+ * script runs under plain Node and cannot import .ts directly.
+ */
+async function loadSections(server) {
+  const { routes } = await server.ssrLoadModule('/src/routes/registry.ts');
+  if (!Array.isArray(routes) || routes.length === 0) {
+    throw new Error('src/routes/registry.ts exported no sections.');
+  }
+  return routes.map((entry) => ({
+    hash: entry.hash,
+    pageId: entry.pageId,
+    sectionId: sectionDomId(entry.pageId),
+    url: `/${entry.hash}`,
+  }));
+}
 
 async function main() {
   let server;
@@ -120,30 +157,32 @@ async function main() {
       throw error;
     }
 
+    const sections = await loadSections(server);
     const page = await browser.newPage();
 
-    // Pass 1: occlusion / target-size / clipped-text, once per route, at the
+    // Pass 1: occlusion / target-size / clipped-text, once per section, at the
     // stage's native 1440x900 size (scale === 1 -- see module doc comment).
-    for (const route of ROUTES) {
+    for (const section of sections) {
       await page.setViewportSize({ width: STAGE_WIDTH, height: STAGE_HEIGHT });
-      await page.goto(`${baseUrl}${route}`, { waitUntil: 'load' });
-      await waitForStable(page);
-      await assertNativeScale(page, route);
+      await loadFresh(page, `${baseUrl}${section.url}`);
+      await waitForStable(page, section);
+      await assertNativeScale(page, section.hash);
+      await assertSectionAtTop(page, section);
 
-      const snapshot = await page.evaluate(collectSnapshot);
-      findings.push(...runContentChecks(route, snapshot));
+      const snapshot = await page.evaluate(collectSnapshot, section.sectionId);
+      findings.push(...runContentChecks(section.hash, snapshot));
     }
 
-    // Pass 2: letterbox/overflow sweep across the reference viewport widths
-    // -- cheap (no DOM snapshot walk), just document-level overflow.
-    for (const route of ROUTES) {
+    // Pass 2: horizontal-containment sweep across the reference viewport
+    // widths -- cheap (no DOM snapshot walk), just overflow signals.
+    for (const section of sections) {
       for (const width of VIEWPORT_WIDTHS) {
         await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
-        await page.goto(`${baseUrl}${route}`, { waitUntil: 'load' });
-        await waitForStable(page);
+        await loadFresh(page, `${baseUrl}${section.url}`);
+        await waitForStable(page, section);
 
         const overflow = await page.evaluate(collectOverflowSnapshot);
-        findings.push(...runOverflowChecks(route, width, overflow));
+        findings.push(...runOverflowChecks(section.hash, width, overflow));
       }
     }
   } finally {
@@ -155,7 +194,19 @@ async function main() {
   process.exitCode = findings.some((f) => !f.skipped) ? 1 : 0;
 }
 
-async function waitForStable(page) {
+/**
+ * Loads `url` as a REAL page load. Navigating a live page between two URLs that
+ * differ only by hash is a same-document navigation: the app would receive a
+ * `hashchange` (an animated scroll from the previous section) instead of the
+ * deep-link-on-load path this audit means to measure. Going through
+ * about:blank guarantees the latter.
+ */
+async function loadFresh(page, url) {
+  await page.goto('about:blank');
+  await page.goto(url, { waitUntil: 'load' });
+}
+
+async function waitForStable(page, section) {
   // The Tailwind dev compile lands after first paint; wait until a real,
   // universal design token has resolved (defined once on :root, present on
   // every screen -- unlike the per-screen `--color-*-bg` tokens) so we
@@ -168,12 +219,10 @@ async function waitForStable(page) {
     )
     .catch(() => {});
 
-  // Wait for Shell's route-change focus-management effect to have run --
-  // its target selector existing is a reliable signal the new screen has
-  // actually mounted into `.screen-layer--enter` (src/shell/Shell.tsx),
-  // replacing the old `.page-layer[data-phase="open"]` wait (that selector
-  // no longer exists in this shell).
-  await page.waitForSelector('.screen-layer--enter [data-screen-heading]', { timeout: 5000 }).catch(() => {});
+  // All five screens are mounted at once (src/shell/Shell.tsx); the target
+  // section's own heading existing is the signal that ITS screen has rendered
+  // (the shell's hash navigation then focuses that heading).
+  await page.waitForSelector(`#${section.sectionId} [data-screen-heading]`, { timeout: 5000 }).catch(() => {});
 
   // Wait for real fonts to finish loading before measuring. Until they do,
   // text renders in a fallback font with different metrics, which can wrap
@@ -197,34 +246,69 @@ async function waitForStable(page) {
  * Hard precondition for pass 1: refuses to trust any measured rect unless
  * `.stage` is actually rendering at scale 1 (see module doc comment). A
  * scrollbar, an off-by-one viewport, or a future change to
- * `useStageScale`'s contain-fit math could otherwise silently produce
+ * `useStageScale`'s width-derived scale math could otherwise silently produce
  * bogus sub-24px target-size findings that have nothing to do with a real
  * defect. Throws (caught by `main`, surfaced as exit code 2) rather than
  * reporting a `finding`, since this is an audit-infrastructure failure, not
  * a layout defect the audit is designed to catch.
  */
-async function assertNativeScale(page, route) {
+async function assertNativeScale(page, label) {
   const scale = await page.evaluate(() => {
     const stage = document.querySelector('.stage');
     if (!stage) return null;
     return getComputedStyle(stage).transform;
   });
   if (scale === null) {
-    throw new Error(`[${route}] .stage element not found -- cannot verify native (scale=1) rendering.`);
+    throw new Error(`[${label}] .stage element not found -- cannot verify native (scale=1) rendering.`);
   }
   const factor = parseScale(scale);
   if (Math.abs(factor - 1) > 0.01) {
     throw new Error(
-      `[${route}] .stage is rendering at scale ${factor.toFixed(3)}, not 1 -- ` +
+      `[${label}] .stage is rendering at scale ${factor.toFixed(3)}, not 1 -- ` +
         `refusing to run occlusion/target-size/clipped-text checks against scaled rects. ` +
         `Expected viewport ${STAGE_WIDTH}x${STAGE_HEIGHT} to produce --stage-scale: 1 exactly.`,
     );
   }
 }
 
+/**
+ * Hard precondition for pass 1, like `assertNativeScale`: the hash deep link
+ * (instant scroll on load) must have landed the section's top edge at the
+ * viewport top. At 1440x900 (scale 1, one section per viewport) every section
+ * -- Contact's last-section clamp included -- can. Polls, since the landing
+ * happens in an effect after first paint. Throws (exit code 2) rather than
+ * measuring the wrong part of the page.
+ */
+async function assertSectionAtTop(page, section) {
+  const landed = await page
+    .waitForFunction(
+      (id) => {
+        const el = document.getElementById(id);
+        return !!el && Math.abs(el.getBoundingClientRect().top) <= 2;
+      },
+      section.sectionId,
+      { timeout: 5000 },
+    )
+    .then(() => true)
+    .catch(() => false);
+  if (!landed) {
+    throw new Error(
+      `[${section.hash}] #${section.sectionId} did not land at the viewport top within 5s of loading its hash URL -- ` +
+        `refusing to audit an unscrolled/mid-scroll page.`,
+    );
+  }
+  // Let any straggling scroll settle before the (atomic) snapshot.
+  await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(resolve));
+      }),
+  );
+}
+
 // Runs inside the browser via page.evaluate -- no access to the outer
 // module scope, so it stays a plain, fully self-contained function body.
-function collectSnapshot() {
+function collectSnapshot(sectionId) {
   function isAncestorHidden(el) {
     let node = el;
     while (node) {
@@ -305,19 +389,23 @@ function collectSnapshot() {
         rotationGroupIndexByNode.set(node, index);
         return index;
       }
-      if (node === scope) break;
+      if (node === document.body) break;
       node = node.parentElement;
     }
     return null;
   }
 
-  // The whole document is one screen's worth of content -- unlike the old
-  // shell (which kept Home mounted inert behind an open module), this
-  // shell only ever mounts the current route's screen (plus the briefly
-  // co-mounted REFORM/ENTER crossfade pair, which `waitForStable` already
-  // waits out). No dialog-scoping is needed for the routes this script
-  // visits (the Distinctions lightbox is never opened here).
-  const scope = document.body;
+  // All five screens are always mounted and stacked in one scrolling page, so
+  // the audited scope is ONE section (the one this hash URL scrolled to the
+  // viewport top) plus the fixed pill nav, which overlays it. Off-screen
+  // sections are skipped: they cannot overlap the section in view, and
+  // including them would repeat the same findings for every hash. No
+  // dialog-scoping is needed (the Distinctions lightbox is never opened here).
+  const sectionRoot = document.getElementById(sectionId);
+  const pillNav = document.querySelector('.pill-nav');
+  if (!sectionRoot) throw new Error(`#${sectionId} not found -- cannot audit this section.`);
+  if (!pillNav) throw new Error('.pill-nav not found -- cannot audit the fixed nav overlay.');
+  const scopes = [sectionRoot, pillNav];
 
   // Text-bearing elements: elements whose OWN direct text (not a
   // descendant's) is non-empty. Normal in-flow layout never overlaps two
@@ -331,28 +419,30 @@ function collectSnapshot() {
   // ancestor, if any -- see runContentChecks' occlusion check.
   const textEls = [];
   const textElRefs = [];
-  const walker = document.createTreeWalker(scope, NodeFilter.SHOW_ELEMENT);
-  let current = walker.nextNode();
-  while (current) {
-    const el = current;
-    current = walker.nextNode();
-    if (isAncestorHidden(el) || !isRendered(el)) continue;
-    const ownText = Array.from(el.childNodes)
-      .filter((n) => n.nodeType === Node.TEXT_NODE)
-      .map((n) => n.textContent ?? '')
-      .join('')
-      .trim();
-    if (!ownText) continue;
-    const rect = rectOf(el);
-    if (isVisuallyHiddenRect(rect)) continue;
-    textEls.push({
-      selector: describe(el),
-      rect,
-      offsetWidth: el.offsetWidth,
-      offsetHeight: el.offsetHeight,
-      rotationGroup: rotationGroupFor(el),
-    });
-    textElRefs.push(el);
+  for (const scope of scopes) {
+    const walker = document.createTreeWalker(scope, NodeFilter.SHOW_ELEMENT);
+    let current = walker.nextNode();
+    while (current) {
+      const el = current;
+      current = walker.nextNode();
+      if (isAncestorHidden(el) || !isRendered(el)) continue;
+      const ownText = Array.from(el.childNodes)
+        .filter((n) => n.nodeType === Node.TEXT_NODE)
+        .map((n) => n.textContent ?? '')
+        .join('')
+        .trim();
+      if (!ownText) continue;
+      const rect = rectOf(el);
+      if (isVisuallyHiddenRect(rect)) continue;
+      textEls.push({
+        selector: describe(el),
+        rect,
+        offsetWidth: el.offsetWidth,
+        offsetHeight: el.offsetHeight,
+        rotationGroup: rotationGroupFor(el),
+      });
+      textElRefs.push(el);
+    }
   }
 
   const relatedPairs = [];
@@ -368,11 +458,13 @@ function collectSnapshot() {
   // interactive SVG cells (Distinctions' `<path role="button">`), which
   // `querySelectorAll('[role="button"]')` already covers.
   const interactiveEls = [];
-  for (const el of Array.from(scope.querySelectorAll('a, button, [role="button"], input, select, textarea'))) {
-    if (isAncestorHidden(el) || !isRendered(el)) continue;
-    const rect = rectOf(el);
-    if (isVisuallyHiddenRect(rect)) continue;
-    interactiveEls.push({ selector: describe(el), rect });
+  for (const scope of scopes) {
+    for (const el of Array.from(scope.querySelectorAll('a, button, [role="button"], input, select, textarea'))) {
+      if (isAncestorHidden(el) || !isRendered(el)) continue;
+      const rect = rectOf(el);
+      if (isVisuallyHiddenRect(rect)) continue;
+      interactiveEls.push({ selector: describe(el), rect });
+    }
   }
 
   // Clipped-text candidates: reuse the same own-text leaf elements as the
@@ -405,40 +497,41 @@ function collectSnapshot() {
   return { textEls, relatedPairs, rotationGroups, interactiveEls, clipCandidates };
 }
 
-// Lightweight overflow-only snapshot for pass 2 (letterbox sweep) -- no DOM
-// walk, just the signals that matter for "does the letterboxed stage ever
-// leak a scrollbar".
+// Lightweight overflow-only snapshot for pass 2 (horizontal-containment
+// sweep) -- no DOM walk, just the signals that matter for "does the scaled
+// stage ever leak horizontally".
 //
 // NOTE on why this does NOT compare `.stage-viewport`'s own
 // scrollWidth/clientWidth (unlike the document-level check below): `.stage`
-// is a fixed-size 1440x900 flex child scaled down via
-// `transform: scale()` (src/shell/useStageScale.ts). Per the CSS Overflow
-// spec, `scrollWidth` reports the scrollable overflow region computed from
-// the element's PRE-transform layout box, not its scaled-down painted
-// size -- so at any viewport narrower than 1440px, `.stage-viewport`'s
-// scrollWidth genuinely exceeds its clientWidth even though nothing is
-// visually cut off or scrollable (`.stage-viewport` is `overflow:hidden`,
-// not `scroll`/`auto`, so that computed-but-clipped region never produces
-// an actual scrollbar or user-visible overflow). Comparing those two
-// numbers here would be a guaranteed false positive at every non-1440
-// width, not a real regression signal -- confirmed by first shipping that
-// version of this check and observing findings at every route/width
-// combination, with the document-level check (the one that DOES reflect
-// something a user could ever see or scroll) clean throughout. What
-// actually matters -- that the letterbox never becomes visible/scrollable
-// -- is: (1) the document itself never overflows (checked below), and (2)
-// `.stage-viewport` still declares `overflow: hidden` (a static regression
-// guard against someone loosening that rule in shell.css and turning the
-// pre-transform overflow region above into a real, user-visible scrollbar).
+// is a fixed 1440px-wide block scaled down via `transform: scale()`
+// (src/shell/useStageScale.ts), and an element's scrollWidth reports its
+// PRE-transform layout box, so at any viewport narrower than 1440px
+// `.stage-viewport`'s scrollWidth exceeds its clientWidth even though nothing
+// is visually cut off or scrollable. Comparing those two numbers here would be
+// a guaranteed false positive at every non-1440 width, not a real regression
+// signal. What actually matters is: (1) the document itself never overflows
+// horizontally -- the real "no horizontal scroll" invariant; (2) the PAINTED
+// stage (its transformed bounding box, i.e. what the user sees) fits inside the
+// viewport width -- needed because `.stage-viewport` clips (`overflow-x: clip`),
+// so a broken scale factor would be hidden from the document's scrollWidth and
+// would silently cut content off instead; and (3) `.stage-viewport` still
+// declares the overflow contract, a STATIC guard pinning the shipped 7.1 rule
+// (see `meetsStageViewportOverflowContract`). Measured: removing the clip does
+// not make the page scroll horizontally today (Chromium counts the transformed
+// box's scaled extent), so (3) is defense in depth against a future wide
+// non-transformed child, not proof of a live leak.
 function collectOverflowSnapshot() {
   const stageViewport = document.querySelector('.stage-viewport');
   const stageViewportStyle = stageViewport ? getComputedStyle(stageViewport) : null;
+  const stage = document.querySelector('.stage');
   return {
     documentScrollWidth: document.documentElement.scrollWidth,
     documentClientWidth: document.documentElement.clientWidth,
     stageViewportExists: !!stageViewport,
     stageViewportOverflowX: stageViewportStyle?.overflowX ?? null,
     stageViewportOverflowY: stageViewportStyle?.overflowY ?? null,
+    stageExists: !!stage,
+    stagePaintedRight: stage ? stage.getBoundingClientRect().right : null,
   };
 }
 
@@ -458,9 +551,9 @@ function comparableRects(a, b, rotationGroups) {
   ];
 }
 
-function runContentChecks(route, snapshot) {
+function runContentChecks(hash, snapshot) {
   const results = [];
-  const at = (message) => `[${route} @ ${STAGE_WIDTH}x${STAGE_HEIGHT} (native)] ${message}`;
+  const at = (message) => `[${hash} @ ${STAGE_WIDTH}x${STAGE_HEIGHT} (native)] ${message}`;
 
   const relatedPairKeys = new Set((snapshot.relatedPairs ?? []).map(([i, j]) => `${i}-${j}`));
   for (let i = 0; i < snapshot.textEls.length; i++) {
@@ -499,12 +592,19 @@ function runContentChecks(route, snapshot) {
   return results;
 }
 
-function runOverflowChecks(route, width, snapshot) {
+function runOverflowChecks(hash, width, snapshot) {
   const results = [];
-  const at = (message) => `[${route} @ ${width}px] ${message}`;
+  const at = (message) => `[${hash} @ ${width}px] ${message}`;
 
-  const { documentScrollWidth, documentClientWidth, stageViewportExists, stageViewportOverflowX, stageViewportOverflowY } =
-    snapshot;
+  const {
+    documentScrollWidth,
+    documentClientWidth,
+    stageViewportExists,
+    stageViewportOverflowX,
+    stageViewportOverflowY,
+    stageExists,
+    stagePaintedRight,
+  } = snapshot;
   if (hasHorizontalOverflow(documentScrollWidth, documentClientWidth)) {
     results.push({
       type: 'horizontal-scroll',
@@ -513,13 +613,24 @@ function runOverflowChecks(route, width, snapshot) {
   }
   if (!stageViewportExists) {
     results.push({ type: 'horizontal-scroll', message: at('.stage-viewport not found') });
-  } else if (stageViewportOverflowX !== 'hidden' || stageViewportOverflowY !== 'hidden') {
+  } else if (!meetsStageViewportOverflowContract(stageViewportOverflowX, stageViewportOverflowY)) {
     results.push({
       type: 'horizontal-scroll',
       message: at(
-        `.stage-viewport overflow is "${stageViewportOverflowX}/${stageViewportOverflowY}", not "hidden/hidden" -- ` +
-          `the letterboxed stage's pre-transform 1440x900 layout box (src/shell/useStageScale.ts) would leak a real, ` +
-          `user-visible scrollbar at this width without that rule (see src/shell/shell.css .stage-viewport)`,
+        `.stage-viewport overflow is "${stageViewportOverflowX}/${stageViewportOverflowY}", expected "clip/visible" (or "clip/clip") -- ` +
+          `the shipped contract (src/shell/shell.css .stage-viewport, task 7.1): clip horizontally, and never become a scroll ` +
+          `container on y (see meetsStageViewportOverflowContract in scripts/audit-checks.mjs; a static guard, not a measured leak)`,
+      ),
+    });
+  }
+  if (!stageExists) {
+    results.push({ type: 'horizontal-scroll', message: at('.stage not found') });
+  } else if (hasHorizontalOverflow(stagePaintedRight, documentClientWidth)) {
+    results.push({
+      type: 'horizontal-scroll',
+      message: at(
+        `painted .stage right edge ${Math.round(stagePaintedRight)}px exceeds the viewport width ${documentClientWidth}px -- ` +
+          `the width-derived stage scale is not fitting the stage (the clipped wrapper would hide the overflow)`,
       ),
     });
   }

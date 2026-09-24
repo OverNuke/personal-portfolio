@@ -12,7 +12,8 @@
 // rather than importing across page folders; the two copies' arm-aim/arrow
 // targets differ (this one points at whichever certification cell has
 // hover focus, Projects' points at whichever project card does).
-import { rnd, smooth, blink } from './strokeMath';
+import { perturbPoints, smooth, blink } from './strokeMath';
+import { DESIGN_HEIGHT, ambientY } from './voronoi';
 import type { CellGeometry } from './voronoi';
 
 export const GUY_BODY: number[][] = [
@@ -54,12 +55,18 @@ export const SPARK: number[][] = [
   [-5, -6],
 ];
 /** `[cx, cy, phaseSeed]` for the 3 drifting spore rings (template.html line
- *  759). */
+ *  759). `cy` is a design-space y authored against `DESIGN_HEIGHT` (900) --
+ *  `buildDoodleStrokes` re-anchors it to the section's real height via
+ *  `ambientY`, same as the mascot's resting y (`GUY_DESIGN_Y`). */
 const SPORES: [number, number, number][] = [
   [1185, 640, 0],
   [255, 300, 2.1],
   [830, 268, 4.3],
 ];
+
+/** The mascot's resting y in the 900-tall design space (template.html: `gy`
+ *  = 838 before the idle-sway offset). */
+const GUY_DESIGN_Y = 838;
 
 export interface DoodlePath {
   id: string;
@@ -103,6 +110,14 @@ export interface DoodleParams {
   /** This frame's cell geometry (for the arrow's target point + the
    *  title cell's spark anchor). */
   cells: CellGeometry[];
+  /** The section's real rendered height in px (design-space 1440-wide
+   *  coordinate frame, NOT the Shell-scaled size). The mascot's resting y and
+   *  the spores' base y are free-floating ambient positions, so they
+   *  re-anchor proportionally (`ambientY`); everything cell-derived (arrow,
+   *  title spark) already follows the `cells` array. Defaults to
+   *  `DESIGN_HEIGHT`, which reproduces the shipped 900-tall output
+   *  bit-for-bit. */
+  height?: number;
   /** Resolved doodle ink color -- `#e0452b` per the app-shell override
    *  (docs/01/docs/02), not the standalone default `#2b39c7`. */
   color: string;
@@ -114,23 +129,27 @@ export interface DoodleParams {
  *  drifting spore rings. Every id in `DOODLE_PATH_IDS` is always present
  *  (empty `d` when a part is inactive) so the caller's SVG path pool never
  *  needs to add/remove nodes across frames. */
-export function buildDoodleStrokes({ t, jitterOn, hoverValues, cells, color }: DoodleParams): DoodlePath[] {
+export function buildDoodleStrokes({
+  t,
+  jitterOn,
+  hoverValues,
+  cells,
+  color,
+  height = DESIGN_HEIGHT,
+}: DoodleParams): DoodlePath[] {
   const B = color;
   const f = jitterOn ? Math.floor(t * 7.5) : 0;
   const out: DoodlePath[] = [];
 
   const at = (pts: number[][], ox: number, oy: number, seed: number, amp: number, sc = 1): number[][] =>
-    pts.map((p, i) => [
-      ox + p[0] * sc + (jitterOn ? rnd(i, f, seed) * amp : 0),
-      oy + p[1] * sc + (jitterOn ? rnd(i + 41, f, seed) * amp : 0),
-    ]);
+    perturbPoints(pts, ox, oy, seed, amp, jitterOn ? f : null, sc);
 
   const push = (id: string, d: string, fill: string, w: number) => {
     out.push({ id, d: d || '', fill: fill || 'none', stroke: B, w: w || 3.4 });
   };
 
   const gx = 470;
-  const gy = 838 + (jitterOn ? Math.sin(t * 1.7) * 4 : 0);
+  const gy = ambientY(GUY_DESIGN_Y, height) + (jitterOn ? Math.sin(t * 1.7) * 4 : 0);
   push('ear-l', smooth(at(GUY_EAR_L, gx, gy, 2, 1.1), true), B, 2.6);
   push('ear-r', smooth(at(GUY_EAR_R, gx, gy, 3, 1.1), true), B, 2.6);
   push('body', smooth(at(GUY_BODY, gx, gy, 1, 1.6), true), B, 3.2);
@@ -235,7 +254,7 @@ export function buildDoodleStrokes({ t, jitterOn, hoverValues, cells, color }: D
 
   SPORES.forEach(([sx, sy, seed], i) => {
     const cx = sx + (jitterOn ? Math.cos(t * 0.28 + seed) * 34 : 0);
-    const cy = sy + (jitterOn ? Math.sin(t * 0.23 + seed) * 26 : 0);
+    const cy = ambientY(sy, height) + (jitterOn ? Math.sin(t * 0.23 + seed) * 26 : 0);
     const ring: number[][] = [];
     for (let a2 = 0; a2 < 9; a2++) {
       const th = (a2 / 9) * Math.PI * 2;

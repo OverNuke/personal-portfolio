@@ -11,7 +11,7 @@ import './contact/contact.css';
 // Phase 7 stub as-is.
 function Contact() {
   return (
-    <main data-testid="screen-contact" className="contact-screen">
+    <div data-testid="screen-contact" className="contact-screen">
       {/* Background photo + gradients + dot grid -- fully decorative, one
           aria-hidden subtree per docs/05_ACCESSIBILITY.MD. */}
       <div className="contact-bg" aria-hidden="true">
@@ -42,7 +42,7 @@ function Contact() {
       <div className="contact-footer-rule" aria-hidden="true">
         <span className="contact-rule" />
       </div>
-    </main>
+    </div>
   );
 }
 

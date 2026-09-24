@@ -66,6 +66,15 @@ evidence Distinctions is supposed to be presenting.
 
 ## Why the fixed 1440×900 stage
 
+> **Updated 2026-09-23.** The argument below still holds for the fixed
+> 1440px *width*: one committed design width, no breakpoints, no reflow. What
+> changed is the stage's shape — it is now one continuously scrollable stack
+> of five 1440-wide sections with a 900px design floor each, scaled by
+> viewport width alone (`00_PROJECT_VISION.MD`'s dated decision), and
+> "letterboxed everywhere else" no longer describes it (there are no bars; the
+> stage fills the width and the page scrolls). Read "the 1440×900 stage" below
+> as "the 1440px-wide, 900px-floor section". The reasoning is unedited.
+
 This isn't a fluid marketing site and it isn't trying to be. Committing to
 one exact canvas size, rendered at that size and letterboxed everywhere else,
 is a bet that a small number of screens built with real depth beats a

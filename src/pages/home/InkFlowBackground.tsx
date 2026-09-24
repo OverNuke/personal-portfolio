@@ -43,13 +43,32 @@ const LIGHT_RINGS: RingSpec[] = [
   { left: '28%', top: '74%', width: '30%', height: '34%', animation: 'ifA', durationMultiplier: 24, shape: 'ellipse 58% 52%', dotRadius: 1.4, maskRadius: '54%' },
 ];
 
+// Design-time stage the ring geometry above was hand-tuned against. Width is a
+// fixed 1440px letterbox in the continuous-scroll layout; height is fluid
+// (spec: continuous-scroll-layout). `width` and `height` percentages are
+// independent, so at a container taller than 1440x900 the old "height: N%"
+// stretched every swirl vertically (verified by screenshot at 1400px). Each
+// ring's height is therefore a fixed px length -- exactly what the decoded
+// source's `height%` resolves to at 1440x900 -- so it no longer tracks the
+// container's height: identical at 1440x900, proportionate at every other
+// height. (`aspect-ratio` was tried first and rounds to 467.98px instead of
+// 468px -- a sub-pixel raster drift at the shipped size.)
+// `top`/`left` stay percentages of the container so the swirls still spread
+// across the full section instead of clustering in the top 900px.
+const DESIGN_STAGE_HEIGHT = 900;
+
+/** A ring's `height%`, resolved against the 900px design stage and frozen as px. */
+function ringHeight(ring: RingSpec): string {
+  return `${(parseFloat(ring.height) / 100) * DESIGN_STAGE_HEIGHT}px`;
+}
+
 function ringStyle(ring: RingSpec, dotColor: string): CSSProperties {
   return {
     position: 'absolute',
     left: ring.left,
     top: ring.top,
     width: ring.width,
-    height: ring.height,
+    height: ringHeight(ring),
     animationName: ring.animation,
     animationDuration: `calc(var(--if-spd, 1) * ${ring.durationMultiplier}s)`,
     animationTimingFunction: 'ease-in-out',
@@ -95,9 +114,12 @@ interface InkFlowBackgroundProps {
  * `#0e0f0b` -- that shell background is fully covered by this layer and
  * never actually composites under Home's text (docs/02's dated correction).
  *
- * `ifWarp`/`ifWarpSoft` filter ids are scoped per-instance via `useId()`:
- * the REFORM/ENTER crossfade can briefly mount two screen layers at once,
- * and unscoped ids would collide.
+ * `ifWarp`/`ifWarpSoft` filter ids are scoped per-instance via `useId()`
+ * so two copies of this component could never collide on the same SVG
+ * filter ids. (This used to be needed because the REFORM/ENTER crossfade
+ * could briefly mount two screen layers at once; that crossfade is gone --
+ * docs/14 -- and all five screens are now mounted together, but the scoping
+ * is kept as a cheap safeguard.)
  *
  * Fully decorative (docs/05): `aria-hidden`, never a tab stop. Home's real
  * text (wordmark/toggle/nav list) lives entirely outside this component, at

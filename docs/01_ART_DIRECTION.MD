@@ -117,6 +117,33 @@ from the cursor visibly participate less rather than not at all.
   All of these doodle strokes are deterministically noise-perturbed per frame
   (a seeded pseudo-random function, not `Math.random()`) so they "boil"
   slightly like a hand redrawing the line, rather than looking vector-static.
+  **Added 2026-09-23 (`continuous-scroll-and-doodles`) — the molecular /
+  health doodle set on Distinctions.** Beside the crayon mascot, Distinctions
+  carries five quiet single-stroke line drawings: a **DNA helix**, a
+  **flask**, a **molecule** (a hexagon ring with two small atom loops), a
+  **pill capsule** (drawn tilted) and a **microscope**. They are code, not
+  image assets: each is a literal point array in
+  `src/pages/distinctions/molecularDoodles.ts`, following the exact
+  `GUY_BODY`/`GUY_ARM` convention of `doodleStrokes.ts` — ONE continuous pen
+  stroke per doodle (a single ordered point list drawn without lifting the
+  pen, retracing a line where a shape needs a branch), smoothed through the
+  shared `strokeMath.ts` `smooth()`, and boiled with the same seeded noise as
+  the mascot (`perturbPoints`, new noise frame every 1/7.5 s, amplitude
+  1.3px), at the mascot's open-stroke weight (3.2px) in the doodle ink
+  `#e0452b` — so the line quality reads as the same hand. They are deliberately
+  *quiet* (the mascot and spores stay the focal doodles): all five sit in the
+  corridor between the first and second rows of certificate labels
+  (roughly y 340–420 in the 900-tall design space, left to right: pill,
+  microscope, DNA, then flask and molecule on the right), the one band with no
+  certificate label at any tested height, so they never cover a label. Their
+  resting y is authored in the 900px design space and re-anchored to the real
+  section height with `ambientY`, the same rule the mascot and spores follow;
+  shape sizes stay fixed px. Per-frame path data comes from
+  `doodleFrame.ts`'s single `buildAllDoodleStrokes` (mascot + spores +
+  molecular set, one shared clock, no second animation loop) and is written
+  into a pre-rendered pool of `<path>`s by `DoodleLayer.tsx`. All of it is
+  fully decorative and `aria-hidden` — the worked example is in
+  `05_ACCESSIBILITY.MD`.
 - **Corner-bracket / reticle motif.** Contact's five cards each carry four
   small L-shaped corner brackets (`border-left`+`border-top` etc. on
   absolutely-positioned 15×15px spans) framing the card like a

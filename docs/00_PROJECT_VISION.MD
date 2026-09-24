@@ -7,27 +7,77 @@
 
 ## What this is
 
-This portfolio is not a scrolling website. It is a single fixed-size **stage**
-(1440×900px) that shows exactly one of five screens at a time — Home, Profile,
-Distinctions, Projects, Contact — switched by a floating pill-nav (top-left)
-or, on Home, by arrow keys. There is no page scroll within a screen; each
-screen is a self-contained composition designed to fill that exact rectangle,
-the way a gallery piece is designed for one wall, not a scrolling feed.
+> **Updated 2026-09-23 (`continuous-scroll-and-doodles`, spec
+> `project-vision` / "Stage Scroll Model").** This section previously opened
+> with "This portfolio is not a scrolling website. It is a single fixed-size
+> stage (1440×900px) that shows exactly one of five screens at a time … There
+> is no page scroll within a screen." **SUPERSEDED** — the shipped site is a
+> scrolling page. Reason: the discrete one-screen-at-a-time stage was replaced
+> by one continuous scroll of all five screens (the pill nav now scrolls
+> instead of swapping screens). Each screen is still a composition designed
+> for a fixed 1440px-wide rectangle; what changed is that the five rectangles
+> are now stacked, not swapped.
 
-Screen-switching today is local component state (`state.screen` in the
-decoded shell, `docs/_decoded/index/template.html`), not URL routing — how
-that reconciles with URL-addressable routes is `03_UX_ARCHITECTURE.MD`'s call
-to make, not this doc's.
+This portfolio is **one continuously scrollable page of five stacked
+sections** — Home, Profile, Distinctions, Projects, Contact — all mounted at
+once, in that order, at a **fixed 1440px design width**. Each section has a
+**900px design floor** (`min-height: 900px` on every screen root — see the
+height model below). The whole stack is scaled uniformly by viewport width
+alone, and the page scrolls. A floating pill-nav (top-left, `position:
+fixed`) scrolls to a section; on Home, arrow keys move a simulated highlight
+along Home's numbered list (see `03_UX_ARCHITECTURE.MD`). Each section is
+still a self-contained composition, designed the way a gallery piece is
+designed for one wall — the visitor just walks the gallery by scrolling
+rather than being teleported between rooms.
 
-## The fixed 1440×900 stage is a decision, not an oversight
+There is no router and no per-screen path. Sections are addressed by URL
+hash (`#home`, `#profile`, `#distinctions`, `#projects`, `#contact`); the
+navigation, deep-link and focus model is owned by `03_UX_ARCHITECTURE.MD`.
+
+## The fixed 1440px design width is a decision, not an oversight
 
 Every decoded screen hard-codes `width:1440px;height:900px` (or
 `aspect-ratio:1440/900` with a scale transform) and none of the five templates
-contain a media query. This is deliberate: the site is built and will ship as
-a **letterboxed / scaled fixed-size stage** on smaller viewports for this
-rebuild. A fully responsive redesign is explicitly **out of scope** for this
-pass — don't silently "fix" this into a fluid layout later; if responsiveness
-becomes a goal, it's a new decision that needs its own doc update here first.
+contain a media query. This is deliberate, and it still holds for **width**:
+the site is built and ships at a fixed 1440px design width that is scaled
+uniformly (`documentElement.clientWidth / 1440`, uncapped — a window wider
+than 1440px scales the stage up, a narrower one scales it down) so the stage
+always fills the viewport width. A fully responsive redesign is still
+explicitly **out of scope**: there are no breakpoints, no reflow, no
+mobile layout. Don't silently "fix" this into a fluid layout later; if
+responsiveness becomes a goal, it's a new decision that needs its own doc
+update here first.
+
+> **Decision recorded 2026-09-23 (user-approved; this is the "own doc update"
+> the paragraph above requires for the height axis).** What changed and what
+> did not:
+>
+> - **Unchanged:** the 1440px design width, the single uniform scalar (equal
+>   on both axes — `useMagneticDock`'s pointer un-projection depends on it),
+>   no breakpoints.
+> - **Changed — height model:** the original wording was a fixed 900px-tall
+>   stage. It is now **fluid-capable with a 900px design floor**. Every screen
+>   root carries an explicit `min-height: 900px` (a floor: never `height`,
+>   never below 900), because every screen root's children are absolutely
+>   positioned (natural height would be 0) and real content does not fit
+>   below 900 (Projects' cards reach y=868). A section MAY grow above 900 only
+>   if it gains in-flow content; the height-dependent effects (Voronoi cell
+>   geometry, Contact dock, Profile columns, Projects glyph/mascot, Home ink
+>   rings, the Distinctions doodles) were built and tested at 700/900/1400 so
+>   they stay correct at any height ≥ 900, but **no section exceeds 900 today**.
+> - **Heights below 900 are unsupported** (Projects' cards would be clipped
+>   and its mascot would land inside the card band). The floor exists to make
+>   that unreachable.
+> - **Scale is width-only.** Viewport height never enters the scale, so a
+>   short window scrolls instead of shrinking the stage.
+> - **"Letterboxed" is no longer accurate.** The earlier "letterboxed / scaled
+>   fixed-size stage" wording described a stage centered in a taller-or-wider
+>   viewport with bars; there are no side or bottom bars now — the stage
+>   scales to fill the width and the page scrolls vertically. The document
+>   ends exactly where Contact ends (no trailing spacer).
+> - **Known consequence (accepted):** on windows taller than a scaled section
+>   (aspect ratio below 1.6:1) the last section, Contact, cannot reach the
+>   viewport top — see `03_UX_ARCHITECTURE.MD`.
 
 ## The five screens
 
@@ -49,7 +99,10 @@ becomes a goal, it's a new decision that needs its own doc update here first.
 - **Distinctions** — a hand-rolled weighted-Voronoi ("power diagram") colony
   of paper cells, each holding one real certification; cell size encodes
   weight/importance, not a fixed grid. Clicking a cell opens a lightbox with
-  the real certificate scan.
+  the real certificate scan. **Added 2026-09-23:** a quiet row of five
+  hand-drawn molecular/health doodles (DNA helix, flask, molecule, pill
+  capsule, microscope) sits between the label rows alongside the crayon
+  mascot — see `01_ART_DIRECTION.MD`.
 - **Projects** — three polaroid-style project photo cards (circular, rotated,
   blob-morphing on hover) on a paper-textured background, under a
   hand-lettered "PROJECTS" title built from single-stroke SVG glyph paths

@@ -70,7 +70,7 @@ This project's "architecture" lives in numbered spec docs under `docs/`, not in 
 | `00_PROJECT_VISION.MD` | Concept, the 5-screen model, the fixed 1440×900 non-responsive decision |
 | `01_ART_DIRECTION.MD` | Per-screen visual language (dark identity hero, canvas ink-bloom + goo chambers, Voronoi paper cells, polaroid + hand-lettering, magnetic dock) |
 | `02_DESIGN_SYSTEM.MD` | **Per-screen** color palettes (not one flat palette) with measured contrast ratios, typography (5 real font families), corrected contrast pairings |
-| `03_UX_ARCHITECTURE.MD` | Real nav model (pill nav + `react-router-dom` routes + Home arrow-key focus cycling), the 5-route table, where `lang` state lives |
+| `03_UX_ARCHITECTURE.MD` | Real nav model (pill-nav scroll-to-section + URL-hash deep links `#home`…`#contact`, no router; Home arrow-key focus cycling scoped to the active section), the 5-section hash table, where `lang` state lives |
 | `04_COMPONENT_RULES.MD` | Component contracts per custom effect; the 3-way effect-placement rule (component-internal ref+useEffect vs. custom hook vs. pure computation module) |
 | `05_ACCESSIBILITY.MD` | WCAG 2.2 AA contrast pairs, keyboard mapping, decorative-animation pattern with a worked example per new effect |
 | `06_FRONTEND_STACK.MD` | React + Vite + TS + Tailwind; **no Framer Motion** — motion is CSS custom properties + native canvas/SVG/Web Animations |

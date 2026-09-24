@@ -171,7 +171,11 @@ This is the single most important nuance to get right on port, per
 
 A `window`-level `keydown` listener, attached in `componentDidMount` and
 removed in `componentWillUnmount` (i.e. active only while Home is the
-mounted screen):
+mounted screen). **Updated 2026-09-23:** Home is now always mounted, so the
+port (`useNavFocusCycle(itemCount, enabled)`) attaches the listener only
+while Home is the **active section** (`enabled = activeSection === 'home'`);
+while it is, ArrowUp/ArrowDown are `preventDefault()`ed and do not scroll
+the page (a known, disclosed limitation — `05_ACCESSIBILITY.MD`):
 
 | Key | Effect |
 |---|---|
@@ -265,23 +269,36 @@ on this layer rendering at all — legibility never depends on its state.
 > removing anything, so the frozen composition still looks correct.
 > `ifWarp`/`ifWarpSoft` filter ids are scoped per-instance with `useId()`
 > since the REFORM/ENTER crossfade can briefly mount two screen layers (and
-> two copies of this component) at once. `inkMass` and `paperLift` are
+> two copies of this component) at once. **(Updated 2026-09-23: that
+> crossfade is gone — `14_REFORM_MOTION.md`. The scoping is still needed: all
+> five screens are now mounted simultaneously, and Home is one of five
+> always-live effect trees; ids stay per-instance via `useId()` regardless.)** `inkMass` and `paperLift` are
 > exposed as optional props (defaults `#0c0d0a` and `1`, matching the
 > decoded component) but not wired at the Home call site, matching the
 > decoded `dc-import` exactly.
 
-## Route entry — focus and announcement
+## Section entry — focus and announcement
+
+> **Rewritten 2026-09-23.** This section was "Route entry": "when a route
+> change lands on Home (`/`), focus moves immediately to Home's primary
+> heading … independent of whether the REFORM/ENTER crossfade is running".
+> **SUPERSEDED** — there are no routes and no crossfade
+> (`03_UX_ARCHITECTURE.MD`, `14_REFORM_MOTION.md`), and Home is mounted
+> permanently, not "on entry".
 
 Per `03_UX_ARCHITECTURE.MD` (new architecture decided in that doc, not
-recovered from the mockup) and `14_REFORM_MOTION.md` (sequencing): when a
-route change lands on Home (`/`), focus moves immediately to Home's primary
-heading (the `<h1>Kevin.</h1>` wordmark — give it a stable `tabIndex={-1}`
-and call `.focus()` on mount) independent of whether the REFORM/ENTER
-crossfade is running, and the shared `aria-live="polite"` region announces
-"Home." at the same moment. This is the same rule every other screen follows
-— Home has no special-cased entry behavior beyond owning the arrow-key
-listener described above, which attaches on mount alongside the focus move,
-not instead of it.
+recovered from the mockup): when Home is reached by **explicit activation**
+(the pill's Home button, or `#home` via a page-load deep link, Back/Forward,
+or a hand-edited hash), the shell scrolls Home to the viewport top, focus
+moves to Home's primary heading (the `<h1>Kevin.</h1>` wordmark, which keeps
+its stable `tabIndex={-1}` and carries `data-screen-heading`; the shell
+focuses it with `preventScroll`), and the shared `aria-live="polite"` region
+announces "Home." in the same tick. Merely *scrolling* onto Home moves
+neither focus nor the announcement, and an ordinary load with no hash does
+neither. This is the same rule every other screen follows — Home has no
+special-cased entry behavior beyond owning the arrow-key listener described
+above, which is now attached only while Home is the active section (below the
+`enabled` scope note in `03_UX_ARCHITECTURE.MD`), not "on mount".
 
 ## What this doc is not
 
@@ -291,4 +308,5 @@ design or cross-screen behavior in general (`03_UX_ARCHITECTURE.MD` /
 `01_ART_DIRECTION.MD`, referenced here only where Home-specific detail is
 needed), the corrected color values themselves (`02_DESIGN_SYSTEM.MD`), the
 decorative-animation accessibility contract (`05_ACCESSIBILITY.MD`), or the
-route-transition crossfade mechanics (`14_REFORM_MOTION.md`).
+pill's transition mechanics (`14_REFORM_MOTION.md`; the route crossfade this
+line used to reference is retired).

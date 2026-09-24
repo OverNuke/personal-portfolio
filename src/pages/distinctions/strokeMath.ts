@@ -17,6 +17,30 @@ export function rnd(a: number, b: number, c: number): number {
   return (s - Math.floor(s)) * 2 - 1;
 }
 
+/** Places a point array in the world and boils it: every point is scaled by
+ *  `sc`, translated by (`ox`, `oy`), then nudged by up to `amp` px per axis
+ *  with the SAME seeded noise the crayon mascot uses (`rnd(i, frame, seed)`
+ *  for x, `rnd(i + 41, frame, seed)` for y). `frame` is the integer boil
+ *  frame (`Math.floor(t * 7.5)`); pass `null` for the frozen, noise-free
+ *  pose under prefers-reduced-motion. Extracted from `buildDoodleStrokes`'s
+ *  inline `at()` closure so the molecular doodles reuse the exact mapping
+ *  instead of re-deriving it (spec: "existing strokeMath.ts primitives, not
+ *  a new perturbation algorithm"). */
+export function perturbPoints(
+  pts: number[][],
+  ox: number,
+  oy: number,
+  seed: number,
+  amp: number,
+  frame: number | null,
+  sc = 1,
+): number[][] {
+  return pts.map((p, i) => [
+    ox + p[0] * sc + (frame !== null ? rnd(i, frame, seed) * amp : 0),
+    oy + p[1] * sc + (frame !== null ? rnd(i + 41, frame, seed) * amp : 0),
+  ]);
+}
+
 /** Catmull-Rom-derived smoothing into an SVG path `d` string. `closed`
  *  wraps the last segment back to the first point instead of stopping. */
 export function smooth(pts: number[][], closed: boolean): string {

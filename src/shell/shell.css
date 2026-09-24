@@ -1,37 +1,63 @@
 /*
- * Shell chrome: the letterboxed stage, the persistent pill nav, and the
- * REFORM/ENTER route-change crossfade (docs/00, docs/03, docs/14).
+ * Shell chrome: the continuous-scroll stage and the persistent pill nav
+ * (docs/00, docs/03, docs/14).
+ *
+ * Layout model (spec `continuous-scroll-layout`): the 5 screens are stacked
+ * `.screen-section`s inside one 1440px-wide `.stage` of NATURAL height, so the
+ * document itself scrolls. `useStageScale` (src/shell/useStageScale.ts) writes
+ * two custom properties on `.stage-viewport`:
+ *   --stage-scale   viewport width / 1440 (width only, never height)
+ *   --stage-height  the stage's natural, unscaled height in px
+ * A CSS transform doesn't change layout size, so `.stage-scaler` gives the
+ * document the SCALED size (1440*scale by stage-height*scale) -- no horizontal
+ * scrollbar, no dead space after the last section -- and `.stage` scales
+ * inside it from its top-left corner.
  */
 
 .stage-viewport {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  position: relative;
+  width: 100%;
+  overflow-x: clip;
   background: var(--stage-letterbox-bg, #050505);
+}
+
+.stage-scaler {
+  position: relative;
+  width: calc(1440px * var(--stage-scale, 1));
+  height: calc(var(--stage-height, 4500) * 1px * var(--stage-scale, 1));
+  margin: 0 auto;
 }
 
 .stage {
   position: relative;
+  display: block;
   width: 1440px;
-  height: 900px;
-  flex: none;
-  overflow: hidden;
+  /* No fixed height and no overflow clipping: each section owns its own
+     height (a 900px floor, see the screen roots' min-height) and the stage is
+     just their stack. */
   background: #0a0a0a;
   transform: scale(var(--stage-scale, 1));
-  transform-origin: center center;
+  transform-origin: top left;
 }
 
-/* Persistent pill nav -- exact values verified against
+.screen-section {
+  position: relative;
+}
+
+/* Persistent pill nav. Fixed to the VIEWPORT, so it lives outside `.stage`
+   (a fixed element inside a transformed ancestor is positioned against that
+   ancestor and would scroll away). It keeps the size it had as part of the
+   scaled stage by carrying the same uniform scale from its top-left corner;
+   `left`/`top` are the same 20px, scaled. Exact values verified against
    docs/_decoded/index/template.html line ~544 and docs/02's Fix 2 corrected
    active-state accent (#8b9c56, not the raw #6f7f45 default -- see
    02_DESIGN_SYSTEM.MD's Corrected Contrast Pairings). */
 .pill-nav {
-  position: absolute;
-  left: 20px;
-  top: 20px;
+  position: fixed;
+  left: calc(20px * var(--stage-scale, 1));
+  top: calc(20px * var(--stage-scale, 1));
+  transform: scale(var(--stage-scale, 1));
+  transform-origin: top left;
   z-index: 9000;
   display: flex;
   gap: 6px;
@@ -52,9 +78,20 @@
   text-transform: uppercase;
   background: transparent;
   color: #f3f2ef;
+  /* The active-pill indicator's crossfade -- all that is left of docs/14's
+     REFORM/ENTER motion now that sections no longer mount/unmount: 120ms on
+     the house ease, opacity-free (just the two colors the active state swaps),
+     and purely visual -- it never gates scroll or focus. */
   transition:
-    background 0.2s ease,
-    color 0.2s ease;
+    background 120ms var(--ease-house, cubic-bezier(0.2, 0.85, 0.2, 1)),
+    color 120ms var(--ease-house, cubic-bezier(0.2, 0.85, 0.2, 1));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* docs/14: reduced motion jumps straight to the end state. */
+  .pill-nav__button {
+    transition: none;
+  }
 }
 
 .pill-nav__button[data-active] {
@@ -71,49 +108,6 @@
 .pill-nav__button:focus-visible {
   outline: 2px solid #f3f2ef;
   outline-offset: 2px;
-}
-
-/* REFORM/ENTER crossfade (docs/14) -- opacity only, no transform/scale/blur,
-   no shared element. 120ms exit / 140ms enter, house ease. CSS @keyframes
-   (not a JS/rAF loop) specifically because it's genuinely stopped by the
-   prefers-reduced-motion override below, per docs/06/07's stated reason for
-   preferring CSS wherever an effect doesn't need per-frame pixel control. */
-.screen-layer {
-  position: absolute;
-  inset: 0;
-}
-
-.screen-layer--enter {
-  animation: screen-enter-fade 140ms var(--ease-house, cubic-bezier(0.2, 0.85, 0.2, 1));
-}
-
-.screen-layer--reform {
-  animation: screen-reform-fade 120ms var(--ease-house, cubic-bezier(0.2, 0.85, 0.2, 1)) forwards;
-}
-
-@keyframes screen-enter-fade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes screen-reform-fade {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .screen-layer--enter,
-  .screen-layer--reform {
-    animation: none;
-  }
 }
 
 .sr-only {

@@ -1,6 +1,7 @@
-import { Link } from 'react-router-dom';
 import { routes } from '../routes/registry';
 import { useLang } from '../shell/LangContext';
+import { useSectionNav } from '../shell/SectionNavContext';
+import { sectionHash } from '../shell/sectionHash';
 import InkFlowBackground from './home/InkFlowBackground';
 import { useNavFocusCycle } from './home/useNavFocusCycle';
 import './home/home.css';
@@ -26,16 +27,21 @@ const NAV_ITEMS = routes.filter((route) => route.pageId !== 'home');
 // 554-632 in full -- see docs/11_HANDOFF_HOME.md for the per-value
 // citations and src/pages/home/InkFlowBackground.tsx /
 // useNavFocusCycle.ts for the two extracted effect/interaction pieces.
-// `data-screen-heading` (Shell.tsx's route-change focus target) lives on
+// `data-screen-heading` (the heading Shell.tsx focuses on explicit section activation) lives on
 // the real "Kevin." <h1> -- the only heading on this screen, matching this
 // repo's one-real-heading-per-screen precedent (Profile/Distinctions/
 // Projects/Contact). Home's own arrow-key focus cycling only ever touches
 // `home-nav-item[data-focused]`, a plain data attribute unrelated to
 // `tabIndex`/`document.activeElement`, so it cannot fight Shell's
-// `document.querySelector('[data-screen-heading]').focus()` call on mount.
+// `section.querySelector('[data-screen-heading]')?.focus()` call, which runs
+// on explicit activation of this section (not on mount).
 function Home() {
   const { lang, toggleLang } = useLang();
-  const [focusIndex, setFocusIndex] = useNavFocusCycle(NAV_ITEMS.length);
+  const { activeSection, goToSection } = useSectionNav();
+  // Arrow-key cycling is scoped to Home being the section on screen: Home is
+  // now always mounted, and an ungated listener would swallow the arrow keys
+  // (and native scrolling) on every other section.
+  const [focusIndex, setFocusIndex] = useNavFocusCycle(NAV_ITEMS.length, activeSection === 'home');
 
   // LangContext only exposes a flip (`toggleLang`), matching the shared
   // shell-level state's binary EN/ES model (docs/03). Guarded so clicking
@@ -47,7 +53,7 @@ function Home() {
   }
 
   return (
-    <main data-testid="screen-home" className="home-screen">
+    <div data-testid="screen-home" className="home-screen">
       <InkFlowBackground ink={ACCENT_INK} speed={1.3} ringGap={7} />
 
       <div className="home-content">
@@ -87,9 +93,17 @@ function Home() {
 
         <nav className="home-nav-list" aria-label="Sections">
           {NAV_ITEMS.map((route, index) => (
-            <Link
+            <a
               key={route.pageId}
-              to={route.path}
+              // Real anchor carrying the section's deep-link hash (open in
+              // new tab / copy link land on that section), but activation
+              // scrolls + focuses + announces + pushes the hash through the
+              // shell instead of jumping natively.
+              href={sectionHash(route.pageId)}
+              onClick={(event) => {
+                event.preventDefault();
+                goToSection(route.pageId);
+              }}
               className="home-nav-item"
               data-focused={index === focusIndex || undefined}
               // Hover and arrow-key cycling drive the exact same
@@ -103,11 +117,11 @@ function Home() {
               <span className="home-nav-item__arrow" aria-hidden="true">
                 →
               </span>
-            </Link>
+            </a>
           ))}
         </nav>
       </div>
-    </main>
+    </div>
   );
 }
 

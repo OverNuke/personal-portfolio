@@ -2,8 +2,10 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vitest/config';
 
+import { resolveBase } from './vite.base.ts';
+
 export default defineConfig({
-  base: '/',
+  base: resolveBase(process.env.VITE_BASE),
   plugins: [react(), tailwindcss()],
   test: {
     environment: 'jsdom',

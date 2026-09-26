@@ -115,7 +115,9 @@ fusion metaphor it was built for) — don't apply it generally.
   ease-in-out infinite` — `scale(1)↔scale(1.24)` combined with an organic
   `border-radius` morph (`60% 40% 55% 45%/45% 55% 40% 60%` ↔ `45% 55% 40%
   60%/60% 40% 55% 45%`), i.e. the dot doesn't just pulse in size, its shape
-  breathes too.
+  breathes too. **Updated 2026-09-26:** the badge sits at `top: 20px`
+  (was `92px`) so it clears the first of the five chambers; the animation
+  itself is unchanged.
 
 ### Distinctions
 

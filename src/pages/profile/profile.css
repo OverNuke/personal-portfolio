@@ -1,6 +1,6 @@
 /*
  * Profile screen -- diagonal paper->dark gradient, ink-bloom canvas
- * backdrop, headline/bio, "looking for an opportunity" badge, and the 4
+ * backdrop, headline/bio, "looking for an opportunity" badge, and the 5
  * goo-filter chambers. Every value here is read directly from
  * docs/_decoded/profile-section-v4-standalone/template.html (lines 335-393)
  * unless a comment says otherwise -- see docs/02, docs/04, docs/05, docs/07.
@@ -151,11 +151,15 @@
 }
 
 /* "Looking for an opportunity" -- the pulsing dot is decorative, the label
-   text is real content and stays out of the aria-hidden tree (docs/05). */
+   text is real content and stays out of the aria-hidden tree (docs/05).
+   Updated 2026-09-26: top 92px -> 20px. With 5 chambers (780px, centered in
+   the 900px floor) chamber 1 starts at y=60, so the decoded 92px badge
+   collided with it; 20px leaves ~24px clear (16px to the focus ring) and
+   matches the pill nav's 20px inset. */
 .profile-status {
   position: absolute;
   right: 68px;
-  top: 92px;
+  top: 20px;
   z-index: 24;
   display: flex;
   align-items: center;

@@ -3,14 +3,13 @@
 // Names, meta lines, tags, descriptions, and annotation copy are quoted
 // verbatim from the decoded source -- nothing here is invented.
 //
-// Repository links: the decoded source's own hrefs are `#repo-barbershop`
-// and `#repo-acopiatech` -- placeholder in-page anchors, not real GitHub
-// URLs (verified: no `github.com/...` string appears anywhere in this
-// template). Odoo has no repository link at all -- its group renders a
-// plain "private repository" label instead (line 461). Ported as-is per
-// this repo's established pattern from the Contact build of not fabricating
-// a missing/placeholder destination (src/pages/contact/channels.ts's own
-// comment for WhatsApp/Book-a-call).
+// Repository links: the decoded source's own hrefs were the in-page
+// placeholders `#repo-barbershop` / `#repo-acopiatech`. Updated 2026-09-26:
+// the real repository URLs (both under the owner's `Sinhularity` GitHub
+// account) were migrated from the owner's local metadata file. Odoo has no
+// repository link at all -- it is a private codebase (no public repo), so its
+// group renders a plain "private repository" label instead (line 461); do
+// not invent a URL for it.
 //
 // Polaroid photo: the decoded template has exactly ONE <image-slot> per
 // project (the circular polaroid) -- no second in-card icon/detail image
@@ -104,7 +103,7 @@ export const PROJECTS: ProjectData[] = [
     tagsLeft: 76,
     tagsTop: 772,
     repo: {
-      href: '#repo-barbershop',
+      href: 'https://github.com/Sinhularity/barbershop',
       left: 76,
       top: 824,
       hoverRadius: '62% 38% 55% 45% / 45% 60% 40% 55%',
@@ -133,7 +132,8 @@ export const PROJECTS: ProjectData[] = [
     eyebrowLabel: 'mobile',
     title: 'Acopiatech',
     titleFontSize: 30,
-    description: 'Mobile app for e-waste donation and collection routing, field-tested on local routes.',
+    description:
+      'Mobile app for e-waste donation and collection routing, field-tested on local routes.',
     descriptionFontSize: 13.5,
     copyLeft: 600,
     copyTop: 470,
@@ -143,7 +143,7 @@ export const PROJECTS: ProjectData[] = [
     tagsTop: 626,
     tagsWidth: 210,
     repo: {
-      href: '#repo-acopiatech',
+      href: 'https://github.com/Sinhularity/acopiatech-app',
       left: 600,
       top: 704,
       hoverRadius: '55% 45% 62% 38% / 40% 55% 45% 60%',
@@ -172,7 +172,8 @@ export const PROJECTS: ProjectData[] = [
     eyebrowLabel: 'module',
     title: 'Odoo Custom Module',
     titleFontSize: 30,
-    description: 'Document management module built for a local company, folded into their existing ERP.',
+    description:
+      'Document management module built for a local company, folded into their existing ERP.',
     descriptionFontSize: 13.5,
     copyLeft: 1108,
     copyTop: 400,

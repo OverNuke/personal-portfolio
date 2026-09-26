@@ -22,3 +22,6 @@ blob-report
 .atl/
 .impeccable/
 docs/_decoded/
+
+# Owner's local-only metadata source (skills/projects/contact values); never committed
+local-metadata/

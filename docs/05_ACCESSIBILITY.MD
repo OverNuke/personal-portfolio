@@ -116,8 +116,12 @@ Two effects, two different accessibility treatments — do not conflate them.
   behind the chamber UI. `aria-hidden="true"`, never a tab stop, carries no
   information — it is atmosphere over the paper→dark gradient, not a status
   signal.
-- **The 4 chambers are real, keyboard-operable UI — not decorative, and must
-  stay out of the `aria-hidden` tree entirely.** Verified against both the
+- **The 5 chambers are real, keyboard-operable UI — not decorative, and must
+  stay out of the `aria-hidden` tree entirely.** (**Updated 2026-09-26:**
+  this said "4 chambers" until the `sync-portfolio-metadata` change added a
+  third chamber, "Tools", and renumbered the last two — the count is now
+  five, each holding at most four dots; the interaction contract below is
+  unchanged and applies to every chamber alike.) Verified against both the
   decoded template's `status` field and the shipped `Chamber.tsx`
   cited in `04_COMPONENT_RULES.MD`: each chamber is
   `role="button" tabIndex={0} aria-pressed={state === 'bonded'}`, with a
@@ -268,10 +272,18 @@ Two effects, two different accessibility treatments — do not conflate them.
 - **The 5 cards are real links, not decorative surfaces, and must be fully
   keyboard-operable independent of the mouse-proximity effect.** Verified:
   all 5 are real `<a href>` elements today (`mailto:ksfgarcia24@gmail.com`,
-  `https://github.com/overnuke`, `https://wa.me/`,
-  `https://linkedin.com/in/keffwontwakeup`, `https://cal.com/` —
-  `docs/_decoded/contact-section-v2-standalone/template.html` lines
-  407–516). `04_COMPONENT_RULES.MD`'s contract additionally requires that
+  `https://github.com/OverNuke`, `https://wa.me/`,
+  `https://www.linkedin.com/in/keffwontwakeup/`, `https://cal.com/` —
+  `src/pages/contact/channels.ts`). **Updated 2026-09-26:** the GitHub and
+  LinkedIn hrefs are now the owner's real profiles; the decoded mockup
+  (`docs/_decoded/contact-section-v2-standalone/template.html` lines
+  407–516) still carries the old lowercase GitHub handle and non-`www`
+  LinkedIn host and is not the source of truth for these two. The
+  WhatsApp (`https://wa.me/`) and Book-a-call (`https://cal.com/`) hrefs are
+  still the mockup's placeholders — they are real, focusable links but
+  don't yet point at a real number or booking page. The visible card text
+  (`@overnuke`, `/keffwontwakeup`) is unchanged.
+  `04_COMPONENT_RULES.MD`'s contract additionally requires that
   *if* a future channel is unavailable, it renders as a real disabled
   `<button>`, never a styled-to-look-disabled link — not something the
   current decoded markup exercises, but the contract to build against.

@@ -50,12 +50,16 @@ independently on one screen. A `<canvas>` (`mix-blend-mode: exclusion`) runs
 a `requestAnimationFrame` particle system of soft irregular "blooms" (7–14
 noise-perturbed lobes per blob, procedurally regenerated) drifting slowly
 across the gradient. Separately, an SVG `<filter>` (`feGaussianBlur` +
-`feColorMatrix`, id `profileGoo`) is applied to four stacked 560×132px
+`feColorMatrix`, id `profileGoo`) is applied to five stacked 560×132px
 "chamber" rows on the right side; each chamber holds 2–4 small circular dots
 (skill tags) that, on hover/focus, animate toward each other under the goo
 filter until they visually fuse into a single blob rendering as one italic
 serif word (e.g. three language dots → "Anywhere"). This is a metaphor made
-literal: separate skills merging into one identity trait.
+literal: separate skills merging into one identity trait. (**Updated
+2026-09-26:** "four" until the `sync-portfolio-metadata` change added a
+third chamber, "Tools" (HTML, CSS, Figma, VS Code); the stack is now 5×132px
++ 4×30px gaps = 780px, inside the 900px section floor, and the "Looking for
+an opportunity" badge moved up to `top: 20px` to clear the first chamber.)
 
 **Distinctions — weighted-Voronoi paper cells.** Rather than a grid, cell
 boundaries are computed as an *additively-weighted Voronoi diagram* (a "power

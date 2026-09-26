@@ -94,8 +94,10 @@ update here first.
 - **Profile** — the hinge screen. A canvas-driven generative "ink bloom"
   animation blended with `mix-blend-mode: exclusion` over a diagonal gradient
   that runs from warm paper (`#f6f3e9`) to near-black (`#0a0a09`) left to
-  right. Four SVG goo-filter "chambers" merge scattered skill-tag dots into a
-  single fused word on hover/click.
+  right. Five SVG goo-filter "chambers" merge scattered skill-tag dots into a
+  single fused word on hover/click. (**Updated 2026-09-26:** "Four" until the
+  `sync-portfolio-metadata` change added a third chamber, "Tools", and
+  synced the skill dots with the owner's real skill list.)
 - **Distinctions** — a hand-rolled weighted-Voronoi ("power diagram") colony
   of paper cells, each holding one real certification; cell size encodes
   weight/importance, not a fixed grid. Clicking a cell opens a lightbox with

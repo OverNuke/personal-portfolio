@@ -136,6 +136,58 @@ test.describe('height-fluid effects', () => {
     }
   });
 
+  /** Chamber boxes, the status badge and the chamber labels in the Profile section's unscaled layout px. */
+  function measureProfileChambers(page: Page) {
+    return page.evaluate(() => {
+      const screenRect = document.querySelector<HTMLElement>('.profile-screen')!.getBoundingClientRect();
+      const scale = screenRect.width / 1440;
+      const local = (el: Element): LocalRect => {
+        const rect = el.getBoundingClientRect();
+        return {
+          top: (rect.top - screenRect.top) / scale,
+          bottom: (rect.bottom - screenRect.top) / scale,
+          left: (rect.left - screenRect.left) / scale,
+          right: (rect.right - screenRect.left) / scale,
+        };
+      };
+      return {
+        status: local(document.querySelector('.profile-status')!),
+        chambers: Array.from(document.querySelectorAll('.profile-chamber')).map((chamber) => ({
+          box: local(chamber),
+          labels: Array.from(chamber.querySelectorAll('.profile-chamber__label')).map(local),
+        })),
+      };
+    });
+  }
+
+  // `scripts/audit.mjs` skips aria-hidden subtrees (`isAncestorHidden`), so it can never see the chamber
+  // labels or judge the badge against the chambers: this is the only place those clearances are checked.
+  atFloorAndTaller('Profile status badge clears the first chamber and its focus ring', 'profile', async (page) => {
+    const measured = await measureProfileChambers(page);
+    // The focus ring (`.profile-chamber:focus-visible`: 1px outline, `outline-offset: 8px`) sits 8px OUTSIDE the box.
+    const FOCUS_RING = 8;
+
+    expect(measured.chambers).toHaveLength(5);
+    expect(measured.status.top).toBeGreaterThanOrEqual(0);
+    // Chamber 1 is the topmost (column flex): with 5 chambers it starts at y=60 at the floor, and the badge
+    // (top: 20px) must end above its focus ring, not merely above the box.
+    expect(measured.status.bottom).toBeLessThan(measured.chambers[0].box.top - FOCUS_RING);
+  });
+
+  atFloorAndTaller('Profile chamber labels stay inside their own chamber box', 'profile', async (page) => {
+    const measured = await measureProfileChambers(page);
+
+    expect(measured.chambers).toHaveLength(5);
+    measured.chambers.forEach(({ box, labels }, index) => {
+      // Guard against a vacuous pass: every chamber really lists its labels (the block is measurable even
+      // while fused: it only fades to opacity 0, it is never display:none).
+      expect(labels.length, `chamber ${index + 1} labels`).toBeGreaterThan(0);
+      const lastLabel = labels[labels.length - 1];
+      expect(labels[0].top, `chamber ${index + 1} first label top`).toBeGreaterThanOrEqual(box.top - 1);
+      expect(lastLabel.bottom, `chamber ${index + 1} last label bottom`).toBeLessThanOrEqual(box.bottom + 1);
+    });
+  });
+
   atFloorAndTaller('Contact quote stays inside its section and clear of all 5 dock cards at rest', 'contact', async (page) => {
     const measured = await page.evaluate(() => {
       const screenRect = document.querySelector<HTMLElement>('.contact-screen')!.getBoundingClientRect();

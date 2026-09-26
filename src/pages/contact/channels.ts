@@ -1,9 +1,10 @@
 // Real Contact channel content, verified against
 // docs/_decoded/contact-section-v2-standalone/template.html lines 407-516.
-// Email/GitHub/LinkedIn are real, live destinations. WhatsApp and Book-a-call
-// are ported as-is with the mockup's own placeholder hrefs (`wa.me/`,
-// `cal.com/` with no ID) -- do not invent a phone number or booking slug,
-// per this batch's instructions.
+// Email/GitHub/LinkedIn are real, live destinations; the GitHub and LinkedIn
+// hrefs were migrated on 2026-09-26 from the owner's local metadata file
+// (visible handles are unchanged). WhatsApp and Book-a-call remain the
+// mockup's own placeholder hrefs (`wa.me/`, `cal.com/` with no ID) -- do not
+// invent a phone number or booking slug, per this batch's instructions.
 export interface ContactChannel {
   id: string;
   /** Card position label, e.g. "01" -- rendered as "(01)". */
@@ -47,7 +48,7 @@ export const channels: ContactChannel[] = [
     index: '02',
     label: 'GitHub',
     headlineSize: 34,
-    href: 'https://github.com/overnuke',
+    href: 'https://github.com/OverNuke',
     external: true,
     accentBg: true,
     detailLines: ['@overnuke', 'repositories'],
@@ -68,7 +69,7 @@ export const channels: ContactChannel[] = [
     index: '04',
     label: 'LinkedIn',
     headlineSize: 32,
-    href: 'https://linkedin.com/in/keffwontwakeup',
+    href: 'https://www.linkedin.com/in/keffwontwakeup/',
     external: true,
     detailLines: ['/keffwontwakeup', 'network · profile'],
     ctaLabel: 'connect',

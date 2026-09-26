@@ -66,9 +66,20 @@ function ProjectCard({ project, bindFocus }: ProjectCardProps) {
         data-pid={id}
         data-rot={rotation}
         data-lift={lift}
-        style={{ left, top, width: cardWidth, zIndex: cardZIndex, transform: `rotate(${rotation}deg)` }}
+        style={{
+          left,
+          top,
+          width: cardWidth,
+          zIndex: cardZIndex,
+          transform: `rotate(${rotation}deg)`,
+        }}
       >
-        <div className="projects-card__photo" data-mark={id} data-mk="photo" style={{ width: photoSize, height: photoSize }}>
+        <div
+          className="projects-card__photo"
+          data-mark={id}
+          data-mk="photo"
+          style={{ width: photoSize, height: photoSize }}
+        >
           <img src={photo} alt={photoAlt} />
         </div>
         <div className="projects-card__meta">
@@ -104,7 +115,12 @@ function ProjectCard({ project, bindFocus }: ProjectCardProps) {
           <span className="projects-copy__rule" aria-hidden="true" />
           <span>{eyebrowLabel}</span>
         </div>
-        <h3 className="projects-copy__title" data-mark={id} data-mk="title" style={{ fontSize: titleFontSize }}>
+        <h3
+          className="projects-copy__title"
+          data-mark={id}
+          data-mk="title"
+          style={{ fontSize: titleFontSize }}
+        >
           {title}
         </h3>
         <p className="projects-copy__description" style={{ fontSize: descriptionFontSize }}>
@@ -135,6 +151,8 @@ function ProjectCard({ project, bindFocus }: ProjectCardProps) {
           data-rot={0}
           data-lift={5}
           href={repo.href}
+          target="_blank"
+          rel="noreferrer"
           style={
             {
               left: repo.left,

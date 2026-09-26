@@ -5,7 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist', 'mockup', 'docs/_decoded'] },
+  { ignores: ['dist', 'mockup', 'docs/_decoded', 'local-metadata'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

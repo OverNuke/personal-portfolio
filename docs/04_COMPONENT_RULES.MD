@@ -223,6 +223,12 @@ browser rather than a fourth bucket:
     decoded template confirms the same three-state model server-side
     (`status: locked ? 'bonded' : on ? 'binding' : 'separate'`), so this was
     never meant to be a hover-only decorative flourish.
+- **Data shape (`src/pages/profile/chambersData.ts`):** **Updated
+  2026-09-26** — five chambers (01 Software, 02 Systems, 03 Tools, 04
+  Anywhere, 05 Dependable), each with at most four dots (19 dot labels in
+  total). `Chamber.tsx`'s contract is unchanged; only the data grew. Zone
+  geometry comes from the exported `buildZones` and the named constants
+  `ZONE_LEFT`, `CHAMBER_WIDTH`, `ZONE_SPAN` rather than inline magic numbers.
 - **The SVG goo filter is shared, not per-chamber.** One `<filter id="profileGoo">`
   (`feGaussianBlur` + `feColorMatrix`) is defined once at the Profile page
   level (matching the decoded template's single `<svg>` `<defs>` block); each

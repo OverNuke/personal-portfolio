@@ -42,10 +42,17 @@ describe('pageIdFromHash (URL hash -> page id)', () => {
     expect(pageIdFromHash('#CONTACT')).toBe('contact');
   });
 
-  it.each(['', '#', '#foo', '#distinction', '#section-profile', '/profile', 'profile', '#profile?x=1', '#profile/extra'])(
-    'returns null for the unknown/empty hash %j',
-    (hash) => {
-      expect(pageIdFromHash(hash)).toBeNull();
-    },
-  );
+  it.each([
+    '',
+    '#',
+    '#foo',
+    '#distinction',
+    '#section-profile',
+    '/profile',
+    'profile',
+    '#profile?x=1',
+    '#profile/extra',
+  ])('returns null for the unknown/empty hash %j', (hash) => {
+    expect(pageIdFromHash(hash)).toBeNull();
+  });
 });

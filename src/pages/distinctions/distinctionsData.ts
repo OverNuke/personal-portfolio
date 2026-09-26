@@ -149,5 +149,6 @@ export const CERTIFICATIONS_BY_ID: Record<string, CertCell> = Object.fromEntries
  *  Voronoi "title" cell shape as everything else on the colony field. */
 export const TITLE_CELL = {
   heading: 'Distinctions',
-  intro: 'Honors, language certification and coursework, packed as one colony. Each cell holds its own scan.',
+  intro:
+    'Honors, language certification and coursework, packed as one colony. Each cell holds its own scan.',
 };

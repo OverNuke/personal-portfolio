@@ -24,13 +24,19 @@ describe('meetsStageViewportOverflowContract', () => {
     expect(meetsStageViewportOverflowContract('clip', 'clip')).toBe(true);
   });
 
-  it.each(['visible', 'auto', 'scroll'])('rejects x = %s (would permit horizontal scroll or leak the pre-transform box)', (x) => {
-    expect(meetsStageViewportOverflowContract(x, 'visible')).toBe(false);
-  });
+  it.each(['visible', 'auto', 'scroll'])(
+    'rejects x = %s (would permit horizontal scroll or leak the pre-transform box)',
+    (x) => {
+      expect(meetsStageViewportOverflowContract(x, 'visible')).toBe(false);
+    },
+  );
 
-  it.each(['auto', 'scroll', 'hidden'])('rejects y = %s (would make the wrapper a scroll container that captures document scroll)', (y) => {
-    expect(meetsStageViewportOverflowContract('clip', y)).toBe(false);
-  });
+  it.each(['auto', 'scroll', 'hidden'])(
+    'rejects y = %s (would make the wrapper a scroll container that captures document scroll)',
+    (y) => {
+      expect(meetsStageViewportOverflowContract('clip', y)).toBe(false);
+    },
+  );
 
   it('rejects the pre-continuous-scroll contract, hidden/hidden', () => {
     expect(meetsStageViewportOverflowContract('hidden', 'hidden')).toBe(false);

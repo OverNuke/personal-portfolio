@@ -61,28 +61,28 @@ There is no `tools/halftone.py` — an earlier plan referenced a halftone-preset
 
 ## What this project is
 
-**KEVIN_PORTFOLIO** — a developer portfolio deliberately built as *not* a website: a fixed-design-width, continuous-scroll, 5-section single-page app (Home, Profile, Distinctions, Projects, Contact) with screen-specific, hand-built visual effects (canvas ink-bloom, SVG goo-filter chambers, a weighted-Voronoi credential layout, hand-lettered SVG titles, mouse-proximity hover physics) rather than a conventional dashboard grid. See `00_PROJECT_VISION.MD` for the full concept and `10_PROJECT_MANIFESTO.md` for the reasoning behind it.
+**KEVIN_PORTFOLIO** — a developer portfolio deliberately built as _not_ a website: a fixed-design-width, continuous-scroll, 5-section single-page app (Home, Profile, Distinctions, Projects, Contact) with screen-specific, hand-built visual effects (canvas ink-bloom, SVG goo-filter chambers, a weighted-Voronoi credential layout, hand-lettered SVG titles, mouse-proximity hover physics) rather than a conventional dashboard grid. See `00_PROJECT_VISION.MD` for the full concept and `10_PROJECT_MANIFESTO.md` for the reasoning behind it.
 
 ## Doc-driven architecture
 
 This project's "architecture" lives in numbered spec docs under `docs/`, not in code. Each doc is a single source of truth for its domain — don't restate their content elsewhere, reference them. All docs below were rewritten from the decoded mockup content and reconciled with the shipped scroll shell (see Project state):
 
-| Doc | Owns |
-| --- | --- |
-| `00_PROJECT_VISION.MD` | Concept, the 5-section continuous-scroll model, the fixed 1440px design width + 900px floor non-responsive decision |
-| `01_ART_DIRECTION.MD` | Per-screen visual language (dark identity hero, canvas ink-bloom + goo chambers, Voronoi paper cells, polaroid + hand-lettering, magnetic dock) |
-| `02_DESIGN_SYSTEM.MD` | **Per-screen** color palettes (not one flat palette) with measured contrast ratios, typography (5 real font families), corrected contrast pairings |
-| `03_UX_ARCHITECTURE.MD` | Real nav model (pill-nav scroll-to-section + URL-hash deep links `#home`…`#contact`, no router; Home arrow-key focus cycling scoped to the active section), the 5-section hash table, where `lang` state lives |
-| `04_COMPONENT_RULES.MD` | Component contracts per custom effect; the 3-way effect-placement rule (component-internal ref+useEffect vs. custom hook vs. pure computation module) |
-| `05_ACCESSIBILITY.MD` | WCAG 2.2 AA contrast pairs, keyboard mapping, decorative-animation pattern with a worked example per new effect |
-| `06_FRONTEND_STACK.MD` | React + Vite + TS + Tailwind; **no Framer Motion** — motion is CSS custom properties + native canvas/SVG/Web Animations |
-| `07_ANIMATION_GUIDELINES.md` | Motion philosophy, the shared "house ease," real per-effect timing values pulled from the decoded mockup |
-| `08_AGENT_ROLES.md` | Which sub-agent reads which doc |
-| `09_IMPLEMENTATION_ROADMAP.md` | The full reset's phase order — current progress lives here |
-| `10_PROJECT_MANIFESTO.md` | The "why" behind the design choices — not enforceable spec, not site copy |
-| `11_HANDOFF_HOME.md` | Full implementation spec for Home, sourced from the decoded mockup |
-| `13_ASSET_SPEC.md` | Real asset manifest — font/image origin (decoded mockup UUID, or `raw/*`) to `src/assets/` destination path |
-| `14_REFORM_MOTION.md` | **SUPERSEDED 2026-09-23** — the REFORM/ENTER route crossfade is retired (no route swaps in the scroll shell); kept as a pointer for the pill nav's 120ms active-state crossfade |
+| Doc                            | Owns                                                                                                                                                                                                           |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `00_PROJECT_VISION.MD`         | Concept, the 5-section continuous-scroll model, the fixed 1440px design width + 900px floor non-responsive decision                                                                                            |
+| `01_ART_DIRECTION.MD`          | Per-screen visual language (dark identity hero, canvas ink-bloom + goo chambers, Voronoi paper cells, polaroid + hand-lettering, magnetic dock)                                                                |
+| `02_DESIGN_SYSTEM.MD`          | **Per-screen** color palettes (not one flat palette) with measured contrast ratios, typography (5 real font families), corrected contrast pairings                                                             |
+| `03_UX_ARCHITECTURE.MD`        | Real nav model (pill-nav scroll-to-section + URL-hash deep links `#home`…`#contact`, no router; Home arrow-key focus cycling scoped to the active section), the 5-section hash table, where `lang` state lives |
+| `04_COMPONENT_RULES.MD`        | Component contracts per custom effect; the 3-way effect-placement rule (component-internal ref+useEffect vs. custom hook vs. pure computation module)                                                          |
+| `05_ACCESSIBILITY.MD`          | WCAG 2.2 AA contrast pairs, keyboard mapping, decorative-animation pattern with a worked example per new effect                                                                                                |
+| `06_FRONTEND_STACK.MD`         | React + Vite + TS + Tailwind; **no Framer Motion** — motion is CSS custom properties + native canvas/SVG/Web Animations                                                                                        |
+| `07_ANIMATION_GUIDELINES.md`   | Motion philosophy, the shared "house ease," real per-effect timing values pulled from the decoded mockup                                                                                                       |
+| `08_AGENT_ROLES.md`            | Which sub-agent reads which doc                                                                                                                                                                                |
+| `09_IMPLEMENTATION_ROADMAP.md` | The full reset's phase order — current progress lives here                                                                                                                                                     |
+| `10_PROJECT_MANIFESTO.md`      | The "why" behind the design choices — not enforceable spec, not site copy                                                                                                                                      |
+| `11_HANDOFF_HOME.md`           | Full implementation spec for Home, sourced from the decoded mockup                                                                                                                                             |
+| `13_ASSET_SPEC.md`             | Real asset manifest — font/image origin (decoded mockup UUID, or `raw/*`) to `src/assets/` destination path                                                                                                    |
+| `14_REFORM_MOTION.md`          | **SUPERSEDED 2026-09-23** — the REFORM/ENTER route crossfade is retired (no route swaps in the scroll shell); kept as a pointer for the pill nav's 120ms active-state crossfade                                |
 
 `12_COLLAGE_SYSTEM.md` is retired — the old 12-col rotation grid it described isn't the mockup's real layout model. Not part of the current doc set.
 
@@ -93,6 +93,7 @@ When docs conflict, the later dated correction wins (docs are annotated inline w
 When two concerns disagree, resolve in this order: **Accessibility → Project Vision → Architecture → Developer Experience → Implementation Speed.** Never trade the first for the last. This order is why the mockup's as-decoded colors were corrected rather than ported as-is where they failed WCAG AA — see `02_DESIGN_SYSTEM.MD`'s "Corrected Contrast Pairings" section.
 
 ## Key architectural decisions to know before touching UI code
+
 - **Color/contrast values are law, not suggestions.** `02_DESIGN_SYSTEM.MD` and `05_ACCESSIBILITY.MD` list exact hex values with measured contrast ratios. Don't reintroduce a rejected/failing value; don't invent new colors without contrast-checking and documenting the ratio the way existing entries do.
 - **Rounded and circular shapes are part of the design language, not excluded.** The mockup uses `border-radius: 50%` polaroid photo frames, pill-shaped nav, circular chamber dots, and curved Voronoi cell paths (`01_ART_DIRECTION.MD`) — there is no zero-border-radius rule in this design.
-- **Decorative auto-playing animations must be fully `aria-hidden`, never partially.** `docs/05_ACCESSIBILITY.MD`'s "Decorative / Auto-Playing Animations" section is the reference pattern: a rapidly auto-cycling or generative animation has no coherent screen-reader translation, so it's marked fully decorative, never receives focus, and dismisses on *any* keypress — while the host page's real content must independently carry the same information in accessible markup, and must remain legible/usable without the animation running. `05_ACCESSIBILITY.MD` has a worked example of this for each of the 5 new effects (Home Ink Flow, Profile ink-bloom + chambers, Distinctions doodles + Voronoi cells, Contact magnetic dock).
+- **Decorative auto-playing animations must be fully `aria-hidden`, never partially.** `docs/05_ACCESSIBILITY.MD`'s "Decorative / Auto-Playing Animations" section is the reference pattern: a rapidly auto-cycling or generative animation has no coherent screen-reader translation, so it's marked fully decorative, never receives focus, and dismisses on _any_ keypress — while the host page's real content must independently carry the same information in accessible markup, and must remain legible/usable without the animation running. `05_ACCESSIBILITY.MD` has a worked example of this for each of the 5 new effects (Home Ink Flow, Profile ink-bloom + chambers, Distinctions doodles + Voronoi cells, Contact magnetic dock).

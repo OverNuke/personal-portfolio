@@ -39,6 +39,18 @@ export const routes: RouteEntry[] = [
     labelEn: 'Distinction',
     labelEs: 'Distinción',
   },
-  { hash: '#projects', pageId: 'projects', navLabel: 'Projects', labelEn: 'Projects', labelEs: 'Proyectos' },
-  { hash: '#contact', pageId: 'contact', navLabel: 'Contact', labelEn: 'Reach out', labelEs: 'Contacto' },
+  {
+    hash: '#projects',
+    pageId: 'projects',
+    navLabel: 'Projects',
+    labelEn: 'Projects',
+    labelEs: 'Proyectos',
+  },
+  {
+    hash: '#contact',
+    pageId: 'contact',
+    navLabel: 'Contact',
+    labelEn: 'Reach out',
+    labelEs: 'Contacto',
+  },
 ];

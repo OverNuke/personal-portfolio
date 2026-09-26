@@ -213,7 +213,9 @@ async function waitForStable(page, section) {
   // measure styled layout, not raw flow.
   await page
     .waitForFunction(
-      () => getComputedStyle(document.documentElement).getPropertyValue('--stage-letterbox-bg').trim().length > 0,
+      () =>
+        getComputedStyle(document.documentElement).getPropertyValue('--stage-letterbox-bg').trim()
+          .length > 0,
       undefined,
       { timeout: 5000 },
     )
@@ -222,7 +224,9 @@ async function waitForStable(page, section) {
   // All five screens are mounted at once (src/shell/Shell.tsx); the target
   // section's own heading existing is the signal that ITS screen has rendered
   // (the shell's hash navigation then focuses that heading).
-  await page.waitForSelector(`#${section.sectionId} [data-screen-heading]`, { timeout: 5000 }).catch(() => {});
+  await page
+    .waitForSelector(`#${section.sectionId} [data-screen-heading]`, { timeout: 5000 })
+    .catch(() => {});
 
   // Wait for real fonts to finish loading before measuring. Until they do,
   // text renders in a fallback font with different metrics, which can wrap
@@ -259,7 +263,9 @@ async function assertNativeScale(page, label) {
     return getComputedStyle(stage).transform;
   });
   if (scale === null) {
-    throw new Error(`[${label}] .stage element not found -- cannot verify native (scale=1) rendering.`);
+    throw new Error(
+      `[${label}] .stage element not found -- cannot verify native (scale=1) rendering.`,
+    );
   }
   const factor = parseScale(scale);
   if (Math.abs(factor - 1) > 0.01) {
@@ -459,7 +465,9 @@ function collectSnapshot(sectionId) {
   // `querySelectorAll('[role="button"]')` already covers.
   const interactiveEls = [];
   for (const scope of scopes) {
-    for (const el of Array.from(scope.querySelectorAll('a, button, [role="button"], input, select, textarea'))) {
+    for (const el of Array.from(
+      scope.querySelectorAll('a, button, [role="button"], input, select, textarea'),
+    )) {
       if (isAncestorHidden(el) || !isRendered(el)) continue;
       const rect = rectOf(el);
       if (isVisuallyHiddenRect(rect)) continue;
@@ -563,7 +571,10 @@ function runContentChecks(hash, snapshot) {
       const b = snapshot.textEls[j];
       const [rectA, rectB] = comparableRects(a, b, snapshot.rotationGroups ?? []);
       if (rectsIntersect(rectA, rectB)) {
-        results.push({ type: 'occlusion', message: at(`"${a.selector}" overlaps "${b.selector}"`) });
+        results.push({
+          type: 'occlusion',
+          message: at(`"${a.selector}" overlaps "${b.selector}"`),
+        });
       }
     }
   }
@@ -584,7 +595,9 @@ function runContentChecks(hash, snapshot) {
     if (isTextClipped(el)) {
       results.push({
         type: 'clipped-text',
-        message: at(`"${el.selector}" clips its own text (overflow ${el.overflowX}/${el.overflowY})`),
+        message: at(
+          `"${el.selector}" clips its own text (overflow ${el.overflowX}/${el.overflowY})`,
+        ),
       });
     }
   }
@@ -608,7 +621,9 @@ function runOverflowChecks(hash, width, snapshot) {
   if (hasHorizontalOverflow(documentScrollWidth, documentClientWidth)) {
     results.push({
       type: 'horizontal-scroll',
-      message: at(`document scrollWidth ${documentScrollWidth} > clientWidth ${documentClientWidth}`),
+      message: at(
+        `document scrollWidth ${documentScrollWidth} > clientWidth ${documentClientWidth}`,
+      ),
     });
   }
   if (!stageViewportExists) {

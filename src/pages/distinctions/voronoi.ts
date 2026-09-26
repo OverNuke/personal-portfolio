@@ -166,7 +166,12 @@ function powerCell(i: number, seeds: LiveSeed[], height: number): Point[] {
     const dx = q.x - s.x;
     const dy = q.y - s.y;
     if (dx * dx + dy * dy < 1e-6) continue;
-    poly = clipHalf(poly, 2 * dx, 2 * dy, q.x * q.x + q.y * q.y - s.x * s.x - s.y * s.y + s.w - q.w);
+    poly = clipHalf(
+      poly,
+      2 * dx,
+      2 * dy,
+      q.x * q.x + q.y * q.y - s.x * s.x - s.y * s.y + s.w - q.w,
+    );
   }
   return poly;
 }
@@ -223,7 +228,10 @@ function simplify(poly: Point[], minEdge: number): Point[] {
     if (last && Math.hypot(v.x - last.x, v.y - last.y) < minEdge) continue;
     out.push(v);
   }
-  while (out.length > 3 && Math.hypot(out[0].x - out[out.length - 1].x, out[0].y - out[out.length - 1].y) < minEdge) {
+  while (
+    out.length > 3 &&
+    Math.hypot(out[0].x - out[out.length - 1].x, out[0].y - out[out.length - 1].y) < minEdge
+  ) {
     out.pop();
   }
   if (out.length < 3) return poly;
@@ -254,7 +262,10 @@ function roundPath(poly: Point[], r: number): string {
     const q = poly[(i + 1) % n];
     const l1 = Math.hypot(p.x - v.x, p.y - v.y) || 1;
     const l2 = Math.hypot(q.x - v.x, q.y - v.y) || 1;
-    const dot = Math.max(-1, Math.min(1, ((p.x - v.x) * (q.x - v.x) + (p.y - v.y) * (q.y - v.y)) / (l1 * l2)));
+    const dot = Math.max(
+      -1,
+      Math.min(1, ((p.x - v.x) * (q.x - v.x) + (p.y - v.y) * (q.y - v.y)) / (l1 * l2)),
+    );
     const half = Math.acos(dot) / 2;
     const rr = Math.min(r / Math.max(Math.tan(half), 0.12), l1 * 0.5, l2 * 0.5);
     const ax = v.x + ((p.x - v.x) / l1) * rr;
@@ -320,7 +331,12 @@ export interface GeometryOptions {
  *  -parsing the rounded SVG path string `roundPath` produces (its `Q`
  *  corner curves are lossy to turn back into vertices). `computeCellGeometry`
  *  below is now a thin wrapper: centroid + rounded path on top of this. */
-export function computeCellPolygons(seeds: LiveSeed[], height: number, gap: number, minEdge = 10): Point[][] {
+export function computeCellPolygons(
+  seeds: LiveSeed[],
+  height: number,
+  gap: number,
+  minEdge = 10,
+): Point[][] {
   const insetDistance = gap / 2;
   return seeds.map((_, i) => {
     const raw = powerCell(i, seeds, height);
@@ -333,7 +349,11 @@ export function computeCellPolygons(seeds: LiveSeed[], height: number, gap: numb
  *  ACTUAL rendered `height`. No DOM access -- callers (VoronoiCellField)
  *  own translating `d`/`cx`/`cy` into actual SVG attributes / label
  *  positions. */
-export function computeCellGeometry(seeds: LiveSeed[], height: number, options: GeometryOptions): CellGeometry[] {
+export function computeCellGeometry(
+  seeds: LiveSeed[],
+  height: number,
+  options: GeometryOptions,
+): CellGeometry[] {
   const r = options.roundness;
   const minEdge = Math.max(10, r * 0.32);
   const polygons = computeCellPolygons(seeds, height, options.gap, minEdge);

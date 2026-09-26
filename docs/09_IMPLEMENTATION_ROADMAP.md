@@ -149,7 +149,7 @@ All five screens built, in the order fixed by the approved plan:
 1. **Contact** (magnetic dock) — `useMagneticDock.ts` + `Dock.tsx`, per
    `04_COMPONENT_RULES.MD`'s exact contract.
 2. **Projects** (polaroid cards + stroke-glyph title) — `ProjectCard.tsx`
-   + `useCardHover.ts` + the glyph-stroke module.
+   - `useCardHover.ts` + the glyph-stroke module.
 3. **Profile** (ink-bloom canvas + goo-filter chambers) — canvas effect
    per bucket 1, `Chamber.tsx` state machine per its verified contract.
 4. **Distinctions** (Voronoi cell field — largest/most complex) —
@@ -248,7 +248,7 @@ audit-gate and legacy-path-URL fixes):**
   `layout.spec.ts`, `scroll-nav.spec.ts`, rewritten `smoke.spec.ts` (55
   tests).
 - **Docs reconciliation (Phase 9.1):** `00, 01, 03, 04, 05, 06, 07, 08, 09,
-  10, 11, 14`. `13_ASSET_SPEC.md` unchanged (no asset changed: the doodles
+10, 11, 14`. `13_ASSET_SPEC.md` unchanged (no asset changed: the doodles
   are code, not assets).
 
 **Gate numbers at close (2026-09-24, final targeted re-verify

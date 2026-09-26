@@ -57,7 +57,12 @@
 .contact-bg__gradient-radial {
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(120% 88% at 50% 52%, transparent 24%, rgba(10, 10, 10, 0.55) 66%, #0a0a0a 100%);
+  background-image: radial-gradient(
+    120% 88% at 50% 52%,
+    transparent 24%,
+    rgba(10, 10, 10, 0.55) 66%,
+    #0a0a0a 100%
+  );
   z-index: 3;
 }
 

@@ -50,19 +50,27 @@ function overlapArea(a: LocalRect, b: LocalRect): number {
 
 for (const viewport of VIEWPORTS) {
   test.describe(`floor at ${viewport.width}x${viewport.height} (scale ${viewport.scale})`, () => {
-    test.use({ viewport: { width: viewport.width, height: viewport.height }, reducedMotion: 'reduce' });
+    test.use({
+      viewport: { width: viewport.width, height: viewport.height },
+      reducedMotion: 'reduce',
+    });
 
-    test('all 5 sections are exactly 900px tall and the page never scrolls horizontally', async ({ page }) => {
+    test('all 5 sections are exactly 900px tall and the page never scrolls horizontally', async ({
+      page,
+    }) => {
       await openApp(page);
 
       const measured = await page.evaluate(() => ({
-        sections: Array.from(document.querySelectorAll<HTMLElement>('.screen-section')).map((section) => ({
-          id: section.id,
-          clientHeight: section.clientHeight,
-          rectHeight: section.getBoundingClientRect().height,
-        })),
+        sections: Array.from(document.querySelectorAll<HTMLElement>('.screen-section')).map(
+          (section) => ({
+            id: section.id,
+            clientHeight: section.clientHeight,
+            rectHeight: section.getBoundingClientRect().height,
+          }),
+        ),
         scale: document.querySelector<HTMLElement>('.stage')!.getBoundingClientRect().width / 1440,
-        scalerWidth: document.querySelector<HTMLElement>('.stage-scaler')!.getBoundingClientRect().width,
+        scalerWidth: document.querySelector<HTMLElement>('.stage-scaler')!.getBoundingClientRect()
+          .width,
         scrollWidth: document.documentElement.scrollWidth,
         clientWidth: document.documentElement.clientWidth,
         scrollHeight: document.documentElement.scrollHeight,
@@ -100,9 +108,15 @@ test.describe('height-fluid effects', () => {
   test.use({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
 
   /** Run one check at the natural 900px floor and again with `root` forced to FORCED_HEIGHT. */
-  function atFloorAndTaller(name: string, root: keyof typeof SCREEN_ROOTS, check: (page: Page, height: number) => Promise<void>) {
+  function atFloorAndTaller(
+    name: string,
+    root: keyof typeof SCREEN_ROOTS,
+    check: (page: Page, height: number) => Promise<void>,
+  ) {
     for (const height of [SECTION_HEIGHT, FORCED_HEIGHT]) {
-      test(`${name} (${height === SECTION_HEIGHT ? 'floor' : `forced to ${height}px`})`, async ({ page }) => {
+      test(`${name} (${height === SECTION_HEIGHT ? 'floor' : `forced to ${height}px`})`, async ({
+        page,
+      }) => {
         await openApp(page);
         if (height !== SECTION_HEIGHT) await forceScreenHeight(page, SCREEN_ROOTS[root], height);
         await check(page, height);
@@ -110,36 +124,56 @@ test.describe('height-fluid effects', () => {
     }
   }
 
-  atFloorAndTaller('Profile columns are vertically centered in their section', 'profile', async (page, height) => {
-    const measured = await page.evaluate(() => {
-      const screen = document.querySelector<HTMLElement>('.profile-screen')!.getBoundingClientRect();
-      const mid = (top: number, bottom: number) => (top + bottom) / 2;
-      const column = (selector: string) => {
-        const el = document.querySelector<HTMLElement>(selector)!;
-        const box = el.getBoundingClientRect();
-        const children = Array.from(el.children).map((child) => child.getBoundingClientRect());
-        const top = Math.min(...children.map((rect) => rect.top));
-        const bottom = Math.max(...children.map((rect) => rect.bottom));
-        return { children: children.length, boxMid: mid(box.top, box.bottom), contentMid: mid(top, bottom), contentHeight: bottom - top };
-      };
-      return { screenMid: mid(screen.top, screen.bottom), intro: column('.profile-intro'), chambers: column('.profile-chambers') };
-    });
+  atFloorAndTaller(
+    'Profile columns are vertically centered in their section',
+    'profile',
+    async (page, height) => {
+      const measured = await page.evaluate(() => {
+        const screen = document
+          .querySelector<HTMLElement>('.profile-screen')!
+          .getBoundingClientRect();
+        const mid = (top: number, bottom: number) => (top + bottom) / 2;
+        const column = (selector: string) => {
+          const el = document.querySelector<HTMLElement>(selector)!;
+          const box = el.getBoundingClientRect();
+          const children = Array.from(el.children).map((child) => child.getBoundingClientRect());
+          const top = Math.min(...children.map((rect) => rect.top));
+          const bottom = Math.max(...children.map((rect) => rect.bottom));
+          return {
+            children: children.length,
+            boxMid: mid(box.top, box.bottom),
+            contentMid: mid(top, bottom),
+            contentHeight: bottom - top,
+          };
+        };
+        return {
+          screenMid: mid(screen.top, screen.bottom),
+          intro: column('.profile-intro'),
+          chambers: column('.profile-chambers'),
+        };
+      });
 
-    for (const [name, column] of Object.entries({ intro: measured.intro, chambers: measured.chambers })) {
-      // Guard against a vacuous pass: the column has real content that fits inside the section.
-      expect(column.children, name).toBeGreaterThan(0);
-      expect(column.contentHeight, name).toBeGreaterThan(200);
-      expect(column.contentHeight, name).toBeLessThan(height);
-      // The column BOX spans the section and its CONTENT is centered in it.
-      expect(column.boxMid, `${name} box midpoint`).toBeCloseTo(measured.screenMid, 0);
-      expect(column.contentMid, `${name} content midpoint`).toBeCloseTo(measured.screenMid, 0);
-    }
-  });
+      for (const [name, column] of Object.entries({
+        intro: measured.intro,
+        chambers: measured.chambers,
+      })) {
+        // Guard against a vacuous pass: the column has real content that fits inside the section.
+        expect(column.children, name).toBeGreaterThan(0);
+        expect(column.contentHeight, name).toBeGreaterThan(200);
+        expect(column.contentHeight, name).toBeLessThan(height);
+        // The column BOX spans the section and its CONTENT is centered in it.
+        expect(column.boxMid, `${name} box midpoint`).toBeCloseTo(measured.screenMid, 0);
+        expect(column.contentMid, `${name} content midpoint`).toBeCloseTo(measured.screenMid, 0);
+      }
+    },
+  );
 
   /** Chamber boxes, the status badge and the chamber labels in the Profile section's unscaled layout px. */
   function measureProfileChambers(page: Page) {
     return page.evaluate(() => {
-      const screenRect = document.querySelector<HTMLElement>('.profile-screen')!.getBoundingClientRect();
+      const screenRect = document
+        .querySelector<HTMLElement>('.profile-screen')!
+        .getBoundingClientRect();
       const scale = screenRect.width / 1440;
       const local = (el: Element): LocalRect => {
         const rect = el.getBoundingClientRect();
@@ -162,67 +196,87 @@ test.describe('height-fluid effects', () => {
 
   // `scripts/audit.mjs` skips aria-hidden subtrees (`isAncestorHidden`), so it can never see the chamber
   // labels or judge the badge against the chambers: this is the only place those clearances are checked.
-  atFloorAndTaller('Profile status badge clears the first chamber and its focus ring', 'profile', async (page) => {
-    const measured = await measureProfileChambers(page);
-    // The focus ring (`.profile-chamber:focus-visible`: 1px outline, `outline-offset: 8px`) sits 8px OUTSIDE the box.
-    const FOCUS_RING = 8;
+  atFloorAndTaller(
+    'Profile status badge clears the first chamber and its focus ring',
+    'profile',
+    async (page) => {
+      const measured = await measureProfileChambers(page);
+      // The focus ring (`.profile-chamber:focus-visible`: 1px outline, `outline-offset: 8px`) sits 8px OUTSIDE the box.
+      const FOCUS_RING = 8;
 
-    expect(measured.chambers).toHaveLength(5);
-    expect(measured.status.top).toBeGreaterThanOrEqual(0);
-    // Chamber 1 is the topmost (column flex): with 5 chambers it starts at y=60 at the floor, and the badge
-    // (top: 20px) must end above its focus ring, not merely above the box.
-    expect(measured.status.bottom).toBeLessThan(measured.chambers[0].box.top - FOCUS_RING);
-  });
+      expect(measured.chambers).toHaveLength(5);
+      expect(measured.status.top).toBeGreaterThanOrEqual(0);
+      // Chamber 1 is the topmost (column flex): with 5 chambers it starts at y=60 at the floor, and the badge
+      // (top: 20px) must end above its focus ring, not merely above the box.
+      expect(measured.status.bottom).toBeLessThan(measured.chambers[0].box.top - FOCUS_RING);
+    },
+  );
 
-  atFloorAndTaller('Profile chamber labels stay inside their own chamber box', 'profile', async (page) => {
-    const measured = await measureProfileChambers(page);
+  atFloorAndTaller(
+    'Profile chamber labels stay inside their own chamber box',
+    'profile',
+    async (page) => {
+      const measured = await measureProfileChambers(page);
 
-    expect(measured.chambers).toHaveLength(5);
-    measured.chambers.forEach(({ box, labels }, index) => {
-      // Guard against a vacuous pass: every chamber really lists its labels (the block is measurable even
-      // while fused: it only fades to opacity 0, it is never display:none).
-      expect(labels.length, `chamber ${index + 1} labels`).toBeGreaterThan(0);
-      const lastLabel = labels[labels.length - 1];
-      expect(labels[0].top, `chamber ${index + 1} first label top`).toBeGreaterThanOrEqual(box.top - 1);
-      expect(lastLabel.bottom, `chamber ${index + 1} last label bottom`).toBeLessThanOrEqual(box.bottom + 1);
-    });
-  });
+      expect(measured.chambers).toHaveLength(5);
+      measured.chambers.forEach(({ box, labels }, index) => {
+        // Guard against a vacuous pass: every chamber really lists its labels (the block is measurable even
+        // while fused: it only fades to opacity 0, it is never display:none).
+        expect(labels.length, `chamber ${index + 1} labels`).toBeGreaterThan(0);
+        const lastLabel = labels[labels.length - 1];
+        expect(labels[0].top, `chamber ${index + 1} first label top`).toBeGreaterThanOrEqual(
+          box.top - 1,
+        );
+        expect(lastLabel.bottom, `chamber ${index + 1} last label bottom`).toBeLessThanOrEqual(
+          box.bottom + 1,
+        );
+      });
+    },
+  );
 
-  atFloorAndTaller('Contact quote stays inside its section and clear of all 5 dock cards at rest', 'contact', async (page) => {
-    const measured = await page.evaluate(() => {
-      const screenRect = document.querySelector<HTMLElement>('.contact-screen')!.getBoundingClientRect();
-      const scale = screenRect.width / 1440;
-      const local = (el: Element): LocalRect => {
-        const rect = el.getBoundingClientRect();
-        return {
-          top: (rect.top - screenRect.top) / scale,
-          bottom: (rect.bottom - screenRect.top) / scale,
-          left: (rect.left - screenRect.left) / scale,
-          right: (rect.right - screenRect.left) / scale,
+  atFloorAndTaller(
+    'Contact quote stays inside its section and clear of all 5 dock cards at rest',
+    'contact',
+    async (page) => {
+      const measured = await page.evaluate(() => {
+        const screenRect = document
+          .querySelector<HTMLElement>('.contact-screen')!
+          .getBoundingClientRect();
+        const scale = screenRect.width / 1440;
+        const local = (el: Element): LocalRect => {
+          const rect = el.getBoundingClientRect();
+          return {
+            top: (rect.top - screenRect.top) / scale,
+            bottom: (rect.bottom - screenRect.top) / scale,
+            left: (rect.left - screenRect.left) / scale,
+            right: (rect.right - screenRect.left) / scale,
+          };
         };
-      };
-      return {
-        screenHeight: screenRect.height / scale,
-        quote: local(document.querySelector('.contact-quote')!),
-        cards: Array.from(document.querySelectorAll('.contact-dock__card')).map(local),
-      };
-    });
+        return {
+          screenHeight: screenRect.height / scale,
+          quote: local(document.querySelector('.contact-quote')!),
+          cards: Array.from(document.querySelectorAll('.contact-dock__card')).map(local),
+        };
+      });
 
-    expect(measured.cards).toHaveLength(5);
-    expect(measured.quote.top).toBeGreaterThanOrEqual(0);
-    expect(measured.quote.bottom).toBeLessThanOrEqual(measured.screenHeight);
-    expect(measured.quote.left).toBeGreaterThanOrEqual(0);
-    expect(measured.quote.right).toBeLessThanOrEqual(STAGE_WIDTH);
-    measured.cards.forEach((card, index) => {
-      expect(overlapArea(measured.quote, card), `card ${index}`).toBe(0);
-    });
-  });
+      expect(measured.cards).toHaveLength(5);
+      expect(measured.quote.top).toBeGreaterThanOrEqual(0);
+      expect(measured.quote.bottom).toBeLessThanOrEqual(measured.screenHeight);
+      expect(measured.quote.left).toBeGreaterThanOrEqual(0);
+      expect(measured.quote.right).toBeLessThanOrEqual(STAGE_WIDTH);
+      measured.cards.forEach((card, index) => {
+        expect(overlapArea(measured.quote, card), `card ${index}`).toBe(0);
+      });
+    },
+  );
 
   atFloorAndTaller('Home ring layers keep constant px heights', 'home', async (page) => {
     const heights = await page.evaluate(() =>
-      Array.from(document.querySelectorAll<HTMLElement>('.ink-flow__dark-rings > *, .ink-flow__light-rings > *')).map((ring) =>
-        parseFloat(getComputedStyle(ring).height),
-      ),
+      Array.from(
+        document.querySelectorAll<HTMLElement>(
+          '.ink-flow__dark-rings > *, .ink-flow__light-rings > *',
+        ),
+      ).map((ring) => parseFloat(getComputedStyle(ring).height)),
     );
     // The decoded source's `height: N%` resolved against the 900px design stage
     // (34/38/40/44/46/52% => 306/342/360/396/414/468px), frozen as px. A
@@ -230,7 +284,9 @@ test.describe('height-fluid effects', () => {
     // section instead: 52% of 1400 = 728px. (These are the CSS box heights;
     // getBoundingClientRect() heights differ because the rings animate/rotate.)
     expect(heights).toHaveLength(9); // 6 dark + 3 light rings
-    const unique = [...new Set(heights.map((h) => Math.round(h * 100) / 100))].sort((a, b) => a - b);
+    const unique = [...new Set(heights.map((h) => Math.round(h * 100) / 100))].sort(
+      (a, b) => a - b,
+    );
     expect(unique).toEqual([306, 342, 360, 396, 414, 468]);
   });
 
@@ -239,7 +295,13 @@ test.describe('height-fluid effects', () => {
       const box = (el: Element) => el.getBoundingClientRect();
       const screen = box(document.querySelector('.home-screen')!);
       const flow = box(document.querySelector('.ink-flow')!);
-      return { screenTop: screen.top, screenBottom: screen.bottom, flowTop: flow.top, flowBottom: flow.bottom, flowWidth: flow.width };
+      return {
+        screenTop: screen.top,
+        screenBottom: screen.bottom,
+        flowTop: flow.top,
+        flowBottom: flow.bottom,
+        flowWidth: flow.width,
+      };
     });
     expect(rects.flowTop).toBeGreaterThanOrEqual(rects.screenTop - 1);
     expect(rects.flowBottom).toBeLessThanOrEqual(rects.screenBottom + 1);
@@ -247,67 +309,90 @@ test.describe('height-fluid effects', () => {
     expect(rects.flowWidth).toBeCloseTo(STAGE_WIDTH, 0);
   });
 
-  atFloorAndTaller('Projects card layer is not clipped by its section', 'projects', async (page, height) => {
-    const measured = await page.evaluate(() => {
-      const screenRect = document.querySelector<HTMLElement>('.projects-screen')!.getBoundingClientRect();
-      const scale = screenRect.width / 1440;
-      const elements = Array.from(document.querySelectorAll('.projects-cards-layer *'));
-      const bottoms = elements.map((el) => (el.getBoundingClientRect().bottom - screenRect.top) / scale);
-      return { count: elements.length, deepest: Math.max(...bottoms), screenHeight: screenRect.height / scale };
-    });
-    // Cards are absolutely positioned in px (W7): the deepest one sits ~868px down
-    // whatever the section height, so it must fit in the floor and be really there.
-    expect(measured.count).toBeGreaterThan(10);
-    expect(measured.deepest).toBeGreaterThan(840);
-    expect(measured.deepest).toBeLessThanOrEqual(measured.screenHeight);
-    expect(measured.deepest).toBeLessThanOrEqual(height);
-  });
-
-  atFloorAndTaller('Distinctions SVGs share the rendered box (no non-uniform stretch)', 'distinction', async (page, height) => {
-    const svgs = await page.evaluate(() =>
-      ['.distinctions-cells-svg', '.distinctions-doodle-svg'].map((selector) => {
-        const svg = document.querySelector<SVGSVGElement>(selector)!;
-        const rect = svg.getBoundingClientRect();
+  atFloorAndTaller(
+    'Projects card layer is not clipped by its section',
+    'projects',
+    async (page, height) => {
+      const measured = await page.evaluate(() => {
+        const screenRect = document
+          .querySelector<HTMLElement>('.projects-screen')!
+          .getBoundingClientRect();
+        const scale = screenRect.width / 1440;
+        const elements = Array.from(document.querySelectorAll('.projects-cards-layer *'));
+        const bottoms = elements.map(
+          (el) => (el.getBoundingClientRect().bottom - screenRect.top) / scale,
+        );
         return {
-          selector,
-          viewBoxWidth: svg.viewBox.baseVal.width,
-          viewBoxHeight: svg.viewBox.baseVal.height,
-          layoutHeight: svg.clientHeight,
-          aspectRatioOfBox: rect.width / rect.height,
+          count: elements.length,
+          deepest: Math.max(...bottoms),
+          screenHeight: screenRect.height / scale,
         };
-      }),
-    );
-    for (const svg of svgs) {
-      expect(svg.viewBoxWidth, svg.selector).toBe(STAGE_WIDTH);
-      expect(svg.viewBoxHeight, svg.selector).toBe(height);
-      expect(svg.layoutHeight, svg.selector).toBe(height);
-      // viewBox aspect == rendered aspect => uniform scale on both axes.
-      expect(svg.viewBoxWidth / svg.viewBoxHeight, svg.selector).toBeCloseTo(svg.aspectRatioOfBox, 2);
-    }
-  });
+      });
+      // Cards are absolutely positioned in px (W7): the deepest one sits ~868px down
+      // whatever the section height, so it must fit in the floor and be really there.
+      expect(measured.count).toBeGreaterThan(10);
+      expect(measured.deepest).toBeGreaterThan(840);
+      expect(measured.deepest).toBeLessThanOrEqual(measured.screenHeight);
+      expect(measured.deepest).toBeLessThanOrEqual(height);
+    },
+  );
 
-  atFloorAndTaller('Distinctions cells fill the section (no dead space)', 'distinction', async (page, height) => {
-    const coverage = await page.evaluate((h) => {
-      const svg = document.querySelector<SVGSVGElement>('.distinctions-cells-svg')!;
-      const cells = Array.from(svg.querySelectorAll<SVGGeometryElement>('path[data-cid]'));
-      const margin = 16.5; // voronoi clip rectangle inset
-      const step = 12;
-      let inside = 0;
-      let covered = 0;
-      for (let y = margin; y <= h - margin; y += step) {
-        for (let x = margin; x <= 1440 - margin; x += step) {
-          inside += 1;
-          const point = new DOMPoint(x, y);
-          if (cells.some((cell) => cell.isPointInFill(point))) covered += 1;
-        }
+  atFloorAndTaller(
+    'Distinctions SVGs share the rendered box (no non-uniform stretch)',
+    'distinction',
+    async (page, height) => {
+      const svgs = await page.evaluate(() =>
+        ['.distinctions-cells-svg', '.distinctions-doodle-svg'].map((selector) => {
+          const svg = document.querySelector<SVGSVGElement>(selector)!;
+          const rect = svg.getBoundingClientRect();
+          return {
+            selector,
+            viewBoxWidth: svg.viewBox.baseVal.width,
+            viewBoxHeight: svg.viewBox.baseVal.height,
+            layoutHeight: svg.clientHeight,
+            aspectRatioOfBox: rect.width / rect.height,
+          };
+        }),
+      );
+      for (const svg of svgs) {
+        expect(svg.viewBoxWidth, svg.selector).toBe(STAGE_WIDTH);
+        expect(svg.viewBoxHeight, svg.selector).toBe(height);
+        expect(svg.layoutHeight, svg.selector).toBe(height);
+        // viewBox aspect == rendered aspect => uniform scale on both axes.
+        expect(svg.viewBoxWidth / svg.viewBoxHeight, svg.selector).toBeCloseTo(
+          svg.aspectRatioOfBox,
+          2,
+        );
       }
-      return { cells: cells.length, ratio: covered / inside, samples: inside };
-    }, height);
-    expect(coverage.cells).toBe(12);
-    expect(coverage.samples).toBeGreaterThan(1000);
-    // Measured fill ratio is the cell area over the clip rect, minus the deliberate 7px gaps.
-    expect(coverage.ratio).toBeGreaterThan(0.9);
-  });
+    },
+  );
+
+  atFloorAndTaller(
+    'Distinctions cells fill the section (no dead space)',
+    'distinction',
+    async (page, height) => {
+      const coverage = await page.evaluate((h) => {
+        const svg = document.querySelector<SVGSVGElement>('.distinctions-cells-svg')!;
+        const cells = Array.from(svg.querySelectorAll<SVGGeometryElement>('path[data-cid]'));
+        const margin = 16.5; // voronoi clip rectangle inset
+        const step = 12;
+        let inside = 0;
+        let covered = 0;
+        for (let y = margin; y <= h - margin; y += step) {
+          for (let x = margin; x <= 1440 - margin; x += step) {
+            inside += 1;
+            const point = new DOMPoint(x, y);
+            if (cells.some((cell) => cell.isPointInFill(point))) covered += 1;
+          }
+        }
+        return { cells: cells.length, ratio: covered / inside, samples: inside };
+      }, height);
+      expect(coverage.cells).toBe(12);
+      expect(coverage.samples).toBeGreaterThan(1000);
+      // Measured fill ratio is the cell area over the clip rect, minus the deliberate 7px gaps.
+      expect(coverage.ratio).toBeGreaterThan(0.9);
+    },
+  );
 });
 
 test.describe('Contact dock hover', () => {
@@ -346,27 +431,41 @@ test.describe('Contact dock hover', () => {
       .poll(async () => Math.max(...(await readScales())), { message: `dock fraction ${fraction}` })
       .toBeGreaterThan(1.02);
     // Let the settled frame land, then sample the whole vector.
-    await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+        ),
+    );
     return readScales();
   }
 
-  test('responds across the full dock height, identically at 900 and at a taller section', async ({ page }) => {
+  test('responds across the full dock height, identically at 900 and at a taller section', async ({
+    page,
+  }) => {
     test.slow();
     await openApp(page);
 
     const atFloor: number[][] = [];
-    for (const fraction of FRACTIONS) atFloor.push(await cardScalesAt(page, fraction, SECTION_HEIGHT));
+    for (const fraction of FRACTIONS)
+      atFloor.push(await cardScalesAt(page, fraction, SECTION_HEIGHT));
 
     await forceScreenHeight(page, SCREEN_ROOTS.contact, FORCED_HEIGHT);
     const taller: number[][] = [];
-    for (const fraction of FRACTIONS) taller.push(await cardScalesAt(page, fraction, FORCED_HEIGHT));
+    for (const fraction of FRACTIONS)
+      taller.push(await cardScalesAt(page, fraction, FORCED_HEIGHT));
 
     // Cards are percent-anchored and the falloff's vertical spread scales with the container's real
     // height (`useMagneticDock`), so pointer y, card centers and the spread all scale together: the same
     // pointer FRACTION must give the same response at every height. A dock still tuned to the old
     // 900px band would respond differently (weaker or stronger) once the section is taller.
     atFloor.forEach((scales, index) => {
-      scales.forEach((scale, card) => expect(taller[index][card], `fraction ${FRACTIONS[index]}, card ${card}`).toBeCloseTo(scale, 2));
+      scales.forEach((scale, card) =>
+        expect(taller[index][card], `fraction ${FRACTIONS[index]}, card ${card}`).toBeCloseTo(
+          scale,
+          2,
+        ),
+      );
     });
   });
 });
@@ -378,20 +477,30 @@ test.describe('pill nav crossfade (task 8.1)', () => {
     page.evaluate(() => {
       const button = document.querySelector<HTMLElement>('.pill-nav__button')!;
       const style = getComputedStyle(button);
-      return { properties: style.transitionProperty, duration: style.transitionDuration, easing: style.transitionTimingFunction };
+      return {
+        properties: style.transitionProperty,
+        duration: style.transitionDuration,
+        easing: style.transitionTimingFunction,
+      };
     });
 
-  test('the active-pill background/color crossfade takes 120ms on the house ease', async ({ page }) => {
+  test('the active-pill background/color crossfade takes 120ms on the house ease', async ({
+    page,
+  }) => {
     await page.emulateMedia({ reducedMotion: 'no-preference' });
     await page.goto('/');
     const transition = await activeTransition(page);
     expect(transition.properties).toBe('background, color');
     expect(transition.duration).toBe('0.12s, 0.12s');
     // The shared "house ease" (docs/07): cubic-bezier(.2, .85, .2, 1).
-    expect(transition.easing).toBe('cubic-bezier(0.2, 0.85, 0.2, 1), cubic-bezier(0.2, 0.85, 0.2, 1)');
+    expect(transition.easing).toBe(
+      'cubic-bezier(0.2, 0.85, 0.2, 1), cubic-bezier(0.2, 0.85, 0.2, 1)',
+    );
   });
 
-  test('reduced motion removes the crossfade entirely (docs/14: instant end state)', async ({ page }) => {
+  test('reduced motion removes the crossfade entirely (docs/14: instant end state)', async ({
+    page,
+  }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/');
     const transition = await activeTransition(page);

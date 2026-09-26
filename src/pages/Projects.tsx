@@ -25,7 +25,8 @@ const HOT_COLOR = '#c9351d';
 // title, since the visible "PROJECTS" lettering is decorative SVG strokes
 // (docs/04, docs/05) that a screen reader gets nothing from directly.
 function Projects() {
-  const { containerRef, valuesRef, handlePointerOver, handlePointerOut, bindFocus } = useCardHover(PROJECT_IDS);
+  const { containerRef, valuesRef, handlePointerOver, handlePointerOut, bindFocus } =
+    useCardHover(PROJECT_IDS);
 
   return (
     <div data-testid="screen-projects" className="projects-screen">
@@ -52,7 +53,12 @@ function Projects() {
         ))}
       </div>
 
-      <CrayonMascot containerRef={containerRef} valuesRef={valuesRef} blueColor={DOODLE_COLOR} hotColor={HOT_COLOR} />
+      <CrayonMascot
+        containerRef={containerRef}
+        valuesRef={valuesRef}
+        blueColor={DOODLE_COLOR}
+        hotColor={HOT_COLOR}
+      />
     </div>
   );
 }

@@ -18,7 +18,11 @@ beforeEach(() => {
       disconnect() {}
     },
   );
-  vi.stubGlobal('matchMedia', () => ({ matches: true, addEventListener() {}, removeEventListener() {} }));
+  vi.stubGlobal('matchMedia', () => ({
+    matches: true,
+    addEventListener() {},
+    removeEventListener() {},
+  }));
   vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockImplementation(() => layerHeight);
 });
 
@@ -33,7 +37,12 @@ function renderMascot() {
   const { container } = render(
     <div>
       <div ref={containerRef} />
-      <CrayonMascot containerRef={containerRef} valuesRef={valuesRef} blueColor="#586a30" hotColor="#c9351d" />
+      <CrayonMascot
+        containerRef={containerRef}
+        valuesRef={valuesRef}
+        blueColor="#586a30"
+        hotColor="#c9351d"
+      />
     </div>,
   );
   const svg = container.querySelector('svg') as SVGSVGElement;
@@ -53,11 +62,14 @@ describe('CrayonMascot at different section heights', () => {
   it.each([
     [700, '0 0 1440 700', 'M476.0 610.0C'],
     [1400, '0 0 1440 1400', 'M476.0 1241.5C'],
-  ])('at %ipx: viewBox tracks the section and the mascot re-anchors with it', (height, viewBox, bodyStart) => {
-    layerHeight = height;
-    const { svg, bodyD } = renderMascot();
-    expect(svg.getAttribute('viewBox')).toBe(viewBox);
-    expect(svg.getAttribute('preserveAspectRatio')).toBe('xMinYMin meet');
-    expect(bodyD.startsWith(bodyStart)).toBe(true);
-  });
+  ])(
+    'at %ipx: viewBox tracks the section and the mascot re-anchors with it',
+    (height, viewBox, bodyStart) => {
+      layerHeight = height;
+      const { svg, bodyD } = renderMascot();
+      expect(svg.getAttribute('viewBox')).toBe(viewBox);
+      expect(svg.getAttribute('preserveAspectRatio')).toBe('xMinYMin meet');
+      expect(bodyD.startsWith(bodyStart)).toBe(true);
+    },
+  );
 });

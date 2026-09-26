@@ -33,7 +33,9 @@ const fakeContext: unknown = new Proxy(function () {}, {
 beforeEach(() => {
   stubs = installLayoutStubs({ reducedMotion: false }); // motion ON: the loops run
   raf = installRafSpy();
-  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(fakeContext as CanvasRenderingContext2D);
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(
+    fakeContext as CanvasRenderingContext2D,
+  );
 });
 
 afterEach(() => {
@@ -52,7 +54,12 @@ function mascot(): ReactElement {
   return (
     <div>
       <div ref={containerRef} />
-      <CrayonMascot containerRef={containerRef} valuesRef={valuesRef} blueColor="#586a30" hotColor="#c9351d" />
+      <CrayonMascot
+        containerRef={containerRef}
+        valuesRef={valuesRef}
+        blueColor="#586a30"
+        hotColor="#c9351d"
+      />
     </div>
   );
 }
@@ -111,7 +118,9 @@ describe('a paused screen still tracks its geometry', () => {
     stubs.setHeight(900);
     const { container } = render(inSection(mascot(), false));
     const bodyD = () => {
-      const paths = Array.from((container.querySelector('svg.projects-mascot') as SVGSVGElement).querySelectorAll('path'));
+      const paths = Array.from(
+        (container.querySelector('svg.projects-mascot') as SVGSVGElement).querySelectorAll('path'),
+      );
       return paths[MASCOT_PATH_IDS.indexOf('body')].getAttribute('d') as string;
     };
     expect(bodyD().startsWith('M476.0 790.4C')).toBe(true);

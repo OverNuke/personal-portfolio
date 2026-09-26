@@ -57,7 +57,8 @@ export function useHashNavigation(navigate: (pageId: PageId, mode: HashNavMode) 
   }, []);
 
   useEffect(() => {
-    const previousRestoration = 'scrollRestoration' in window.history ? window.history.scrollRestoration : null;
+    const previousRestoration =
+      'scrollRestoration' in window.history ? window.history.scrollRestoration : null;
     if (previousRestoration) window.history.scrollRestoration = 'manual';
 
     let handling = false;

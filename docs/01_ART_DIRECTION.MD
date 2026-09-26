@@ -19,7 +19,7 @@ registers, and the alternation is structural, not decorative:
 - **Profile is the literal hinge.** Its background is a single diagonal
   gradient running warm-paper → near-black left to right
   (`linear-gradient(97deg, #f6f3e9 0%, #f2eee1 22%, #dfdaca 40%, #a9a59a 47%,
-  #33332d 55%, #101010 64%, #0a0a09 100%)`), with the identity copy ("Junior
+#33332d 55%, #101010 64%, #0a0a09 100%)`), with the identity copy ("Junior
   software engineer") sitting on the paper side and the interactive skill
   chambers sitting on the dark side. It's the only screen that is both
   registers at once, and its position in the nav order (Home → Profile →
@@ -33,7 +33,7 @@ registers, and the alternation is structural, not decorative:
 an EN/ES toggle boxed in a hard 2px border, and a numbered nav list. There is
 no left content at all — the entire left ~900px of the 1440px stage is given
 to the animated ink-flow backdrop alone. This is a deliberate asymmetric,
-almost brutalist composition: the negative space *is* the visual. **Corrected
+almost brutalist composition: the negative space _is_ the visual. **Corrected
 2026-09-21** (was "dark identity hero"): the Ink Flow Background is its own
 `ext_resources` entry nested inside `main-page-standalone`'s manifest, not
 one of the six top-level decoded files — `decode-mockup.mjs` writes such
@@ -58,11 +58,12 @@ serif word (e.g. three language dots → "Anywhere"). This is a metaphor made
 literal: separate skills merging into one identity trait. (**Updated
 2026-09-26:** "four" until the `sync-portfolio-metadata` change added a
 third chamber, "Tools" (HTML, CSS, Figma, VS Code); the stack is now 5×132px
-+ 4×30px gaps = 780px, inside the 900px section floor, and the "Looking for
-an opportunity" badge moved up to `top: 20px` to clear the first chamber.)
+
+- 4×30px gaps = 780px, inside the 900px section floor, and the "Looking for
+  an opportunity" badge moved up to `top: 20px` to clear the first chamber.)
 
 **Distinctions — weighted-Voronoi paper cells.** Rather than a grid, cell
-boundaries are computed as an *additively-weighted Voronoi diagram* (a "power
+boundaries are computed as an _additively-weighted Voronoi diagram_ (a "power
 diagram" — see the `powerCell()` half-plane-clipping implementation in the
 decoded template) from 12 seed points, each with its own weight in px²
 (**Corrected 2026-09-21, Phase 11 close-out:** this was miscounted as "11
@@ -135,7 +136,7 @@ from the cursor visibly participate less rather than not at all.
   the mascot (`perturbPoints`, new noise frame every 1/7.5 s, amplitude
   1.3px), at the mascot's open-stroke weight (3.2px) in the doodle ink
   `#e0452b` — so the line quality reads as the same hand. They are deliberately
-  *quiet* (the mascot and spores stay the focal doodles): all five sit in the
+  _quiet_ (the mascot and spores stay the focal doodles): all five sit in the
   corridor between the first and second rows of certificate labels
   (roughly y 340–420 in the 900-tall design space, left to right: pill,
   microscope, DNA, then flask and molecule on the right), the one band with no

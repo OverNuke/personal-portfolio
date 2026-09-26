@@ -24,7 +24,9 @@ function setup(reducedMotion = false) {
   installLayoutStubs({ reducedMotion });
   raf = installRafSpy();
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <SectionVisibilityContext.Provider value={visible}>{children}</SectionVisibilityContext.Provider>
+    <SectionVisibilityContext.Provider value={visible}>
+      {children}
+    </SectionVisibilityContext.Provider>
   );
   return renderHook(() => useCardHover(IDS), { wrapper });
 }

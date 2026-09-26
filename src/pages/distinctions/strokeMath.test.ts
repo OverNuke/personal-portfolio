@@ -25,7 +25,9 @@ describe('perturbPoints', () => {
       expect(p[1]).toBeCloseTo(200 + SQUARE[i][1] + rnd(i + 41, 3, 7) * 1.5, 12);
     });
     // and the noise is real: the frame really moved the points, by at most `amp` per axis
-    const moved = out.map((p, i) => Math.hypot(p[0] - (100 + SQUARE[i][0]), p[1] - (200 + SQUARE[i][1])));
+    const moved = out.map((p, i) =>
+      Math.hypot(p[0] - (100 + SQUARE[i][0]), p[1] - (200 + SQUARE[i][1])),
+    );
     expect(Math.max(...moved)).toBeGreaterThan(0.05);
     expect(Math.max(...moved)).toBeLessThanOrEqual(1.5 * Math.SQRT2);
   });

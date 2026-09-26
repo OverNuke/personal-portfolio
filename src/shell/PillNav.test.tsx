@@ -6,8 +6,16 @@ import PillNav from './PillNav';
 describe('PillNav', () => {
   it('renders one real button per screen, in order, with the English-only labels', () => {
     render(<PillNav activeId="home" onNavigate={() => {}} />);
-    const buttons = within(screen.getByRole('navigation', { name: 'Screens' })).getAllByRole('button');
-    expect(buttons.map((b) => b.textContent)).toEqual(['Home', 'Profile', 'Distinctions', 'Projects', 'Contact']);
+    const buttons = within(screen.getByRole('navigation', { name: 'Screens' })).getAllByRole(
+      'button',
+    );
+    expect(buttons.map((b) => b.textContent)).toEqual([
+      'Home',
+      'Profile',
+      'Distinctions',
+      'Projects',
+      'Contact',
+    ]);
   });
 
   it('marks only the active section with aria-current and data-active', () => {

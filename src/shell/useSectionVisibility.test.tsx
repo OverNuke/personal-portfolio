@@ -36,7 +36,8 @@ function installObserver() {
 function report(changes: Record<string, boolean>) {
   const [observer] = observers;
   const entries = Object.entries(changes).map(
-    ([id, isIntersecting]) => ({ target: document.getElementById(id), isIntersecting }) as IntersectionObserverEntry,
+    ([id, isIntersecting]) =>
+      ({ target: document.getElementById(id), isIntersecting }) as IntersectionObserverEntry,
   );
   act(() => observer.callback(entries, {} as IntersectionObserver));
 }

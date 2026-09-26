@@ -17,8 +17,8 @@ crayon doesn't. A production icon set would have been faster to ship and
 would look "more professional" in the boring sense. It would also be
 completely forgettable, and it would say nothing about who made it. The
 mascot exists because Profile's own copy says the honest thing out loud —
-*"Junior software engineer... small projects so far — and the appetite for
-one that makes a change"* — and a portfolio that admits it's early-career
+_"Junior software engineer... small projects so far — and the appetite for
+one that makes a change"_ — and a portfolio that admits it's early-career
 shouldn't try to borrow the visual confidence of a design system built by a
 50-person team. The doodle is confidence of a different, truer kind: I can't
 fake ten years of shipped products, but I can make one small character that's
@@ -28,7 +28,7 @@ clearly mine and put real craft into making it move well.
 
 Home and Contact are dark. Profile, Distinctions, and Projects are paper. This
 isn't a random palette split — it maps directly onto what each screen is
-*for*. Home and Contact are the two moments where something is being asked of
+_for_. Home and Contact are the two moments where something is being asked of
 the visitor: pay attention (Home) or take an action (Contact). Dark,
 high-contrast, headline-driven screens are the right register for that — they
 read as confident and immediate. Profile, Distinctions, and Projects are the
@@ -36,7 +36,7 @@ three "prove it" screens, and they're built to feel like pages of an actual
 paper dossier being turned: warm off-white, grain, ink, hand annotation. You
 don't riffle through a portfolio binder in the dark.
 
-Profile isn't paper *or* dark — it's a single gradient that runs from one
+Profile isn't paper _or_ dark — it's a single gradient that runs from one
 into the other across the same 1440px, with the honest biographical copy
 sitting in the paper zone and the interactive skill chambers sitting in the
 dark zone. That's not a compromise between two palettes; it's the literal
@@ -67,7 +67,7 @@ evidence Distinctions is supposed to be presenting.
 ## Why the fixed 1440×900 stage
 
 > **Updated 2026-09-23.** The argument below still holds for the fixed
-> 1440px *width*: one committed design width, no breakpoints, no reflow. What
+> 1440px _width_: one committed design width, no breakpoints, no reflow. What
 > changed is the stage's shape — it is now one continuously scrollable stack
 > of five 1440-wide sections with a 900px design floor each, scaled by
 > viewport width alone (`00_PROJECT_VISION.MD`'s dated decision), and

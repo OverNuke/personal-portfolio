@@ -27,12 +27,12 @@
 
 **What remains, verified against `src/shell/shell.css`:**
 
-| What | Value |
-|---|---|
-| Only transition in the shell | The pill nav's active-state swap: `.pill-nav__button` `transition: background 120ms var(--ease-house), color 120ms var(--ease-house)` |
-| Easing | `--ease-house` = `cubic-bezier(.2,.85,.2,1)` (defined in `src/styles/index.css`; the shell.css fallback repeats the literal) |
-| Properties | `background` and `color` only — no transform, no scale, no opacity, no blur |
-| `prefers-reduced-motion: reduce` | `.pill-nav__button { transition: none }` — the swap is instant |
+| What                             | Value                                                                                                                                 |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Only transition in the shell     | The pill nav's active-state swap: `.pill-nav__button` `transition: background 120ms var(--ease-house), color 120ms var(--ease-house)` |
+| Easing                           | `--ease-house` = `cubic-bezier(.2,.85,.2,1)` (defined in `src/styles/index.css`; the shell.css fallback repeats the literal)          |
+| Properties                       | `background` and `color` only — no transform, no scale, no opacity, no blur                                                           |
+| `prefers-reduced-motion: reduce` | `.pill-nav__button { transition: none }` — the swap is instant                                                                        |
 
 - The **120ms** (REFORM) figure carried over onto the pill. The **140ms**
   (ENTER) figure is **unused**: the pill's active swap has a single direction
@@ -47,7 +47,7 @@
   "motion never gates function" rule from the section below, which still
   holds unchanged.
 - The pill's transition previously was the mockup's plain `background .2s
-  ease, color .2s ease`; that decoded value was deliberately replaced by the
+ease, color .2s ease`; that decoded value was deliberately replaced by the
   house-ease 120ms (see `07_ANIMATION_GUIDELINES.md`'s dated correction).
 - Guarded by an e2e computed-style test (`e2e/layout.spec.ts`, "pill nav
   crossfade": `transition-duration` / `-timing-function` with motion, `0s`
@@ -78,8 +78,8 @@ This matters because the project's pre-reset old shell
 (`Shell.tsx`, since deleted) did
 have a named transition system (`Crease`/`PageLayer`, referenced historically
 in this repo's docs as "REFORM/ENTER"). That system doesn't carry forward
-as-is for two independent reasons: (1) it animated an *overlay page opening
-on top of a persistent Home layer*, a structural model `03_UX_ARCHITECTURE.MD`
+as-is for two independent reasons: (1) it animated an _overlay page opening
+on top of a persistent Home layer_, a structural model `03_UX_ARCHITECTURE.MD`
 already rejected in favor of five peer routes with no persistent base layer
 to stay put, and (2) it has no source in the actual mockup this rebuild is
 porting — its own animation values were never verified against decoded
@@ -100,16 +100,16 @@ Profile's diagonal-gradient hinge, which has no analog on Distinctions'
 Voronoi field, and so on). The **one** persistent element across every
 transition is the pill-nav chrome itself — and per `03_UX_ARCHITECTURE.MD`,
 that chrome deliberately renders once outside `<Routes>` and never
-remounts, so it has nothing to "move" between states; its permanence *is*
+remounts, so it has nothing to "move" between states; its permanence _is_
 the continuity cue, not a thing this doc needs to animate.
 
 **What ships instead — REFORM/ENTER as a plain opacity crossfade:**
 
-| Phase | What | Duration | Easing |
-|---|---|---|---|
-| REFORM (exit) | Outgoing screen's root fades `opacity: 1 → 0` | 120ms | `cubic-bezier(.2,.85,.2,1)` (the house ease, `07_ANIMATION_GUIDELINES.md`) |
-| ENTER (enter) | Incoming screen's root fades `opacity: 0 → 1` | 140ms | `cubic-bezier(.2,.85,.2,1)` |
-| Both | No transform, no scale, no blur, no shared element — opacity only | — | — |
+| Phase         | What                                                              | Duration | Easing                                                                     |
+| ------------- | ----------------------------------------------------------------- | -------- | -------------------------------------------------------------------------- |
+| REFORM (exit) | Outgoing screen's root fades `opacity: 1 → 0`                     | 120ms    | `cubic-bezier(.2,.85,.2,1)` (the house ease, `07_ANIMATION_GUIDELINES.md`) |
+| ENTER (enter) | Incoming screen's root fades `opacity: 0 → 1`                     | 140ms    | `cubic-bezier(.2,.85,.2,1)`                                                |
+| Both          | No transform, no scale, no blur, no shared element — opacity only | —        | —                                                                          |
 
 This is deliberately the smallest addition beyond the mockup's literal hard
 cut, not a design flourish: a genuinely instantaneous full-screen content
@@ -147,8 +147,8 @@ depends on the crossfade completing — it is presentation only.
 > ("the new screen's component mounts", React Router unmounting the outgoing
 > screen) are obsolete; see `03_UX_ARCHITECTURE.MD`'s "Navigation model".
 
-`03_UX_ARCHITECTURE.MD` already decided *that* focus moves to the new
-screen's primary heading/landmark on every route change, and *that* a
+`03_UX_ARCHITECTURE.MD` already decided _that_ focus moves to the new
+screen's primary heading/landmark on every route change, and _that_ a
 shared `aria-live="polite"` region announces the destination screen by
 name. This doc adds the missing piece: **when**, relative to the crossfade.
 

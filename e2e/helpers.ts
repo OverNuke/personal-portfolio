@@ -38,7 +38,10 @@ export function sectionId(pageId: PageId): string {
 
 /** Top edge of a section in viewport px (0 == flush with the viewport top). */
 export function sectionTop(page: Page, pageId: PageId): Promise<number> {
-  return page.evaluate((id) => document.getElementById(id)!.getBoundingClientRect().top, sectionId(pageId));
+  return page.evaluate(
+    (id) => document.getElementById(id)!.getBoundingClientRect().top,
+    sectionId(pageId),
+  );
 }
 
 /** Resolves once `window.scrollY` has held still for `frames` consecutive animation frames. */
@@ -70,7 +73,9 @@ export function waitForScrollSettled(page: Page, frames = 10): Promise<void> {
  * (not a sleep) so it holds for smooth and instant scrolls alike.
  */
 export async function expectSectionAtTop(page: Page, pageId: PageId): Promise<void> {
-  await expect.poll(async () => Math.abs(await sectionTop(page, pageId)), { timeout: 8000 }).toBeLessThanOrEqual(2);
+  await expect
+    .poll(async () => Math.abs(await sectionTop(page, pageId)), { timeout: 8000 })
+    .toBeLessThanOrEqual(2);
   await waitForScrollSettled(page);
   expect(Math.abs(await sectionTop(page, pageId))).toBeLessThanOrEqual(2);
 }
@@ -78,7 +83,10 @@ export async function expectSectionAtTop(page: Page, pageId: PageId): Promise<vo
 /** Click a pill-nav button by its registry label. */
 export async function clickPill(page: Page, pageId: PageId): Promise<void> {
   const route = routes.find((r) => r.pageId === pageId)!;
-  await page.getByRole('navigation', { name: 'Screens' }).getByRole('button', { name: route.navLabel, exact: true }).click();
+  await page
+    .getByRole('navigation', { name: 'Screens' })
+    .getByRole('button', { name: route.navLabel, exact: true })
+    .click();
 }
 
 /** Instantly jump to the top of the document and wait for the pill to follow (Home active). */
@@ -101,7 +109,11 @@ export function stageScale(page: Page): Promise<number> {
  * here) and wait for the height-tracking machinery -- the ResizeObservers in
  * Distinctions / Projects, and layout itself -- to settle on the new size.
  */
-export async function forceScreenHeight(page: Page, rootSelector: string, height: number): Promise<void> {
+export async function forceScreenHeight(
+  page: Page,
+  rootSelector: string,
+  height: number,
+): Promise<void> {
   await page.evaluate(
     ({ selector, px }) => {
       document.querySelector<HTMLElement>(selector)!.style.minHeight = `${px}px`;
@@ -109,8 +121,18 @@ export async function forceScreenHeight(page: Page, rootSelector: string, height
     { selector: rootSelector, px: height },
   );
   await expect
-    .poll(() => page.evaluate((selector) => document.querySelector<HTMLElement>(selector)!.clientHeight, rootSelector))
+    .poll(() =>
+      page.evaluate(
+        (selector) => document.querySelector<HTMLElement>(selector)!.clientHeight,
+        rootSelector,
+      ),
+    )
     .toBe(height);
   // The ResizeObserver callbacks run at the next frame boundary; let two frames pass.
-  await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  );
 }

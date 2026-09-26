@@ -37,7 +37,14 @@ export function smooth(pts: number[][], closed: boolean): string {
 }
 
 /** Points evenly distributed around an ellipse, `rot` radians offset. */
-export function ellipsePts(cx: number, cy: number, rx: number, ry: number, n: number, rot = 0): number[][] {
+export function ellipsePts(
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number,
+  n: number,
+  rot = 0,
+): number[][] {
   const out: number[][] = [];
   for (let i = 0; i < n; i++) {
     const th = (i / n) * Math.PI * 2 + rot;

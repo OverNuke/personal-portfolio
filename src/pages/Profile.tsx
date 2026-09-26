@@ -58,8 +58,8 @@ function Profile() {
         </h2>
 
         <p className="profile-bio">
-          Just graduated from Universidad Veracruzana. Small projects so far — and the appetite for one that makes a
-          change.
+          Just graduated from Universidad Veracruzana. Small projects so far — and the appetite for
+          one that makes a change.
         </p>
 
         <div className="profile-footer">
@@ -101,7 +101,11 @@ function Profile() {
         <defs>
           <filter id="profileGoo">
             <feGaussianBlur in="SourceGraphic" stdDeviation="8.8" result="blur" />
-            <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -11" />
+            <feColorMatrix
+              in="blur"
+              type="matrix"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -11"
+            />
           </filter>
         </defs>
       </svg>
@@ -114,7 +118,9 @@ function Profile() {
             state={chamberState(index)}
             onEnter={() => setHoveredIndex(index)}
             onLeave={() => setHoveredIndex((current) => (current === index ? null : current))}
-            onToggleBonded={() => setBonded((current) => ({ ...current, [index]: !current[index] }))}
+            onToggleBonded={() =>
+              setBonded((current) => ({ ...current, [index]: !current[index] }))
+            }
           />
         ))}
       </div>

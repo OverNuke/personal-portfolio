@@ -18,7 +18,8 @@ import { clickPill, expectSectionAtTop, sectionId } from './helpers';
  * Distinctions lightbox opens/closes with focus return, and one keyboard path.
  */
 
-const pillNav = (page: import('@playwright/test').Page) => page.getByRole('navigation', { name: 'Screens' });
+const pillNav = (page: import('@playwright/test').Page) =>
+  page.getByRole('navigation', { name: 'Screens' });
 
 test.describe('screens load clean', () => {
   for (const route of routes) {
@@ -54,7 +55,9 @@ test('pill nav reaches every screen', async ({ page }) => {
     await clickPill(page, route.pageId);
     await expect(page).toHaveURL(new RegExp(`${route.hash}$`));
     await expectSectionAtTop(page, route.pageId);
-    await expect(pillNav(page).getByRole('button', { name: route.navLabel, exact: true })).toHaveAttribute('aria-current', 'page');
+    await expect(
+      pillNav(page).getByRole('button', { name: route.navLabel, exact: true }),
+    ).toHaveAttribute('aria-current', 'page');
     await expect(page.locator(`#${sectionId(route.pageId)} [data-screen-heading]`)).toBeFocused();
   }
 });
@@ -79,7 +82,7 @@ test('Home nav list navigates and EN/ES toggle switches language', async ({ page
 });
 
 test('Distinctions lightbox opens and closes, returning focus to its cell', async ({ page }) => {
-    test.slow(); // several scrolls/fresh pages under always-on rAF effects
+  test.slow(); // several scrolls/fresh pages under always-on rAF effects
   await page.goto('/#distinctions');
 
   const cell = page.locator('#section-distinction [role="button"][data-card]').first();
@@ -102,7 +105,15 @@ test('keyboard: Tab reaches the pill nav and Enter navigates', async ({ page }) 
   await page.goto('/');
 
   // The nav precedes <main> in the DOM, so it owns the first Tab stops (no .focus() shortcut: this proves the real order).
-  expect(await pillNav(page).evaluate((nav) => !!(nav.compareDocumentPosition(document.querySelector('main')!) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
+  expect(
+    await pillNav(page).evaluate(
+      (nav) =>
+        !!(
+          nav.compareDocumentPosition(document.querySelector('main')!) &
+          Node.DOCUMENT_POSITION_FOLLOWING
+        ),
+    ),
+  ).toBe(true);
 
   await page.keyboard.press('Tab');
   await expect(pillNav(page).getByRole('button', { name: 'Home', exact: true })).toBeFocused();

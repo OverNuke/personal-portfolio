@@ -110,7 +110,9 @@ function ScanModal({ isOpen, title, meta, imageSrc, imageAlt, onClose }: ScanMod
         return;
       }
       if (event.key !== 'Tab' || !dialogRef.current) return;
-      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+      );
       if (focusable.length === 0) return;
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
@@ -157,7 +159,10 @@ function ScanModal({ isOpen, title, meta, imageSrc, imageAlt, onClose }: ScanMod
       // translate(-130 -75)`), not a per-shape hack.
       const k = reducedMotion ? 1 : blink(t);
       if (lidRef.current) {
-        lidRef.current.setAttribute('transform', `translate(130 75) scale(1 ${k.toFixed(3)}) translate(-130 -75)`);
+        lidRef.current.setAttribute(
+          'transform',
+          `translate(130 75) scale(1 ${k.toFixed(3)}) translate(-130 -75)`,
+        );
       }
     }
 
@@ -219,7 +224,12 @@ function ScanModal({ isOpen, title, meta, imageSrc, imageAlt, onClose }: ScanMod
                   regression rather than a faithful port (judgment call,
                   disclosed in the final report). */}
               <p className="distinctions-modal__placeholder-text">Scan not yet available</p>
-              <svg viewBox="0 0 260 150" className="distinctions-modal__eye" aria-hidden="true" focusable="false">
+              <svg
+                viewBox="0 0 260 150"
+                className="distinctions-modal__eye"
+                aria-hidden="true"
+                focusable="false"
+              >
                 <g ref={lidRef}>
                   <path
                     ref={eyeShapeRef}
@@ -232,7 +242,14 @@ function ScanModal({ isOpen, title, meta, imageSrc, imageAlt, onClose }: ScanMod
                   <circle ref={irisRef} cx={130} cy={75} r={27} fill={DOODLE_EYE_COLOR} />
                   <circle ref={glintRef} cx={121} cy={65} r={8} fill="#f4f1e6" />
                 </g>
-                <path ref={eyeBrowRef} d={EYE_BROW_D} fill="none" stroke={DOODLE_EYE_COLOR} strokeWidth={4.5} strokeLinecap="round" />
+                <path
+                  ref={eyeBrowRef}
+                  d={EYE_BROW_D}
+                  fill="none"
+                  stroke={DOODLE_EYE_COLOR}
+                  strokeWidth={4.5}
+                  strokeLinecap="round"
+                />
               </svg>
             </>
           )}

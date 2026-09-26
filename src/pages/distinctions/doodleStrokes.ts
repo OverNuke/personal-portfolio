@@ -141,8 +141,14 @@ export function buildDoodleStrokes({
   const f = jitterOn ? Math.floor(t * 7.5) : 0;
   const out: DoodlePath[] = [];
 
-  const at = (pts: number[][], ox: number, oy: number, seed: number, amp: number, sc = 1): number[][] =>
-    perturbPoints(pts, ox, oy, seed, amp, jitterOn ? f : null, sc);
+  const at = (
+    pts: number[][],
+    ox: number,
+    oy: number,
+    seed: number,
+    amp: number,
+    sc = 1,
+  ): number[][] => perturbPoints(pts, ox, oy, seed, amp, jitterOn ? f : null, sc);
 
   const push = (id: string, d: string, fill: string, w: number) => {
     out.push({ id, d: d || '', fill: fill || 'none', stroke: B, w: w || 3.4 });
@@ -190,7 +196,10 @@ export function buildDoodleStrokes({
   const sa = Math.sin(a);
   const px = 31;
   const py = 2;
-  const arm = GUY_ARM.map((p) => [px + (p[0] - px) * ca - (p[1] - py) * sa, py + (p[0] - px) * sa + (p[1] - py) * ca]);
+  const arm = GUY_ARM.map((p) => [
+    px + (p[0] - px) * ca - (p[1] - py) * sa,
+    py + (p[0] - px) * sa + (p[1] - py) * ca,
+  ]);
   const armPts = at(arm, gx, gy, 4, 1.2);
   push('arm', smooth(armPts, false), 'none', 3.2);
 
@@ -247,7 +256,12 @@ export function buildDoodleStrokes({
   const titleCell = cells.find((c) => c.id === 'title');
   if (titleCell) {
     const s = 1 + (jitterOn ? Math.sin(t * 2.2) * 0.12 : 0);
-    push('spark', smooth(at(SPARK, titleCell.cx + 168, titleCell.cy - 126, 8, 1.1, s), true), B, 2.4);
+    push(
+      'spark',
+      smooth(at(SPARK, titleCell.cx + 168, titleCell.cy - 126, 8, 1.1, s), true),
+      B,
+      2.4,
+    );
   } else {
     push('spark', '', B, 2.4);
   }

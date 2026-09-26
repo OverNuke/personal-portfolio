@@ -20,7 +20,11 @@ beforeEach(() => {
       disconnect() {}
     },
   );
-  vi.stubGlobal('matchMedia', () => ({ matches: true, addEventListener() {}, removeEventListener() {} }));
+  vi.stubGlobal('matchMedia', () => ({
+    matches: true,
+    addEventListener() {},
+    removeEventListener() {},
+  }));
   vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockImplementation(() => layerHeight);
 });
 
@@ -43,12 +47,15 @@ describe('StrokeGlyphTitle viewBox', () => {
     expect(renderTitle().getAttribute('viewBox')).toBe('0 0 1440 900');
   });
 
-  it.each([700, 1400])('tracks a %ipx-tall section (1 unit = 1 CSS px, top-left anchored)', (height) => {
-    layerHeight = height;
-    const svg = renderTitle();
-    expect(svg.getAttribute('viewBox')).toBe(`0 0 1440 ${height}`);
-    expect(svg.getAttribute('preserveAspectRatio')).toBe('xMinYMin meet');
-  });
+  it.each([700, 1400])(
+    'tracks a %ipx-tall section (1 unit = 1 CSS px, top-left anchored)',
+    (height) => {
+      layerHeight = height;
+      const svg = renderTitle();
+      expect(svg.getAttribute('viewBox')).toBe(`0 0 1440 ${height}`);
+      expect(svg.getAttribute('preserveAspectRatio')).toBe('xMinYMin meet');
+    },
+  );
 
   it('follows the section when it is resized after mount', () => {
     layerHeight = 900;

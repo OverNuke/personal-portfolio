@@ -16,7 +16,11 @@ const COLOR = '#e0452b';
 const REST = { t: 0, jitterOn: false, hoverValues: {} as Record<string, number> };
 /** Live frame: boil + sway on, two cells partly hovered (anfeca wins the peak
  *  so the arm waves and the arrow shoots out toward it). */
-const LIVE = { t: 1.3, jitterOn: true, hoverValues: { anfeca: 0.8, english: 0.2 } as Record<string, number> };
+const LIVE = {
+  t: 1.3,
+  jitterOn: true,
+  hoverValues: { anfeca: 0.8, english: 0.2 } as Record<string, number>,
+};
 
 /** Builds one frame. The cells are ALWAYS computed at `cellsHeight` (default
  *  900) so a height-aware test can isolate the doodle's own height handling
@@ -31,7 +35,10 @@ function build(
     hoverGrowth: DEFAULT_HOVER_GROWTH,
     hoverValues: frame.hoverValues,
   });
-  const cells = computeCellGeometry(seeds, cellsHeight, { gap: DEFAULT_GAP, roundness: DEFAULT_ROUNDNESS });
+  const cells = computeCellGeometry(seeds, cellsHeight, {
+    gap: DEFAULT_GAP,
+    roundness: DEFAULT_ROUNDNESS,
+  });
   const strokes = buildDoodleStrokes({ ...frame, cells, color: COLOR, ...extra } as DoodleParams);
   return Object.fromEntries(strokes.map((s) => [s.id, s]));
 }
@@ -77,7 +84,9 @@ describe('buildDoodleStrokes at the 900px design height (approval)', () => {
     expect(rest['ear-l'].d).toBe(
       'M443.0 816.0C440.2 813.5,436.8 800.7,438.0 797.0C439.2 793.3,447.2 791.5,450.0 794.0C452.8 796.5,456.2 808.3,455.0 812.0C453.8 815.7,445.8 818.5,443.0 816.0Z',
     );
-    expect(rest.arm.d).toBe('M501.0 840.0C503.5 838.4,512.2 834.9,515.8 830.7C519.3 826.4,521.3 817.2,522.4 814.5');
+    expect(rest.arm.d).toBe(
+      'M501.0 840.0C503.5 838.4,512.2 834.9,515.8 830.7C519.3 826.4,521.3 817.2,522.4 814.5',
+    );
     expect(rest.arrow.d).toBe('');
     expect(rest.spark.d).toBe(
       'M380.0 75.1C381.7 75.1,382.0 84.9,385.0 88.1C388.0 91.2,398.0 92.1,398.0 94.1C398.0 96.1,388.0 96.9,385.0 100.1C382.0 103.2,381.7 113.1,380.0 113.1C378.3 113.1,378.0 103.2,375.0 100.1C372.0 96.9,362.0 96.1,362.0 94.1C362.0 92.1,372.0 91.2,375.0 88.1C378.0 84.9,378.3 75.1,380.0 75.1Z',
@@ -97,7 +106,9 @@ describe('buildDoodleStrokes at the 900px design height (approval)', () => {
     expect(live.body.d).toBe(
       'M438.5 823.0C433.8 828.4,435.5 836.4,436.2 843.6C436.8 850.9,438.3 861.4,442.2 866.7C446.2 872.0,452.5 874.3,459.9 875.3C467.4 876.2,480.1 876.1,486.8 872.6C493.6 869.1,497.8 861.2,500.2 854.3C502.7 847.3,503.1 837.0,501.5 830.9C500.0 824.8,496.9 820.9,490.7 817.7C484.5 814.5,473.1 810.7,464.3 811.6C455.6 812.5,443.2 817.7,438.5 823.0Z',
     );
-    expect(live.arm.d).toBe('M500.4 842.9C503.2 842.2,512.7 841.8,517.2 838.7C521.8 835.5,525.8 826.5,527.5 824.0');
+    expect(live.arm.d).toBe(
+      'M500.4 842.9C503.2 842.2,512.7 841.8,517.2 838.7C521.8 835.5,525.8 826.5,527.5 824.0',
+    );
     expect(live.arrow.d).toBe(
       'M528.8 824.4C523.3 810.0,503.8 766.3,496.1 738.0C488.5 709.6,484.9 682.5,482.7 654.5C480.6 626.5,480.2 597.4,483.1 569.9C486.0 542.4,492.2 516.0,500.2 489.4C508.3 462.9,518.4 436.9,531.4 410.5C544.4 384.2,570.3 344.4,578.1 331.2',
     );
@@ -136,43 +147,55 @@ describe('buildDoodleStrokes at other section heights', () => {
   it.each([
     [700, 'M440.0 633.8C', 'M1196.0 497.8C', 'M266.0 233.3C', 'M841.0 208.4C'],
     [1400, 'M440.0 1285.6C', 'M1196.0 995.6C', 'M266.0 466.7C', 'M841.0 416.9C'],
-  ])('%ipx: the resting mascot body and all 3 spores re-anchor proportionally', (height, body, s0, s1, s2) => {
-    const rest = build(REST, { height });
-    expect(rest.body.d.startsWith(body)).toBe(true);
-    expect(rest['spore-0'].d.startsWith(s0)).toBe(true);
-    expect(rest['spore-1'].d.startsWith(s1)).toBe(true);
-    expect(rest['spore-2'].d.startsWith(s2)).toBe(true);
-  });
+  ])(
+    '%ipx: the resting mascot body and all 3 spores re-anchor proportionally',
+    (height, body, s0, s1, s2) => {
+      const rest = build(REST, { height });
+      expect(rest.body.d.startsWith(body)).toBe(true);
+      expect(rest['spore-0'].d.startsWith(s0)).toBe(true);
+      expect(rest['spore-1'].d.startsWith(s1)).toBe(true);
+      expect(rest['spore-2'].d.startsWith(s2)).toBe(true);
+    },
+  );
 
-  it.each([700, 1400])('%ipx: every mascot part translates by exactly the same dy, x untouched', (height) => {
-    const dy = (838 * height) / 900 - 838;
-    const base = build(REST);
-    const moved = build(REST, { height });
-    for (const id of ['ear-l', 'ear-r', 'body', 'eye-l', 'eye-r', 'arm']) {
-      const a = nums(base[id].d);
-      const b = nums(moved[id].d);
-      expect(b).toHaveLength(a.length);
-      expect(a.length).toBeGreaterThan(4);
+  it.each([700, 1400])(
+    '%ipx: every mascot part translates by exactly the same dy, x untouched',
+    (height) => {
+      const dy = (838 * height) / 900 - 838;
+      const base = build(REST);
+      const moved = build(REST, { height });
+      for (const id of ['ear-l', 'ear-r', 'body', 'eye-l', 'eye-r', 'arm']) {
+        const a = nums(base[id].d);
+        const b = nums(moved[id].d);
+        expect(b).toHaveLength(a.length);
+        expect(a.length).toBeGreaterThan(4);
+        a.forEach((v, i) => {
+          // even index = x, odd index = y; smooth() rounds to 0.1
+          expect(Math.abs(b[i] - v - (i % 2 === 1 ? dy : 0))).toBeLessThanOrEqual(0.11);
+        });
+      }
+    },
+  );
+
+  it.each([700, 1400])(
+    '%ipx: the live (boiling, hovered) frame re-anchors by the same dy',
+    (height) => {
+      const dy = (838 * height) / 900 - 838;
+      const a = nums(build(LIVE).body.d);
+      const b = nums(build(LIVE, { height }).body.d);
       a.forEach((v, i) => {
-        // even index = x, odd index = y; smooth() rounds to 0.1
         expect(Math.abs(b[i] - v - (i % 2 === 1 ? dy : 0))).toBeLessThanOrEqual(0.11);
       });
-    }
-  });
+    },
+  );
 
-  it.each([700, 1400])('%ipx: the live (boiling, hovered) frame re-anchors by the same dy', (height) => {
-    const dy = (838 * height) / 900 - 838;
-    const a = nums(build(LIVE).body.d);
-    const b = nums(build(LIVE, { height }).body.d);
-    a.forEach((v, i) => {
-      expect(Math.abs(b[i] - v - (i % 2 === 1 ? dy : 0))).toBeLessThanOrEqual(0.11);
-    });
-  });
-
-  it.each([700, 1400])('%ipx: the title spark is cell-derived, so a height argument leaves it byte-identical', (height) => {
-    expect(build(REST, { height }).spark).toEqual(build(REST).spark);
-    expect(build(LIVE, { height }).spark).toEqual(build(LIVE).spark);
-  });
+  it.each([700, 1400])(
+    '%ipx: the title spark is cell-derived, so a height argument leaves it byte-identical',
+    (height) => {
+      expect(build(REST, { height }).spark).toEqual(build(REST).spark);
+      expect(build(LIVE, { height }).spark).toEqual(build(LIVE).spark);
+    },
+  );
 
   it('the spores keep their x and drift the same way, only their base y scales', () => {
     const a = nums(build(LIVE)['spore-1'].d);

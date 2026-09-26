@@ -26,31 +26,168 @@ interface Glyph {
 // Verified letter-for-letter against the decoded template -- only the 8
 // letters "PROJECTS" needs (P, R, O, J, E, C, T, S) are defined there.
 export const GLYPHS: Record<string, Glyph> = {
-  P: { w: 48, s: [{ p: [[2, 2], [0, 90]] }, { p: [[2, 2], [32, 8], [40, 26], [28, 44], [1, 46]] }] },
+  P: {
+    w: 48,
+    s: [
+      {
+        p: [
+          [2, 2],
+          [0, 90],
+        ],
+      },
+      {
+        p: [
+          [2, 2],
+          [32, 8],
+          [40, 26],
+          [28, 44],
+          [1, 46],
+        ],
+      },
+    ],
+  },
   R: {
     w: 50,
     s: [
-      { p: [[2, 2], [0, 90]] },
-      { p: [[2, 2], [32, 8], [40, 24], [26, 42], [1, 43]] },
-      { p: [[18, 42], [44, 90]] },
+      {
+        p: [
+          [2, 2],
+          [0, 90],
+        ],
+      },
+      {
+        p: [
+          [2, 2],
+          [32, 8],
+          [40, 24],
+          [26, 42],
+          [1, 43],
+        ],
+      },
+      {
+        p: [
+          [18, 42],
+          [44, 90],
+        ],
+      },
     ],
   },
-  O: { w: 58, s: [{ p: [[32, 2], [52, 18], [56, 46], [42, 80], [18, 86], [3, 58], [6, 24]], c: true }] },
-  J: { w: 48, s: [{ p: [[6, 2], [44, 6]] }, { p: [[32, 5], [30, 62], [20, 84], [6, 80], [2, 62]] }] },
+  O: {
+    w: 58,
+    s: [
+      {
+        p: [
+          [32, 2],
+          [52, 18],
+          [56, 46],
+          [42, 80],
+          [18, 86],
+          [3, 58],
+          [6, 24],
+        ],
+        c: true,
+      },
+    ],
+  },
+  J: {
+    w: 48,
+    s: [
+      {
+        p: [
+          [6, 2],
+          [44, 6],
+        ],
+      },
+      {
+        p: [
+          [32, 5],
+          [30, 62],
+          [20, 84],
+          [6, 80],
+          [2, 62],
+        ],
+      },
+    ],
+  },
   E: {
     w: 46,
     s: [
-      { p: [[4, 2], [0, 90]] },
-      { p: [[4, 2], [42, 0]] },
-      { p: [[2, 44], [32, 42]] },
-      { p: [[0, 90], [42, 86]] },
+      {
+        p: [
+          [4, 2],
+          [0, 90],
+        ],
+      },
+      {
+        p: [
+          [4, 2],
+          [42, 0],
+        ],
+      },
+      {
+        p: [
+          [2, 44],
+          [32, 42],
+        ],
+      },
+      {
+        p: [
+          [0, 90],
+          [42, 86],
+        ],
+      },
     ],
   },
-  C: { w: 56, s: [{ p: [[50, 16], [30, 2], [9, 16], [3, 48], [14, 78], [36, 86], [52, 72]] }] },
-  T: { w: 50, s: [{ p: [[0, 3], [48, 0]] }, { p: [[25, 2], [22, 90]] }] },
+  C: {
+    w: 56,
+    s: [
+      {
+        p: [
+          [50, 16],
+          [30, 2],
+          [9, 16],
+          [3, 48],
+          [14, 78],
+          [36, 86],
+          [52, 72],
+        ],
+      },
+    ],
+  },
+  T: {
+    w: 50,
+    s: [
+      {
+        p: [
+          [0, 3],
+          [48, 0],
+        ],
+      },
+      {
+        p: [
+          [25, 2],
+          [22, 90],
+        ],
+      },
+    ],
+  },
   S: {
     w: 50,
-    s: [{ p: [[46, 14], [26, 2], [8, 12], [12, 33], [34, 45], [47, 60], [40, 80], [16, 86], [3, 72]] }],
+    s: [
+      {
+        p: [
+          [46, 14],
+          [26, 2],
+          [8, 12],
+          [12, 33],
+          [34, 45],
+          [47, 60],
+          [40, 80],
+          [16, 86],
+          [3, 72],
+        ],
+      },
+    ],
   },
 };
 
@@ -62,13 +199,21 @@ export interface TitleStroke {
 /** Lays out `word` left-to-right starting at (x0, y0), scaled by `sc`, with
  *  `gap` local units of tracking between letters. Matches
  *  `layoutWord('PROJECTS', 76, 74, 1.18, 9)` from the decoded source. */
-export function layoutWord(word: string, x0: number, y0: number, sc: number, gap: number): TitleStroke[] {
+export function layoutWord(
+  word: string,
+  x0: number,
+  y0: number,
+  sc: number,
+  gap: number,
+): TitleStroke[] {
   const out: TitleStroke[] = [];
   let x = x0;
   for (const ch of word) {
     const g = GLYPHS[ch];
     if (!g) continue;
-    g.s.forEach((st) => out.push({ pts: st.p.map((p) => [x + p[0] * sc, y0 + p[1] * sc]), closed: !!st.c }));
+    g.s.forEach((st) =>
+      out.push({ pts: st.p.map((p) => [x + p[0] * sc, y0 + p[1] * sc]), closed: !!st.c }),
+    );
     x += g.w * sc + gap * sc;
   }
   return out;

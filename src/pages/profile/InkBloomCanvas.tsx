@@ -195,7 +195,13 @@ function InkBloomCanvas() {
   }, [reducedMotion, visible]);
 
   return (
-    <canvas ref={canvasRef} width={CANVAS_WIDTH} height={CANVAS_HEIGHT} className="profile-ink-canvas" aria-hidden="true" />
+    <canvas
+      ref={canvasRef}
+      width={CANVAS_WIDTH}
+      height={CANVAS_HEIGHT}
+      className="profile-ink-canvas"
+      aria-hidden="true"
+    />
   );
 }
 

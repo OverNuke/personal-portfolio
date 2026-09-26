@@ -5,7 +5,7 @@ import { usePrefersReducedMotion } from '../../shell/usePrefersReducedMotion';
 // Static print-grain texture -- copied verbatim (byte-for-byte data URI) from
 // the decoded nested component, not regenerated.
 const GRAIN_DATA_URI =
-  "url(data:image/svg+xml;utf8,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27220%27%20height=%27220%27%3E%3Cfilter%20id=%27n%27%3E%3CfeTurbulence%20type=%27fractalNoise%27%20baseFrequency=%270.85%27%20numOctaves=%274%27%20stitchTiles=%27stitch%27/%3E%3C/filter%3E%3Crect%20width=%27220%27%20height=%27220%27%20filter=%27url%28%23n%29%27%20opacity=%270.55%27/%3E%3C/svg%3E)";
+  'url(data:image/svg+xml;utf8,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27220%27%20height=%27220%27%3E%3Cfilter%20id=%27n%27%3E%3CfeTurbulence%20type=%27fractalNoise%27%20baseFrequency=%270.85%27%20numOctaves=%274%27%20stitchTiles=%27stitch%27/%3E%3C/filter%3E%3Crect%20width=%27220%27%20height=%27220%27%20filter=%27url%28%23n%29%27%20opacity=%270.55%27/%3E%3C/svg%3E)';
 
 interface RingSpec {
   left: string;
@@ -26,21 +26,111 @@ interface RingSpec {
 // (docs/_decoded/main-page-standalone/assets/ffce4155-*.html) -- pure literal
 // geometry, not derived, so it's kept as plain data rather than "computed."
 const DARK_RINGS: RingSpec[] = [
-  { left: '20%', top: '34%', width: '44%', height: '52%', animation: 'ifA', durationMultiplier: 38, shape: 'circle', dotRadius: 1.5, maskRadius: '58%' },
-  { left: '-6%', top: '52%', width: '34%', height: '44%', animation: 'ifB', durationMultiplier: 31, shape: 'ellipse 62% 48%', dotRadius: 1.45, maskRadius: '56%' },
-  { left: '46%', top: '58%', width: '38%', height: '46%', animation: 'ifC', durationMultiplier: 44, shape: 'circle', dotRadius: 1.4, maskRadius: '54%' },
-  { left: '4%', top: '14%', width: '30%', height: '38%', animation: 'ifD', durationMultiplier: 27, shape: 'ellipse 54% 62%', dotRadius: 1.45, maskRadius: '52%' },
-  { left: '60%', top: '22%', width: '34%', height: '40%', animation: 'ifB', durationMultiplier: 35, shape: 'circle', dotRadius: 1.35, maskRadius: '46%' },
-  { left: '28%', top: '74%', width: '30%', height: '34%', animation: 'ifA', durationMultiplier: 24, shape: 'ellipse 58% 52%', dotRadius: 1.4, maskRadius: '54%' },
+  {
+    left: '20%',
+    top: '34%',
+    width: '44%',
+    height: '52%',
+    animation: 'ifA',
+    durationMultiplier: 38,
+    shape: 'circle',
+    dotRadius: 1.5,
+    maskRadius: '58%',
+  },
+  {
+    left: '-6%',
+    top: '52%',
+    width: '34%',
+    height: '44%',
+    animation: 'ifB',
+    durationMultiplier: 31,
+    shape: 'ellipse 62% 48%',
+    dotRadius: 1.45,
+    maskRadius: '56%',
+  },
+  {
+    left: '46%',
+    top: '58%',
+    width: '38%',
+    height: '46%',
+    animation: 'ifC',
+    durationMultiplier: 44,
+    shape: 'circle',
+    dotRadius: 1.4,
+    maskRadius: '54%',
+  },
+  {
+    left: '4%',
+    top: '14%',
+    width: '30%',
+    height: '38%',
+    animation: 'ifD',
+    durationMultiplier: 27,
+    shape: 'ellipse 54% 62%',
+    dotRadius: 1.45,
+    maskRadius: '52%',
+  },
+  {
+    left: '60%',
+    top: '22%',
+    width: '34%',
+    height: '40%',
+    animation: 'ifB',
+    durationMultiplier: 35,
+    shape: 'circle',
+    dotRadius: 1.35,
+    maskRadius: '46%',
+  },
+  {
+    left: '28%',
+    top: '74%',
+    width: '30%',
+    height: '34%',
+    animation: 'ifA',
+    durationMultiplier: 24,
+    shape: 'ellipse 58% 52%',
+    dotRadius: 1.4,
+    maskRadius: '54%',
+  },
 ];
 
 // The "light ring field" -- the same swirl geometry reversed out (lighter
 // dots) inside the black ink mass, screen-blended. A 3-item subset of
 // DARK_RINGS's geometry, per the decoded source.
 const LIGHT_RINGS: RingSpec[] = [
-  { left: '-6%', top: '52%', width: '34%', height: '44%', animation: 'ifB', durationMultiplier: 31, shape: 'ellipse 62% 48%', dotRadius: 1.45, maskRadius: '56%' },
-  { left: '20%', top: '34%', width: '44%', height: '52%', animation: 'ifA', durationMultiplier: 38, shape: 'circle', dotRadius: 1.15, maskRadius: '58%' },
-  { left: '28%', top: '74%', width: '30%', height: '34%', animation: 'ifA', durationMultiplier: 24, shape: 'ellipse 58% 52%', dotRadius: 1.4, maskRadius: '54%' },
+  {
+    left: '-6%',
+    top: '52%',
+    width: '34%',
+    height: '44%',
+    animation: 'ifB',
+    durationMultiplier: 31,
+    shape: 'ellipse 62% 48%',
+    dotRadius: 1.45,
+    maskRadius: '56%',
+  },
+  {
+    left: '20%',
+    top: '34%',
+    width: '44%',
+    height: '52%',
+    animation: 'ifA',
+    durationMultiplier: 38,
+    shape: 'circle',
+    dotRadius: 1.15,
+    maskRadius: '58%',
+  },
+  {
+    left: '28%',
+    top: '74%',
+    width: '30%',
+    height: '34%',
+    animation: 'ifA',
+    durationMultiplier: 24,
+    shape: 'ellipse 58% 52%',
+    dotRadius: 1.4,
+    maskRadius: '54%',
+  },
 ];
 
 // Design-time stage the ring geometry above was hand-tuned against. Width is a
@@ -128,7 +218,14 @@ interface InkFlowBackgroundProps {
  * unloaded, or statically framed (`animate=false` pauses every animation via
  * `[data-static]`'s CSS rule rather than removing any layer).
  */
-function InkFlowBackground({ ink, speed, ringGap, inkMass = '#0c0d0a', paperLift = 1, animate = true }: InkFlowBackgroundProps) {
+function InkFlowBackground({
+  ink,
+  speed,
+  ringGap,
+  inkMass = '#0c0d0a',
+  paperLift = 1,
+  animate = true,
+}: InkFlowBackgroundProps) {
   const reducedMotion = usePrefersReducedMotion();
   const shouldAnimate = animate && !reducedMotion;
   const rawId = useId();
@@ -146,15 +243,63 @@ function InkFlowBackground({ ink, speed, ringGap, inkMass = '#0c0d0a', paperLift
   const liftAlpha2 = (0.45 * paperLift).toFixed(3);
 
   return (
-    <div className="ink-flow" style={rootVars} data-static={!shouldAnimate || undefined} aria-hidden="true">
-      <svg width="0" height="0" style={{ position: 'absolute', pointerEvents: 'none' }} aria-hidden="true">
-        <filter id={warpId} x="-25%" y="-25%" width="150%" height="150%" colorInterpolationFilters="sRGB">
-          <feTurbulence type="fractalNoise" baseFrequency="0.0055 0.0085" numOctaves={3} seed={9} result="n" />
-          <feDisplacementMap in="SourceGraphic" in2="n" scale={120} xChannelSelector="R" yChannelSelector="G" />
+    <div
+      className="ink-flow"
+      style={rootVars}
+      data-static={!shouldAnimate || undefined}
+      aria-hidden="true"
+    >
+      <svg
+        width="0"
+        height="0"
+        style={{ position: 'absolute', pointerEvents: 'none' }}
+        aria-hidden="true"
+      >
+        <filter
+          id={warpId}
+          x="-25%"
+          y="-25%"
+          width="150%"
+          height="150%"
+          colorInterpolationFilters="sRGB"
+        >
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.0055 0.0085"
+            numOctaves={3}
+            seed={9}
+            result="n"
+          />
+          <feDisplacementMap
+            in="SourceGraphic"
+            in2="n"
+            scale={120}
+            xChannelSelector="R"
+            yChannelSelector="G"
+          />
         </filter>
-        <filter id={warpSoftId} x="-25%" y="-25%" width="150%" height="150%" colorInterpolationFilters="sRGB">
-          <feTurbulence type="fractalNoise" baseFrequency="0.007 0.006" numOctaves={2} seed={3} result="n" />
-          <feDisplacementMap in="SourceGraphic" in2="n" scale={90} xChannelSelector="R" yChannelSelector="G" />
+        <filter
+          id={warpSoftId}
+          x="-25%"
+          y="-25%"
+          width="150%"
+          height="150%"
+          colorInterpolationFilters="sRGB"
+        >
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.007 0.006"
+            numOctaves={2}
+            seed={3}
+            result="n"
+          />
+          <feDisplacementMap
+            in="SourceGraphic"
+            in2="n"
+            scale={90}
+            xChannelSelector="R"
+            yChannelSelector="G"
+          />
         </filter>
       </svg>
 
@@ -165,7 +310,11 @@ function InkFlowBackground({ ink, speed, ringGap, inkMass = '#0c0d0a', paperLift
 
       <div className="ink-flow__dark-rings" style={{ filter: `url(#${warpId})` }}>
         {DARK_RINGS.map((ring, index) => (
-          <div key={index} className="ink-flow__anim" style={ringStyle(ring, 'var(--if-ink, #14150f)')} />
+          <div
+            key={index}
+            className="ink-flow__anim"
+            style={ringStyle(ring, 'var(--if-ink, #14150f)')}
+          />
         ))}
       </div>
 

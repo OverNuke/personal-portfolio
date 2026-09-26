@@ -136,7 +136,14 @@ export function buildMascotStrokes({
   const f = jitterOn ? Math.floor(t * 7.5) : 0;
   const out: PathDatum[] = [];
 
-  const at = (pts: number[][], ox: number, oy: number, seed: number, amp: number, sc = 1): number[][] =>
+  const at = (
+    pts: number[][],
+    ox: number,
+    oy: number,
+    seed: number,
+    amp: number,
+    sc = 1,
+  ): number[][] =>
     pts.map((p, i) => [
       ox + p[0] * sc + (jitterOn ? rnd(i, f, seed) * amp : 0),
       oy + p[1] * sc + (jitterOn ? rnd(i + 41, f, seed) * amp : 0),
@@ -226,10 +233,12 @@ export function buildMascotStrokes({
   push('ear-r', smooth(at(GUY_EAR_R, gx, gy, 3, 1.1, S), true), B, B, 2.6);
   push('body', smooth(at(GUY_BODY, gx, gy, 1, 1.6, S), true), B, B, 3.2);
 
-  const blink = jitterOn ? (() => {
-    const p = (t + 0.7) % 3.9;
-    return p < 0.17 ? Math.max(0.08, Math.abs(Math.cos((p / 0.17) * Math.PI))) : 1;
-  })() : 1;
+  const blink = jitterOn
+    ? (() => {
+        const p = (t + 0.7) % 3.9;
+        return p < 0.17 ? Math.max(0.08, Math.abs(Math.cos((p / 0.17) * Math.PI))) : 1;
+      })()
+    : 1;
   (['l', 'r'] as const).forEach((side, i) => {
     const ex = gx - 14 + i * 26;
     const ey = gy - 8;
@@ -254,12 +263,18 @@ export function buildMascotStrokes({
   }
   const armAim = bestPhoto ? Math.atan2(bestPhoto.cy - gy, bestPhoto.cx - gx) : 0;
   const idleA = (jitterOn ? Math.sin(t * 1.6) * 0.12 : 0) - 0.15;
-  const a = idleA + (armAim - idleA) * Math.min(1, bv * 1.2) + (bv > 0.1 && jitterOn ? Math.sin(t * 7) * 0.06 : 0);
+  const a =
+    idleA +
+    (armAim - idleA) * Math.min(1, bv * 1.2) +
+    (bv > 0.1 && jitterOn ? Math.sin(t * 7) * 0.06 : 0);
   const ca = Math.cos(a);
   const sa = Math.sin(a);
   const px = 31;
   const py = 2;
-  const arm = GUY_ARM.map((p) => [px + (p[0] - px) * ca - (p[1] - py) * sa, py + (p[0] - px) * sa + (p[1] - py) * ca]);
+  const arm = GUY_ARM.map((p) => [
+    px + (p[0] - px) * ca - (p[1] - py) * sa,
+    py + (p[0] - px) * sa + (p[1] - py) * ca,
+  ]);
   const armPts = at(arm, gx, gy, 4, 1.2, S);
   push('arm', smooth(armPts, false), 'none', B, 3.2);
 
@@ -290,14 +305,20 @@ export function buildMascotStrokes({
       const sc = 0.82 + 0.18 * ann;
       push(
         `ring-a-${pid}`,
-        smooth(at(ellipsePts(ph.cx, ph.cy, rx * sc, ry * sc, 11, 0.3 + pi), 0, 0, 100 + pi, 2.2), true),
+        smooth(
+          at(ellipsePts(ph.cx, ph.cy, rx * sc, ry * sc, 11, 0.3 + pi), 0, 0, 100 + pi, 2.2),
+          true,
+        ),
         'none',
         R,
         3.4,
       );
       push(
         `ring-b-${pid}`,
-        smooth(at(ellipsePts(ph.cx, ph.cy, rx * sc + 7, ry * sc + 5, 11, 1.1 + pi), 0, 0, 110 + pi, 2.6), true),
+        smooth(
+          at(ellipsePts(ph.cx, ph.cy, rx * sc + 7, ry * sc + 5, 11, 1.1 + pi), 0, 0, 110 + pi, 2.6),
+          true,
+        ),
         'none',
         R,
         2.2,
@@ -316,7 +337,18 @@ export function buildMascotStrokes({
       const uy = ty - ph.cy;
       const ul = Math.hypot(ux, uy) || 1;
       const rad = ph.w / 2 + 17;
-      arrow(`ann-${pid}`, ph.cx + (ux / ul) * rad, ph.cy + (uy / ul) * rad, tx, ty, ann, 4, R, 3, 0.12);
+      arrow(
+        `ann-${pid}`,
+        ph.cx + (ux / ul) * rad,
+        ph.cy + (uy / ul) * rad,
+        tx,
+        ty,
+        ann,
+        4,
+        R,
+        3,
+        0.12,
+      );
     } else {
       arrow(`ann-${pid}`, 0, 0, 0, 0, 0, 0, R, 3, 0);
     }
@@ -400,7 +432,13 @@ export function buildMascotStrokes({
   SPORES.forEach((s, i) => {
     const cx = s[0] + (jitterOn ? Math.cos(t * 0.28 + s[2]) * 34 : 0);
     const cy = ambientY(s[1], height) + (jitterOn ? Math.sin(t * 0.23 + s[2]) * 26 : 0);
-    push(`spore-${i}`, smooth(at(ellipsePts(0, 0, 11, 9.5, 9, 0), cx, cy, 10 + i, 1.3), true), 'none', B, 2.4);
+    push(
+      `spore-${i}`,
+      smooth(at(ellipsePts(0, 0, 11, 9.5, 9, 0), cx, cy, 10 + i, 1.3), true),
+      'none',
+      B,
+      2.4,
+    );
     push(
       `nuc-${i}`,
       smooth(

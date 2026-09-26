@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { ambientY, DESIGN_HEIGHT, DESIGN_WIDTH, layerViewBox, resolveLayerHeight } from './projectsLayout';
+import {
+  ambientY,
+  DESIGN_HEIGHT,
+  DESIGN_WIDTH,
+  layerViewBox,
+  resolveLayerHeight,
+} from './projectsLayout';
 
 describe('projectsLayout', () => {
   it('pins the shipped design space at 1440x900', () => {
@@ -23,9 +29,12 @@ describe('projectsLayout', () => {
       expect(resolveLayerHeight(700)).toBe(700);
     });
 
-    it.each([0, -5, Number.NaN])('falls back to the design height for an unusable measurement (%s)', (measured) => {
-      expect(resolveLayerHeight(measured)).toBe(900);
-    });
+    it.each([0, -5, Number.NaN])(
+      'falls back to the design height for an unusable measurement (%s)',
+      (measured) => {
+        expect(resolveLayerHeight(measured)).toBe(900);
+      },
+    );
   });
 
   describe('ambientY', () => {

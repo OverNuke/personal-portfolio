@@ -13,7 +13,14 @@
 // with no dead space and no aspect distortion" -- verified here at
 // 700/900/1400px.
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_GAP, DEFAULT_ROUNDNESS, STAGE_WIDTH, computeCellGeometry, computeCellPolygons, computeLiveSeeds } from './voronoi';
+import {
+  DEFAULT_GAP,
+  DEFAULT_ROUNDNESS,
+  STAGE_WIDTH,
+  computeCellGeometry,
+  computeCellPolygons,
+  computeLiveSeeds,
+} from './voronoi';
 
 interface Point {
   x: number;
@@ -99,22 +106,28 @@ describe('computeCellPolygons — non-overlap and non-degeneracy at dynamic heig
     }
   });
 
-  it.each(HEIGHTS)('keeps every cell vertex within the stage rectangle at height=%dpx', (height) => {
-    const polygons = computeCellPolygons(restSeeds(height), height, DEFAULT_GAP);
+  it.each(HEIGHTS)(
+    'keeps every cell vertex within the stage rectangle at height=%dpx',
+    (height) => {
+      const polygons = computeCellPolygons(restSeeds(height), height, DEFAULT_GAP);
 
-    polygons.forEach((poly) => {
-      poly.forEach((p) => {
-        expect(p.x).toBeGreaterThanOrEqual(0);
-        expect(p.x).toBeLessThanOrEqual(STAGE_WIDTH);
-        expect(p.y).toBeGreaterThanOrEqual(0);
-        expect(p.y).toBeLessThanOrEqual(height);
+      polygons.forEach((poly) => {
+        poly.forEach((p) => {
+          expect(p.x).toBeGreaterThanOrEqual(0);
+          expect(p.x).toBeLessThanOrEqual(STAGE_WIDTH);
+          expect(p.y).toBeGreaterThanOrEqual(0);
+          expect(p.y).toBeLessThanOrEqual(height);
+        });
       });
-    });
-  });
+    },
+  );
 
   it('fills more of the stage at height=1400px than at height=700px (no dead space introduced by a fixed-900 clip)', () => {
     const totalAreaAt = (height: number) =>
-      computeCellPolygons(restSeeds(height), height, DEFAULT_GAP).reduce((sum, poly) => sum + shoelaceArea(poly), 0);
+      computeCellPolygons(restSeeds(height), height, DEFAULT_GAP).reduce(
+        (sum, poly) => sum + shoelaceArea(poly),
+        0,
+      );
 
     // A height-param bug that silently clips to the old 900px rectangle
     // would make total cell area IDENTICAL (or smaller) at 1400px vs
@@ -149,7 +162,10 @@ describe('computeCellGeometry — approval test anchored to the shipped 900px la
 
   it('reproduces the pre-refactor cx/cy/area for all 12 cells at height=900px within 0.05px/px^2', () => {
     const seeds = restSeeds(900);
-    const cells = computeCellGeometry(seeds, 900, { gap: DEFAULT_GAP, roundness: DEFAULT_ROUNDNESS });
+    const cells = computeCellGeometry(seeds, 900, {
+      gap: DEFAULT_GAP,
+      roundness: DEFAULT_ROUNDNESS,
+    });
 
     expect(cells).toHaveLength(BASELINE_900.length);
     cells.forEach((cell, i) => {
@@ -164,7 +180,10 @@ describe('computeCellGeometry — approval test anchored to the shipped 900px la
   it('produces a non-empty rounded path `d` for every cell at 700/900/1400px', () => {
     HEIGHTS.forEach((height) => {
       const seeds = restSeeds(height);
-      const cells = computeCellGeometry(seeds, height, { gap: DEFAULT_GAP, roundness: DEFAULT_ROUNDNESS });
+      const cells = computeCellGeometry(seeds, height, {
+        gap: DEFAULT_GAP,
+        roundness: DEFAULT_ROUNDNESS,
+      });
       cells.forEach((cell) => {
         expect(cell.d.length).toBeGreaterThan(0);
         expect(cell.d.startsWith('M')).toBe(true);

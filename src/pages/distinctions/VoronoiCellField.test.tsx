@@ -34,15 +34,18 @@ describe('VoronoiCellField SVG viewBoxes', () => {
     expect(doodleSvg.getAttribute('viewBox')).toBe('0 0 1440 900');
   });
 
-  it.each([700, 900, 1400])('%ipx: the doodle svg tracks the measured height and never stretches', (height) => {
-    stubs.setHeight(height);
-    const { cellsSvg, doodleSvg } = renderField();
-    expect(cellsSvg.getAttribute('viewBox')).toBe(`0 0 1440 ${height}`);
-    expect(doodleSvg.getAttribute('viewBox')).toBe(`0 0 1440 ${height}`);
-    // `none` is what stretched the old fixed-900 viewBox by 1.56x at 1400
-    // and squashed it by 0.78x at 700; `meet` scales uniformly.
-    expect(doodleSvg.getAttribute('preserveAspectRatio')).toBe('xMinYMin meet');
-  });
+  it.each([700, 900, 1400])(
+    '%ipx: the doodle svg tracks the measured height and never stretches',
+    (height) => {
+      stubs.setHeight(height);
+      const { cellsSvg, doodleSvg } = renderField();
+      expect(cellsSvg.getAttribute('viewBox')).toBe(`0 0 1440 ${height}`);
+      expect(doodleSvg.getAttribute('viewBox')).toBe(`0 0 1440 ${height}`);
+      // `none` is what stretched the old fixed-900 viewBox by 1.56x at 1400
+      // and squashed it by 0.78x at 700; `meet` scales uniformly.
+      expect(doodleSvg.getAttribute('preserveAspectRatio')).toBe('xMinYMin meet');
+    },
+  );
 
   it('follows the section when it is resized after mount', () => {
     stubs.setHeight(900);
@@ -76,7 +79,12 @@ describe('VoronoiCellField molecular doodle wiring', () => {
     vi.stubGlobal('requestAnimationFrame', raf);
     const { container } = renderField();
     const nodes = molecularPaths(container);
-    const expected = buildMolecularStrokes({ t: 0, jitterOn: false, height: 700, color: '#e0452b' });
+    const expected = buildMolecularStrokes({
+      t: 0,
+      jitterOn: false,
+      height: 700,
+      color: '#e0452b',
+    });
     expect(Object.keys(nodes)).toEqual(MOLECULAR_PATH_IDS);
     expected.forEach((s) => {
       const node = nodes[s.id];
@@ -116,7 +124,9 @@ describe('VoronoiCellField molecular doodle wiring', () => {
     expect(raf).toHaveBeenCalledTimes(1);
     const now = performance.now();
     act(() => tick(now + 1000));
-    const first = Object.fromEntries(MOLECULAR_PATH_IDS.map((id) => [id, nodes[id].getAttribute('d')]));
+    const first = Object.fromEntries(
+      MOLECULAR_PATH_IDS.map((id) => [id, nodes[id].getAttribute('d')]),
+    );
     act(() => tick(now + 1400)); // 0.4s later = 3 boil frames on
     expect(raf).toHaveBeenCalledTimes(3); // each tick re-arms the SAME loop, nothing else schedules frames
     MOLECULAR_PATH_IDS.forEach((id) => {

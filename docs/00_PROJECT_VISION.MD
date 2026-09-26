@@ -82,7 +82,7 @@ update here first.
 ## The five screens
 
 - **Home** — an animated ink-flow backdrop (`dc-import name="Ink Flow
-  Background"` — its own nested `ext_resources` entry, decoded and ported in
+Background"` — its own nested `ext_resources` entry, decoded and ported in
   full; see `01_ART_DIRECTION.MD`) of swirling contour-line ink over cream
   paper, a right-aligned oversized "Kevin." wordmark, an EN/ES toggle, and a
   numbered nav list that shifts and reveals an arrow on hover/focus. Keyboard
@@ -125,8 +125,8 @@ boilerplate:
   appetite for one that makes a change." and a live "Looking for an
   opportunity" pulse badge. This is an early-career, honest-about-it voice —
   not an inflated "10x engineer" pitch.
-- Contact: a closing line set in italic serif — *"Even an hundred of years
-  isn't enough to appreciate what life is mean to be."* — kept verbatim from
+- Contact: a closing line set in italic serif — _"Even an hundred of years
+  isn't enough to appreciate what life is mean to be."_ — kept verbatim from
   the decoded template; its imperfect grammar reads as a deliberate personal
   voice choice, not a typo to silently correct.
 - A recurring hand-drawn "crayon guy" mascot (a small blinking, arm-waving
@@ -139,7 +139,7 @@ boilerplate:
   — an older, secondary Home variant superseded by `docs/_decoded/index/` —
   contains a `role` copy string never wired into its own markup:
   `"design engineer · manga-brain"` (EN) / `"ingeniero de diseño · cerebro
-  manga"` (ES). It renders nowhere in either Home template today, but it's
+manga"` (ES). It renders nowhere in either Home template today, but it's
   worth surfacing here as evidence of the intended persona (playful,
   self-aware, technically dense) in case a future revision wants to bring a
   tagline back onto Home.
@@ -152,7 +152,7 @@ framing) and personally illustrated (the crayon mascot) rather than corporate.
 
 ## What this doc is not
 
-This doc states *what* the portfolio is and *why* it's shaped this way at the
+This doc states _what_ the portfolio is and _why_ it's shaped this way at the
 top level. It does not own layout grids, component contracts, exact hex
 values, motion timing, or accessibility rules — those belong to
 `01_ART_DIRECTION.MD`, `02_DESIGN_SYSTEM.MD`, and the architecture/UX docs

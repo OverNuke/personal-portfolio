@@ -7,12 +7,7 @@
 // (breathe: false, no hover growth) at the section's ACTUAL `height` --
 // docs/07's "breathing never reflows copy" intent: sized once per height,
 // not per animation frame.
-import {
-  DEFAULT_GAP,
-  DEFAULT_ROUNDNESS,
-  computeCellGeometry,
-  computeLiveSeeds,
-} from './voronoi';
+import { DEFAULT_GAP, DEFAULT_ROUNDNESS, computeCellGeometry, computeLiveSeeds } from './voronoi';
 
 export interface LabelSize {
   width: number;
@@ -24,8 +19,15 @@ function clamp(min: number, max: number, value: number): number {
 }
 
 export function computeLabelSizing(height: number): Record<string, LabelSize> {
-  const restSeeds = computeLiveSeeds(0, height, { breathe: false, hoverGrowth: 0, hoverValues: {} });
-  const restCells = computeCellGeometry(restSeeds, height, { gap: DEFAULT_GAP, roundness: DEFAULT_ROUNDNESS });
+  const restSeeds = computeLiveSeeds(0, height, {
+    breathe: false,
+    hoverGrowth: 0,
+    hoverValues: {},
+  });
+  const restCells = computeCellGeometry(restSeeds, height, {
+    gap: DEFAULT_GAP,
+    roundness: DEFAULT_ROUNDNESS,
+  });
   const sizing: Record<string, LabelSize> = {};
   restCells.forEach((cell) => {
     const isEye = cell.id === 'count' || cell.id === 'span';

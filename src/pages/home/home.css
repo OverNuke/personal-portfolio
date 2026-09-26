@@ -20,10 +20,7 @@
      own #0e0f0b never actually shows through it. */
   background: var(--color-home-bg, #f6f4ea);
   color: var(--color-home-ink, #14150f);
-  font-family:
-    'Space Grotesk',
-    system-ui,
-    sans-serif;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
 }
 
 /* Ink Flow Background -- z-index:0, fills the whole stage (1440px wide, fluid height), fully
@@ -71,8 +68,20 @@
   position: absolute;
   inset: 0;
   mix-blend-mode: multiply;
-  -webkit-mask-image: linear-gradient(38deg, #000 4%, rgba(0, 0, 0, 0.9) 40%, rgba(0, 0, 0, 0.35) 68%, transparent 92%);
-  mask-image: linear-gradient(38deg, #000 4%, rgba(0, 0, 0, 0.9) 40%, rgba(0, 0, 0, 0.35) 68%, transparent 92%);
+  -webkit-mask-image: linear-gradient(
+    38deg,
+    #000 4%,
+    rgba(0, 0, 0, 0.9) 40%,
+    rgba(0, 0, 0, 0.35) 68%,
+    transparent 92%
+  );
+  mask-image: linear-gradient(
+    38deg,
+    #000 4%,
+    rgba(0, 0, 0, 0.9) 40%,
+    rgba(0, 0, 0, 0.35) 68%,
+    transparent 92%
+  );
 }
 
 /* light ring field: the same swirl geometry reversed out inside the black mass */
@@ -93,7 +102,11 @@
   mix-blend-mode: multiply;
   opacity: 0.4;
   transform: rotate(-8deg);
-  background-image: radial-gradient(circle at 50% 50%, rgba(20, 21, 15, 0.7) 0 0.7px, transparent 1px);
+  background-image: radial-gradient(
+    circle at 50% 50%,
+    rgba(20, 21, 15, 0.7) 0 0.7px,
+    transparent 1px
+  );
   background-size: 4px 4px;
   -webkit-mask-image: radial-gradient(58% 48% at 34% 62%, #000 10%, transparent 74%);
   mask-image: radial-gradient(58% 48% at 34% 62%, #000 10%, transparent 74%);

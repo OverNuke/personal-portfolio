@@ -1,13 +1,14 @@
 # 13. Asset Spec
 
 Reconciled manifest of every binary asset shipped under `src/assets/`, its
-origin, and how it got there. Written *after* the Phase 3 asset-reconciliation
+origin, and how it got there. Written _after_ the Phase 3 asset-reconciliation
 pass against the decoded mockup exports (`docs/_decoded/`, produced by
 `scripts/decode-mockup.mjs` from `mockup/*.html`). This document replaces an
 earlier version that documented a `tools/halftone.py` preset pipeline —
 that tool was never built; drop any reference to it as stale.
 
 Provenance columns:
+
 - **Origin** — which decoded mockup source (`docs/_decoded/<slug>/`) and
   asset UUID the file was extracted from, or `pre-existing` if it predates
   this reconciliation pass and was verified against mockup content instead
@@ -20,14 +21,14 @@ Five families are actually used across the six decoded screens (verified by
 grepping every `@font-face` block and every corresponding `font-family`
 usage in each `docs/_decoded/*/template.html` — not assumed from the brief).
 
-| Family | Style / Weight(s) used | Screens | Origin (slug / UUID) | Destination |
-| --- | --- | --- | --- | --- |
-| Archivo Black | normal 400 | `index` (shell), `main-page-standalone` (secondary reference) | `index` / `b3f2e76e-0a19-4f53-8ce6-2b8b6daad640` | `ArchivoBlack-Regular.woff2` |
-| Space Grotesk | normal 400 / 500 / 700 | `index`, `main-page-standalone` | `index` / `8600dd8e-09d5-410c-ac3f-01d55a017b0c` | `SpaceGrotesk-Variable.woff2` |
-| JetBrains Mono | normal 400 / 500 | `contact`, `distinction`, `index`, `profile`, `projects` (not used in `main-page-standalone`) | `index` / `ee414ceb-2b5b-4fc8-97a7-8b4e8977da89` | `JetBrainsMono-Variable.woff2` |
-| Instrument Serif | normal 400 | `contact`, `distinction`, `index`, `profile`, `projects` | `index` / `d87d58ae-c831-4f5a-acca-f59895160a04` | `InstrumentSerif-Regular.woff2` |
-| Instrument Serif | italic 400 | same screens as above | `index` / `cf22e14d-be36-4c59-aeb7-11a41b188aa3` | `InstrumentSerif-Italic.woff2` |
-| Manrope | normal 400 / 500 / 600 / 700 | `contact`, `distinction`, `index`, `profile`, `projects` | `index` / `c663a964-1f51-4e46-b3d7-c604d14c2326` | `Manrope-Variable.woff2` |
+| Family           | Style / Weight(s) used       | Screens                                                                                       | Origin (slug / UUID)                             | Destination                     |
+| ---------------- | ---------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------ | ------------------------------- |
+| Archivo Black    | normal 400                   | `index` (shell), `main-page-standalone` (secondary reference)                                 | `index` / `b3f2e76e-0a19-4f53-8ce6-2b8b6daad640` | `ArchivoBlack-Regular.woff2`    |
+| Space Grotesk    | normal 400 / 500 / 700       | `index`, `main-page-standalone`                                                               | `index` / `8600dd8e-09d5-410c-ac3f-01d55a017b0c` | `SpaceGrotesk-Variable.woff2`   |
+| JetBrains Mono   | normal 400 / 500             | `contact`, `distinction`, `index`, `profile`, `projects` (not used in `main-page-standalone`) | `index` / `ee414ceb-2b5b-4fc8-97a7-8b4e8977da89` | `JetBrainsMono-Variable.woff2`  |
+| Instrument Serif | normal 400                   | `contact`, `distinction`, `index`, `profile`, `projects`                                      | `index` / `d87d58ae-c831-4f5a-acca-f59895160a04` | `InstrumentSerif-Regular.woff2` |
+| Instrument Serif | italic 400                   | same screens as above                                                                         | `index` / `cf22e14d-be36-4c59-aeb7-11a41b188aa3` | `InstrumentSerif-Italic.woff2`  |
+| Manrope          | normal 400 / 500 / 600 / 700 | `contact`, `distinction`, `index`, `profile`, `projects`                                      | `index` / `c663a964-1f51-4e46-b3d7-c604d14c2326` | `Manrope-Variable.woff2`        |
 
 All six screens declare many more `@font-face` blocks than this table shows
 per family (each is Google's own unicode-range subsetting — cyrillic,
@@ -79,12 +80,12 @@ Pre-existing, verified against mockup content — not re-extracted. Filenames
 match the certificate scans referenced by the Distinctions Voronoi cells in
 `docs/_decoded/distinction-section-v4-standalone/template.html`.
 
-| File | Origin |
-| --- | --- |
-| `anfeca.png` | pre-existing, verified against mockup content |
-| `anglo.png` | pre-existing, verified against mockup content |
-| `exaver.png` | pre-existing, verified against mockup content |
-| `nota.png` | pre-existing, verified against mockup content |
+| File           | Origin                                        |
+| -------------- | --------------------------------------------- |
+| `anfeca.png`   | pre-existing, verified against mockup content |
+| `anglo.png`    | pre-existing, verified against mockup content |
+| `exaver.png`   | pre-existing, verified against mockup content |
+| `nota.png`     | pre-existing, verified against mockup content |
 | `sepToelf.png` | pre-existing, verified against mockup content |
 
 > **Updated 2026-09-21 (Phase 11 close-out):** Distinctions ships **9**
@@ -105,28 +106,28 @@ match the certificate scans referenced by the Distinctions Voronoi cells in
 Pre-existing, verified against mockup content — not re-extracted. One
 subfolder per project card referenced by Projects' polaroid stack.
 
-| Folder | Files | Origin |
-| --- | --- | --- |
-| `acopiatech/` | `main.png`, `pickup.png`, `profile.png` | pre-existing, verified against mockup content |
+| Folder        | Files                                      | Origin                                        |
+| ------------- | ------------------------------------------ | --------------------------------------------- |
+| `acopiatech/` | `main.png`, `pickup.png`, `profile.png`    | pre-existing, verified against mockup content |
 | `barbershop/` | `notification.png`, `test.png`, `user.png` | pre-existing, verified against mockup content |
-| `odoo/` | `access.png`, `info.png`, `trash.png` | pre-existing, verified against mockup content |
+| `odoo/`       | `access.png`, `info.png`, `trash.png`      | pre-existing, verified against mockup content |
 
 ## Portrait / profile photos (`src/assets/plates/portrait/`)
 
 Pre-existing, verified against mockup content — not re-extracted. Used by
 the Profile screen's chamber panels and Contact's figure treatment.
 
-| File | Origin |
-| --- | --- |
-| `contact-figure.jpg` | pre-existing, verified against mockup content |
-| `profile-animate-sit.png` | pre-existing, verified against mockup content |
-| `profile-animate-stand.png` | pre-existing, verified against mockup content |
-| `profile-panel-alien.jpg` | pre-existing, verified against mockup content |
-| `profile-panel-cold.jpg` | pre-existing, verified against mockup content |
-| `profile-panel-keff.jpg` | pre-existing, verified against mockup content |
+| File                         | Origin                                        |
+| ---------------------------- | --------------------------------------------- |
+| `contact-figure.jpg`         | pre-existing, verified against mockup content |
+| `profile-animate-sit.png`    | pre-existing, verified against mockup content |
+| `profile-animate-stand.png`  | pre-existing, verified against mockup content |
+| `profile-panel-alien.jpg`    | pre-existing, verified against mockup content |
+| `profile-panel-cold.jpg`     | pre-existing, verified against mockup content |
+| `profile-panel-keff.jpg`     | pre-existing, verified against mockup content |
 | `profile-panel-overnuke.jpg` | pre-existing, verified against mockup content |
-| `sitting.png` | pre-existing, verified against mockup content |
-| `standing.png` | pre-existing, verified against mockup content |
+| `sitting.png`                | pre-existing, verified against mockup content |
+| `standing.png`               | pre-existing, verified against mockup content |
 
 ## Doodle / decorative (`src/assets/doodle/`)
 
@@ -138,19 +139,19 @@ matches `eye-right.png` (solid, transparent background) and
 matches `eye-left-paper.png` (cream, noise-textured background) exactly — no
 new doodle assets exist in the decoded manifest beyond these two.
 
-| File | Origin |
-| --- | --- |
-| `eye-left.png` | pre-existing, verified against mockup content |
+| File                 | Origin                                                                                                                                  |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `eye-left.png`       | pre-existing, verified against mockup content                                                                                           |
 | `eye-left-paper.png` | pre-existing, verified against mockup content (matches `distinction-section-v4-standalone` UUID `41c7fded-fd41-432e-b73c-f09375d6f881`) |
-| `eye-right.png` | pre-existing, verified against mockup content (matches `distinction-section-v4-standalone` UUID `3ab712c2-87f8-4b1a-a3a5-e43046d8dab4`) |
+| `eye-right.png`      | pre-existing, verified against mockup content (matches `distinction-section-v4-standalone` UUID `3ab712c2-87f8-4b1a-a3a5-e43046d8dab4`) |
 
 ## Contact (`src/assets/contact/`)
 
 Net-new extraction — this asset did not exist anywhere in the repo before
 this pass.
 
-| File | Origin | Notes |
-| --- | --- | --- |
+| File             | Origin                                                                   | Notes                                                                                                                                                                                                                                                                                                                                                               |
+| ---------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `background.jpg` | `contact-section-v2-standalone` / `31d70d56-bfd5-4a7e-aaa1-d379268b3469` | Full-bleed background photo behind the Contact screen's dock. Rendered dimmed in the mockup via `filter: grayscale(1) contrast(1.32) brightness(.52)` plus two gradient overlays — the source file itself is a full-color illustration; apply the same filter/gradient treatment in the component rather than pre-processing the file, so the effect stays tunable. |
 
 ## Assets checked and confirmed to not need extraction

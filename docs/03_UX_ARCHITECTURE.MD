@@ -32,8 +32,8 @@ one `<main class="stage">`: a fixed 1440px-wide, natural-height column scaled
 uniformly by viewport width alone, whose document scrolls. Every section is
 mounted at all times and has a 900px design floor (`min-height: 900px`).
 There is no responsive breakpoint logic for the screens themselves (see
-`00_PROJECT_VISION.MD`). This doc only owns *how you get from one screen to
-another* — layout and visual detail per screen belongs to
+`00_PROJECT_VISION.MD`). This doc only owns _how you get from one screen to
+another_ — layout and visual detail per screen belongs to
 `01_ART_DIRECTION.MD` / `04_COMPONENT_RULES.MD`.
 
 ## The floating pill nav
@@ -52,7 +52,7 @@ Each button's own click handler (`go(key)` in the decoded script) swaps
 `state.screen` directly — there is no separate "close" affordance; clicking
 any pill button, including the one for the screen you're already on, is the
 entire navigation model. **Updated 2026-09-23:** in the shipped app a pill
-click *scrolls to that section* instead of swapping a screen (see "Navigation
+click _scrolls to that section_ instead of swapping a screen (see "Navigation
 model" below); still one click, still no close affordance, and the button for
 the section you're already on is still a valid target. The active button gets a solid accent (`#6f7f45`
 default) background with `#14150f` text; inactive buttons are transparent
@@ -79,7 +79,7 @@ stateless `<nav aria-label="Screens">` of five real `<button type="button">`s
 (Enter and Space both activate — native links would only take Enter);
 `aria-current="page"` and `data-active` mark the section currently under the
 viewport midline. **Observation (not changed by this task, flagged for a
-decision):** `<PillNav>` is rendered *after* the `<main>` in DOM order, so
+decision):** `<PillNav>` is rendered _after_ the `<main>` in DOM order, so
 Tab reaches it only after the focusable content of all five sections; it is
 visually first, but not first in the tab order.
 
@@ -91,19 +91,19 @@ script's `Component` class:
 
 ```js
 const ORDER = [
-  { key: 'about',       screen: 'profile' },
+  { key: 'about', screen: 'profile' },
   { key: 'distinction', screen: 'distinction' },
-  { key: 'projects',    screen: 'projects' },
-  { key: 'contact',     screen: 'contact' }
+  { key: 'projects', screen: 'projects' },
+  { key: 'contact', screen: 'contact' },
 ];
 ```
 
-`ORDER` deliberately **excludes Home itself** — it's the four *other* screens,
+`ORDER` deliberately **excludes Home itself** — it's the four _other_ screens,
 rendered as Home's own right-aligned numbered list (`01 Who me? →`,
 `02 Distinction →`, etc.). While Home is mounted, a `window`-level `keydown`
 listener is attached in `componentDidMount` and removed in
 `componentWillUnmount` (**Updated 2026-09-23:** in the scroll shell Home is
-*always* mounted, so this is now scoped to "while Home is the **active
+_always_ mounted, so this is now scoped to "while Home is the **active
 section**" — see the scope note below the keymap):
 
 - **ArrowRight or ArrowDown** → `move(+1)`
@@ -120,7 +120,7 @@ its `window` listener while `enabled` is true, and Home passes
 under the viewport midline (`SectionNavContext`). Without this, an
 always-mounted Home would `preventDefault()` every arrow key on every section
 and kill native keyboard scrolling page-wide. **Known limitation, stated
-plainly:** while Home *is* the active section, ArrowUp/ArrowDown are
+plainly:** while Home _is_ the active section, ArrowUp/ArrowDown are
 swallowed by the cycling and do **not** scroll the page (PageUp/PageDown,
 Space, Home/End and the pill nav still do); this is inherited from the
 mockup's own `preventDefault()` and is an accessibility trade-off, recorded in
@@ -130,13 +130,13 @@ mockup's own `preventDefault()` and is an accessibility trade-off, recorded in
 `state.focus` drives three purely visual properties on the corresponding list
 item and nothing else:
 
-| Property | Not focused | Focused |
-|---|---|---|
-| Text/number color | `#14150f` (ink) | accent (`#6f7f45` default) |
-| Horizontal position | `translateX(0)` | `translateX(10px)` |
-| Trailing arrow (`→`) opacity | `0` | `1` |
+| Property                     | Not focused     | Focused                    |
+| ---------------------------- | --------------- | -------------------------- |
+| Text/number color            | `#14150f` (ink) | accent (`#6f7f45` default) |
+| Horizontal position          | `translateX(0)` | `translateX(10px)`         |
+| Trailing arrow (`→`) opacity | `0`             | `1`                        |
 
-**Load-bearing nuance for the accessibility phase:** this is a *simulated*
+**Load-bearing nuance for the accessibility phase:** this is a _simulated_
 preview highlight, not real DOM/keyboard focus. The listener is bound to
 `window`, not to the list or any single link, so pressing arrow keys does not
 move `document.activeElement` — it only re-renders which item looks
@@ -157,7 +157,7 @@ for `05_ACCESSIBILITY.MD` rather than silently fixing or silently copying it.
 > `react-router-dom` for URL-addressability and to make focus + `aria-live`
 > fire on every route change. **SUPERSEDED.** Reason: the five screens are
 > now stacked sections of one scrolling document, so there is no route to
-> change; the router was removed. The old pattern's *intent* — a keyboard/AT
+> change; the router was removed. The old pattern's _intent_ — a keyboard/AT
 > user is never left on a stale or invisible element, and every explicit
 > navigation is announced — is preserved and re-scoped below (see "Decisions
 > carried over from the route model").
@@ -191,14 +191,14 @@ transform-scaled position, so the landing is exact at any stage scale
 
 ### Explicit activation vs. scroll-driven change
 
-| Trigger | Scrolls | Focus moves to section heading | Live region announces | URL hash |
-|---|---|---|---|---|
-| Pill click / Enter / Space | smooth (`auto` if reduced motion) | yes | yes | `pushState` |
-| Home's numbered list link, Profile's "Get in touch" CTA (`goToSection`, via `SectionNavContext`) | same | yes | yes | `pushState` |
-| Page load with a valid hash | `instant` | yes | yes | unchanged |
-| Back / Forward, hand-edited hash | animated | yes | yes | unchanged (already changed by the browser) |
-| Scrolling by wheel / touch / keyboard | native | **no** | **no** | **unchanged** |
-| Page load with no / empty / unknown hash | none (stays at Home) | **no** | **no** | unchanged |
+| Trigger                                                                                          | Scrolls                           | Focus moves to section heading | Live region announces | URL hash                                   |
+| ------------------------------------------------------------------------------------------------ | --------------------------------- | ------------------------------ | --------------------- | ------------------------------------------ |
+| Pill click / Enter / Space                                                                       | smooth (`auto` if reduced motion) | yes                            | yes                   | `pushState`                                |
+| Home's numbered list link, Profile's "Get in touch" CTA (`goToSection`, via `SectionNavContext`) | same                              | yes                            | yes                   | `pushState`                                |
+| Page load with a valid hash                                                                      | `instant`                         | yes                            | yes                   | unchanged                                  |
+| Back / Forward, hand-edited hash                                                                 | animated                          | yes                            | yes                   | unchanged (already changed by the browser) |
+| Scrolling by wheel / touch / keyboard                                                            | native                            | **no**                         | **no**                | **unchanged**                              |
+| Page load with no / empty / unknown hash                                                         | none (stays at Home)              | **no**                         | **no**                | unchanged                                  |
 
 Scroll-driven changes only move the pill's visual active state, driven by an
 `IntersectionObserver` (`src/shell/useActiveSection.ts`) on a 1px band at the
@@ -213,7 +213,7 @@ Deep links are URL hashes: `#home`, `#profile`, `#distinctions`, `#projects`,
 hash ⇄ `PageId` (`pageIdFromHash` is an exact, case-insensitive match on the
 registry hash — no prefix/query tolerance, no `#section-*`, no legacy path
 support; anything else returns `null`, treated as Home).
-`src/shell/useHashNavigation.ts` decides *when* to call `navigateToSection`:
+`src/shell/useHashNavigation.ts` decides _when_ to call `navigateToSection`:
 
 - **On load:** a valid hash navigates `instant`ly. An empty/unknown hash does
   nothing (the page already sits on Home; moving focus or announcing on an
@@ -251,7 +251,7 @@ Native scroll clamps at the bottom of the document. When the target is the
 **last** section (Contact) and the viewport is taller than a scaled section
 (window aspect ratio below 1.6:1, i.e. viewport height > `900 × width/1440`),
 Contact's top cannot reach the viewport top without adding dead space. The
-user chose to accept the clamp: Contact's *bottom* aligns to the viewport
+user chose to accept the clamp: Contact's _bottom_ aligns to the viewport
 bottom, the whole section is visible, and its top lands below the viewport
 top (about 360px at 864×900). **No trailing spacer or padding is added** to
 the document. 16:9 and 16:10 windows (aspect ≥ 1.6:1) are unaffected: all five
@@ -292,10 +292,12 @@ The decoded script defines **two separate label dictionaries**, and they
 disagree with each other, so the registry needs two label fields, not one:
 
 ```js
-NAV  = [ Home, Profile, Distinctions, Projects, Contact ]   // pill nav — English only, no ES strings exist
-COPY = { EN: { about: 'Who me?', distinction: 'Distinction', projects: 'Projects', contact: 'Reach out' },
-          ES: { about: '¿Yo?',   distinction: 'Distinción',  projects: 'Proyectos', contact: 'Contacto' } }
-                                                              // Home's own numbered list — localized
+NAV = [Home, Profile, Distinctions, Projects, Contact]; // pill nav — English only, no ES strings exist
+COPY = {
+  EN: { about: 'Who me?', distinction: 'Distinction', projects: 'Projects', contact: 'Reach out' },
+  ES: { about: '¿Yo?', distinction: 'Distinción', projects: 'Proyectos', contact: 'Contacto' },
+};
+// Home's own numbered list — localized
 ```
 
 Two things a build agent must not miss: `NAV` says **"Distinctions"**
@@ -305,7 +307,7 @@ are two different display strings for the same screen, not a typo. And
 Profile / Distinctions / Projects / Contact` regardless of the EN/ES toggle
 in the decoded mockup. Carrying that forward as-is (English-only pill nav)
 is a legitimate reading of the source; localizing the pill nav too would be
-a deliberate *addition* beyond the mockup, not a faithful port — pick one
+a deliberate _addition_ beyond the mockup, not a faithful port — pick one
 explicitly rather than leaving it ambiguous.
 
 ## The five-section table (was: the five-route table)
@@ -320,13 +322,13 @@ explicitly rather than leaving it ambiguous.
 > renames `certifications` to `distinction` to match the mockup's own naming
 > (`docs/_decoded/index/template.html`'s `screen: 'distinction'`).
 
-| Hash (`routes[].hash`) | `pageId` / section DOM id | Screen | Pill-nav label (`navLabel`, EN only) | Home-list `labelEn` | Home-list `labelEs` |
-|---|---|---|---|---|---|
-| `#home` | `home` / `section-home` | Home | `Home` | *(n/a — Home doesn't list itself)* | *(n/a)* |
-| `#profile` | `profile` / `section-profile` | Profile | `Profile` | `Who me?` | `¿Yo?` |
-| `#distinctions` | `distinction` / `section-distinction` | Distinctions | `Distinctions` | `Distinction` | `Distinción` |
-| `#projects` | `projects` / `section-projects` | Projects | `Projects` | `Projects` | `Proyectos` |
-| `#contact` | `contact` / `section-contact` | Contact | `Contact` | `Reach out` | `Contacto` |
+| Hash (`routes[].hash`) | `pageId` / section DOM id             | Screen       | Pill-nav label (`navLabel`, EN only) | Home-list `labelEn`                | Home-list `labelEs` |
+| ---------------------- | ------------------------------------- | ------------ | ------------------------------------ | ---------------------------------- | ------------------- |
+| `#home`                | `home` / `section-home`               | Home         | `Home`                               | _(n/a — Home doesn't list itself)_ | _(n/a)_             |
+| `#profile`             | `profile` / `section-profile`         | Profile      | `Profile`                            | `Who me?`                          | `¿Yo?`              |
+| `#distinctions`        | `distinction` / `section-distinction` | Distinctions | `Distinctions`                       | `Distinction`                      | `Distinción`        |
+| `#projects`            | `projects` / `section-projects`       | Projects     | `Projects`                           | `Projects`                         | `Proyectos`         |
+| `#contact`             | `contact` / `section-contact`         | Contact      | `Contact`                            | `Reach out`                        | `Contacto`          |
 
 The registry carries a `navLabel` field alongside `labelEn`/`labelEs` to hold
 both label dictionaries without collapsing them. The `PageId` union

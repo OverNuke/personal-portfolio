@@ -113,7 +113,9 @@ function Home() {
               onMouseEnter={() => setFocusIndex(index)}
             >
               <span className="home-nav-item__number">{String(index + 1).padStart(2, '0')}</span>
-              <span className="home-nav-item__label">{lang === 'en' ? route.labelEn : route.labelEs}</span>
+              <span className="home-nav-item__label">
+                {lang === 'en' ? route.labelEn : route.labelEs}
+              </span>
               <span className="home-nav-item__arrow" aria-hidden="true">
                 →
               </span>

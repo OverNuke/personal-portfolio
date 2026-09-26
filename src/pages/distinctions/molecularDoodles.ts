@@ -38,7 +38,15 @@ import { ambientY } from './voronoi';
 import type { DoodlePath } from './doodleStrokes';
 
 /** Local-space helper: `n + 1` points along an ellipse arc, degrees, y-down. */
-function arc(cx: number, cy: number, rx: number, ry: number, from: number, to: number, n: number): number[][] {
+function arc(
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number,
+  from: number,
+  to: number,
+  n: number,
+): number[][] {
   return Array.from({ length: n + 1 }, (_, i) => {
     const a = ((from + ((to - from) * i) / n) * Math.PI) / 180;
     return [cx + Math.cos(a) * rx, cy + Math.sin(a) * ry];
@@ -48,7 +56,10 @@ function arc(cx: number, cy: number, rx: number, ry: number, from: number, to: n
 /** Local-space helper: evenly spaced points on a straight segment, both ends
  *  included (equally spaced collinear points keep Catmull-Rom straight). */
 function line(x0: number, y0: number, x1: number, y1: number, n: number): number[][] {
-  return Array.from({ length: n + 1 }, (_, i) => [x0 + ((x1 - x0) * i) / n, y0 + ((y1 - y0) * i) / n]);
+  return Array.from({ length: n + 1 }, (_, i) => [
+    x0 + ((x1 - x0) * i) / n,
+    y0 + ((y1 - y0) * i) / n,
+  ]);
 }
 
 /** Rounds to 0.1 so the authored arrays read like the mascot's literals. */
@@ -183,7 +194,13 @@ export const MICROSCOPE: number[][] = r1([
 
 export type MolecularDoodleId = 'dna' | 'flask' | 'molecule' | 'pill' | 'microscope';
 
-export const MOLECULAR_DOODLE_IDS: MolecularDoodleId[] = ['dna', 'flask', 'molecule', 'pill', 'microscope'];
+export const MOLECULAR_DOODLE_IDS: MolecularDoodleId[] = [
+  'dna',
+  'flask',
+  'molecule',
+  'pill',
+  'microscope',
+];
 
 /** Deterministic, frame-stable id list -- same "pre-render one `<path>` per
  *  id once, update in place every frame" strategy as `DOODLE_PATH_IDS`. */

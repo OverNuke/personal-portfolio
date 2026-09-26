@@ -60,7 +60,10 @@ let viewportCallback: IntersectionObserverCallback = () => {};
 const scrollIntoView = vi.fn();
 
 function entryFor(domId: string, isIntersecting: boolean) {
-  return { target: document.getElementById(domId) as Element, isIntersecting } as IntersectionObserverEntry;
+  return {
+    target: document.getElementById(domId) as Element,
+    isIntersecting,
+  } as IntersectionObserverEntry;
 }
 
 /** The section is under the viewport midline (drives the pill's active state). */
@@ -139,7 +142,8 @@ describe('Shell (continuous scroll)', () => {
   it('tells each screen whether its section is on screen, so effect loops can pause off-screen (W8)', () => {
     setup();
     // fail open: everything is visible until the observer says otherwise
-    for (const id of Object.keys(TITLES)) expect(screen.getByTestId(`visible-${id}`)).toHaveTextContent('true');
+    for (const id of Object.keys(TITLES))
+      expect(screen.getByTestId(`visible-${id}`)).toHaveTextContent('true');
 
     reportVisibility('section-projects', false);
     expect(screen.getByTestId('visible-projects')).toHaveTextContent('false');
@@ -189,7 +193,10 @@ describe('Shell (continuous scroll)', () => {
 
     expect(screen.getByRole('heading', { name: 'Projects headline' })).toHaveFocus();
     expect(liveRegion(container)).toHaveTextContent('Projects.');
-    expect(screen.getByRole('button', { name: 'Projects' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('button', { name: 'Projects' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
   });
 
   it('scrolls without animation under prefers-reduced-motion (function is never gated on motion)', async () => {
@@ -209,7 +216,10 @@ describe('Shell (continuous scroll)', () => {
 
     reportIntersecting('section-distinction');
 
-    expect(screen.getByRole('button', { name: 'Distinctions' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('button', { name: 'Distinctions' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
     expect(screen.getByRole('button', { name: 'Home' })).not.toHaveAttribute('aria-current');
     expect(document.activeElement).toBe(before);
     expect(liveRegion(container)).toBeEmptyDOMElement();
@@ -240,7 +250,10 @@ describe('Shell (continuous scroll)', () => {
       expect(scrollIntoView.mock.contexts[0]).toBe(document.getElementById('section-projects'));
       expect(screen.getByRole('heading', { name: 'Projects headline' })).toHaveFocus();
       expect(liveRegion(container)).toHaveTextContent('Projects.');
-      expect(screen.getByRole('button', { name: 'Projects' })).toHaveAttribute('aria-current', 'page');
+      expect(screen.getByRole('button', { name: 'Projects' })).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
     });
 
     it('the load scroll is instant even under prefers-reduced-motion, and does not push history', () => {
@@ -265,7 +278,10 @@ describe('Shell (continuous scroll)', () => {
         expect(scrollIntoView).not.toHaveBeenCalled();
         expect(document.activeElement).toBe(before);
         expect(liveRegion(container)).toBeEmptyDOMElement();
-        expect(screen.getByRole('button', { name: 'Home' })).toHaveAttribute('aria-current', 'page');
+        expect(screen.getByRole('button', { name: 'Home' })).toHaveAttribute(
+          'aria-current',
+          'page',
+        );
       },
     );
 
@@ -317,7 +333,10 @@ describe('Shell (continuous scroll)', () => {
       expect(document.activeElement).toBe(focused);
       expect(liveRegion(container)).toHaveTextContent('Profile.');
       expect(scrollIntoView).not.toHaveBeenCalled();
-      expect(screen.getByRole('button', { name: 'Contact' })).toHaveAttribute('aria-current', 'page');
+      expect(screen.getByRole('button', { name: 'Contact' })).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
     });
 
     it('back/forward (popstate) scrolls SMOOTHLY to the hash section, focuses + announces it, and never pushes again', () => {
@@ -372,11 +391,17 @@ describe('Shell (continuous scroll)', () => {
       });
       // the animation passes over Projects on the way: the highlight must not flicker there
       reportIntersecting('section-projects');
-      expect(screen.getByRole('button', { name: 'Contact' })).toHaveAttribute('aria-current', 'page');
+      expect(screen.getByRole('button', { name: 'Contact' })).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
 
       reportIntersecting('section-contact');
       reportIntersecting('section-projects'); // lock released on arrival: scroll-driven changes flow again
-      expect(screen.getByRole('button', { name: 'Projects' })).toHaveAttribute('aria-current', 'page');
+      expect(screen.getByRole('button', { name: 'Projects' })).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
     });
   });
 });

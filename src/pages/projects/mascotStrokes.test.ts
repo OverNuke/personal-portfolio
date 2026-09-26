@@ -3,7 +3,14 @@ import { buildMascotStrokes } from './mascotStrokes';
 import type { ProjectMeasure, Rect } from './mascotStrokes';
 import { getTitleStrokePaths } from './glyphStrokes';
 
-const rect = (x: number, y: number, w: number, h: number): Rect => ({ x, y, w, h, cx: x + w / 2, cy: y + h / 2 });
+const rect = (x: number, y: number, w: number, h: number): Rect => ({
+  x,
+  y,
+  w,
+  h,
+  cx: x + w / 2,
+  cy: y + h / 2,
+});
 
 // Rects mimic what CrayonMascot's measureRect() reads off the real DOM
 // nodes ProjectCard renders (photo/title/note/tags per project) at the
@@ -36,9 +43,21 @@ const HOT = '#c9351d';
 
 function pathById(
   height: number | undefined,
-  { t = 0, jitterOn = false, hov = HOVER }: { t?: number; jitterOn?: boolean; hov?: Record<string, number> } = {},
+  {
+    t = 0,
+    jitterOn = false,
+    hov = HOVER,
+  }: { t?: number; jitterOn?: boolean; hov?: Record<string, number> } = {},
 ): Record<string, string> {
-  const strokes = buildMascotStrokes({ t, jitterOn, hov, measures: MEASURES, blue: BLUE, hot: HOT, height });
+  const strokes = buildMascotStrokes({
+    t,
+    jitterOn,
+    hov,
+    measures: MEASURES,
+    blue: BLUE,
+    hot: HOT,
+    height,
+  });
   return Object.fromEntries(strokes.map((s) => [s.id, s.d]));
 }
 
@@ -110,7 +129,11 @@ describe('buildMascotStrokes -- approval of the shipped 900px output (captured p
   });
 
   it('reproduces the first 3 "PROJECTS" title strokes exactly', () => {
-    expect(getTitleStrokePaths(0, BLUE).slice(0, 3).map((p) => p.d)).toEqual([
+    expect(
+      getTitleStrokePaths(0, BLUE)
+        .slice(0, 3)
+        .map((p) => p.d),
+    ).toEqual([
       'M77.3 77.9L77.0 180.4',
       'M78.2 75.4C84.0 77.0,105.9 80.2,113.5 85.1C121.0 90.0,124.0 98.0,123.4 104.7C122.8 111.4,117.9 121.8,110.0 125.6C102.1 129.3,81.6 126.9,75.9 127.2',
       'M146.7 75.8L144.2 180.7',
@@ -118,7 +141,9 @@ describe('buildMascotStrokes -- approval of the shipped 900px output (captured p
   });
 
   it('treats an explicit height of 900 identically to the default', () => {
-    expect(pathById(900, { t: 1.3, jitterOn: true })).toEqual(pathById(undefined, { t: 1.3, jitterOn: true }));
+    expect(pathById(900, { t: 1.3, jitterOn: true })).toEqual(
+      pathById(undefined, { t: 1.3, jitterOn: true }),
+    );
   });
 });
 
@@ -150,7 +175,11 @@ describe('buildMascotStrokes -- height-aware ambient anchors', () => {
 
   it('keeps the idle arm attached to the body (pure translation) when nothing is hovered', () => {
     const dy = BODY_DESIGN_Y * (700 / 900) - BODY_DESIGN_Y;
-    const dev = maxDeviation(pathById(900, { hov: IDLE })['arm'], pathById(700, { hov: IDLE })['arm'], dy);
+    const dev = maxDeviation(
+      pathById(900, { hov: IDLE })['arm'],
+      pathById(700, { hov: IDLE })['arm'],
+      dy,
+    );
     expect(dev.y).toBeLessThanOrEqual(0.11);
     expect(dev.x).toBeLessThanOrEqual(0.11);
   });
@@ -172,7 +201,16 @@ describe('buildMascotStrokes -- height-aware ambient anchors', () => {
     (height) => {
       const at900 = pathById(900, { t: 1.3, jitterOn: true });
       const atH = pathById(height, { t: 1.3, jitterOn: true });
-      for (const id of ['ring-a-p1', 'ring-b-p2', 'ul-a-p1', 'tag-p1-0', 'flag-ring', 'swoosh-a', 'swoosh-b', 'spark']) {
+      for (const id of [
+        'ring-a-p1',
+        'ring-b-p2',
+        'ul-a-p1',
+        'tag-p1-0',
+        'flag-ring',
+        'swoosh-a',
+        'swoosh-b',
+        'spark',
+      ]) {
         expect(atH[id].length).toBeGreaterThan(20);
         expect(atH[id]).toBe(at900[id]);
       }

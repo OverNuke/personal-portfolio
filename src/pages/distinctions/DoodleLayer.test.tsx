@@ -46,9 +46,12 @@ describe('DoodleLayer accessibility', () => {
     expect(svg.querySelectorAll('a, button, input, [tabindex], [role], [onclick]')).toHaveLength(0);
   });
 
-  it.each([700, 900, 1400])('%ipx: the viewBox is the real box, uniform-scaled (never stretched)', (height) => {
-    const { svg } = renderLayer(height);
-    expect(svg.getAttribute('viewBox')).toBe(`0 0 1440 ${height}`);
-    expect(svg.getAttribute('preserveAspectRatio')).toBe('xMinYMin meet');
-  });
+  it.each([700, 900, 1400])(
+    '%ipx: the viewBox is the real box, uniform-scaled (never stretched)',
+    (height) => {
+      const { svg } = renderLayer(height);
+      expect(svg.getAttribute('viewBox')).toBe(`0 0 1440 ${height}`);
+      expect(svg.getAttribute('preserveAspectRatio')).toBe('xMinYMin meet');
+    },
+  );
 });

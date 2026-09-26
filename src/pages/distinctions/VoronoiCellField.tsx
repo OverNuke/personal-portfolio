@@ -63,7 +63,11 @@ const EYE_CELL_IMAGES: Record<string, string> = {
 };
 
 function mixColor(a: string, b: string, t: number): string {
-  const parse = (hex: string) => [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
+  const parse = (hex: string) => [
+    parseInt(hex.slice(1, 3), 16),
+    parseInt(hex.slice(3, 5), 16),
+    parseInt(hex.slice(5, 7), 16),
+  ];
   const A = parse(a);
   const B = parse(b);
   return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(',')})`;
@@ -97,7 +101,9 @@ function VoronoiCellField({ onOpenCell }: VoronoiCellFieldProps) {
   const eyeImgRefs = useRef(new Map<string, HTMLImageElement>());
 
   const hoverIdRef = useRef<string | null>(null);
-  const hoverValuesRef = useRef<Record<string, number>>(Object.fromEntries(CERT_CELL_IDS.map((id) => [id, 0])));
+  const hoverValuesRef = useRef<Record<string, number>>(
+    Object.fromEntries(CERT_CELL_IDS.map((id) => [id, 0])),
+  );
   const pointerRef = useRef<{ x: number; y: number } | null>(null);
 
   // Section height is no longer the fixed STAGE_HEIGHT=900 constant that
@@ -155,7 +161,8 @@ function VoronoiCellField({ onOpenCell }: VoronoiCellFieldProps) {
 
       const container = containerRef.current;
       const rect = container ? container.getBoundingClientRect() : null;
-      const scale = rect && container && container.offsetWidth ? rect.width / container.offsetWidth : 1;
+      const scale =
+        rect && container && container.offsetWidth ? rect.width / container.offsetWidth : 1;
       const k = jitterOn ? blink(t) : 1;
 
       cells.forEach((cell) => {
@@ -165,7 +172,8 @@ function VoronoiCellField({ onOpenCell }: VoronoiCellFieldProps) {
         if (pathNode) {
           pathNode.setAttribute('d', cell.d);
           if (cell.kind === 'accent') pathNode.setAttribute('fill', ACCENT);
-          else if (cell.kind === 'rec') pathNode.setAttribute('fill', h > 0.02 ? mixColor(PAPER, ACCENT, h) : PAPER);
+          else if (cell.kind === 'rec')
+            pathNode.setAttribute('fill', h > 0.02 ? mixColor(PAPER, ACCENT, h) : PAPER);
           else pathNode.setAttribute('fill', PAPER);
         }
 
@@ -319,7 +327,11 @@ function VoronoiCellField({ onOpenCell }: VoronoiCellFieldProps) {
           ratio. `preserveAspectRatio="none"` is kept for defensive
           idempotence (a same-aspect-ratio viewBox is a no-op stretch
           either way), not because it's doing the scaling work here. */}
-      <svg viewBox={`0 0 ${STAGE_WIDTH} ${height}`} preserveAspectRatio="none" className="distinctions-cells-svg">
+      <svg
+        viewBox={`0 0 ${STAGE_WIDTH} ${height}`}
+        preserveAspectRatio="none"
+        className="distinctions-cells-svg"
+      >
         {CELL_SEEDS.map((seed) => {
           const interactive = seed.kind === 'rec';
           const cert = interactive ? CERTIFICATIONS_BY_ID[seed.id] : undefined;
@@ -367,25 +379,25 @@ function VoronoiCellField({ onOpenCell }: VoronoiCellFieldProps) {
         </div>
 
         {CERT_CELL_IDS.map((id) => {
-            const cert = CERTIFICATIONS_BY_ID[id];
-            const sizing = labelSizing[id];
-            return (
-              <div
-                key={id}
-                ref={(el) => {
-                  if (el) labelRefs.current.set(id, el);
-                }}
-                className="distinctions-label distinctions-label--cert"
-                style={{ width: sizing?.width }}
-              >
-                <span className="distinctions-label__number">{cert.number}</span>
-                <span className="distinctions-label__name" style={{ fontSize: sizing?.fontSize }}>
-                  {cert.title}
-                </span>
-                <span className="distinctions-label__meta">{cert.labelMeta}</span>
-              </div>
-            );
-          })}
+          const cert = CERTIFICATIONS_BY_ID[id];
+          const sizing = labelSizing[id];
+          return (
+            <div
+              key={id}
+              ref={(el) => {
+                if (el) labelRefs.current.set(id, el);
+              }}
+              className="distinctions-label distinctions-label--cert"
+              style={{ width: sizing?.width }}
+            >
+              <span className="distinctions-label__number">{cert.number}</span>
+              <span className="distinctions-label__name" style={{ fontSize: sizing?.fontSize }}>
+                {cert.title}
+              </span>
+              <span className="distinctions-label__meta">{cert.labelMeta}</span>
+            </div>
+          );
+        })}
 
         {(['count', 'span'] as const).map((id) => (
           <div

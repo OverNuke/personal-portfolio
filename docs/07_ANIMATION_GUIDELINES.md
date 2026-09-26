@@ -29,26 +29,26 @@ screen's UI-state transitions — verified independently in four different
 decoded templates, not copy-pasted from one and assumed elsewhere:
 
 - Home's nav-list item hover/focus shift: `transform .22s
-  cubic-bezier(.2,.85,.2,1), color .22s ease` (`docs/_decoded/index/
-  template.html` line 509).
+cubic-bezier(.2,.85,.2,1), color .22s ease` (`docs/_decoded/index/
+template.html` line 509).
 - Profile's chamber dot fusion: `transform .9s cubic-bezier(.24,1.15,.32,1),
-  background .7s ease` — note this is a close relative with an
+background .7s ease` — note this is a close relative with an
   **overshoot** (`1.15` > 1 in the second control point), used specifically
   for the fusion snap, not identical to the house curve (`docs/_decoded/
-  profile-section-v4-standalone/template.html` line 369).
+profile-section-v4-standalone/template.html` line 369).
 - Contact's dock card lift: `transform .24s cubic-bezier(.2,.85,.2,1),
-  box-shadow .24s ease` (`docs/_decoded/contact-section-v2-standalone/
-  template.html` line 407, repeated on all 5 cards).
+box-shadow .24s ease` (`docs/_decoded/contact-section-v2-standalone/
+template.html` line 407, repeated on all 5 cards).
 - Projects' repository-pill blob morph: `border-radius .35s
-  cubic-bezier(.2,.85,.2,1)` (`docs/_decoded/projects-section-v2-standalone/
-  template.html` lines 432, 447).
+cubic-bezier(.2,.85,.2,1)` (`docs/_decoded/projects-section-v2-standalone/
+template.html` lines 432, 447).
 
 **Convention for new work:** `cubic-bezier(.2,.85,.2,1)` is this project's
 default ease for any discrete UI-state transition (hover, focus, toggle) —
 a fast decelerate with no overshoot, matching the "mechanical, not playful"
 character these four independent usages already establish. Reach for
 Profile's overshoot variant (`cubic-bezier(.24,1.15,.32,1)`) only for an
-effect that's specifically about two things *snapping together* (the
+effect that's specifically about two things _snapping together_ (the
 fusion metaphor it was built for) — don't apply it generally.
 
 ## Per-effect motion specifics
@@ -56,17 +56,17 @@ fusion metaphor it was built for) — don't apply it generally.
 ### Home
 
 - Nav-list item shift on hover/focus: `translateX(10px)`, `transform .22s
-  cubic-bezier(.2,.85,.2,1), color .22s ease`. Trailing arrow (`→`) opacity
+cubic-bezier(.2,.85,.2,1), color .22s ease`. Trailing arrow (`→`) opacity
   `0→1` over `.22s ease` (no easing curve given for opacity specifically —
   plain `ease`, not the house cubic-bezier).
 - Pill-nav active/inactive background+color swap: `background .2s ease,
-  color .2s ease` (`docs/_decoded/index/template.html` line 623) — plain
+color .2s ease` (`docs/_decoded/index/template.html` line 623) — plain
   `ease`, not the house curve; this is chrome, not content, and reads
   correctly as a slightly softer, less "designed" transition.
   > **Corrected 2026-09-23 (task 8.1, spec `screen-transitions`): the
   > decoded value above was deliberately REPLACED, not ported.** The shipped
   > pill (`.pill-nav__button` in `src/shell/shell.css`) uses `background
-  > 120ms` and `color 120ms` on the house ease (`--ease-house`,
+120ms` and `color 120ms` on the house ease (`--ease-house`,
   > `cubic-bezier(.2,.85,.2,1)`), with `transition: none` under
   > `prefers-reduced-motion: reduce` (the pill had no reduced-motion handling
   > before). Reason: the REFORM/ENTER route crossfade that owned the 120ms
@@ -84,7 +84,7 @@ fusion metaphor it was built for) — don't apply it generally.
   `01_ART_DIRECTION.MD`'s open question). Its only documented contract is
   the prop surface (`ink`, `speed` default `1.3` range `0.2–3`, `ring-gap`
   default `7px` range `4–14`, `animate` boolean) from `docs/_decoded/index/
-  template.html`'s `data-props` block — implement its actual per-frame
+template.html`'s `data-props` block — implement its actual per-frame
   motion using that prop surface and this doc's general "mechanical, not
   playful" character, not a recovered timing curve, since none exists to
   recover.
@@ -101,20 +101,20 @@ fusion metaphor it was built for) — don't apply it generally.
   495–510). `mix-blend-mode: exclusion` throughout.
 - **Chamber dot fusion** (state-change, not decoration — see
   `05_ACCESSIBILITY.MD`): dot `transform`/`background` on `.9s
-  cubic-bezier(.24,1.15,.32,1)` / `.7s ease`; fused-word reveal on `opacity
-  .5s ease .2s` (200ms delay) and `transform .6s
-  cubic-bezier(.24,1.15,.32,1) .16s` (160ms delay) — the word fades/settles
+cubic-bezier(.24,1.15,.32,1)` / `.7s ease`; fused-word reveal on `opacity
+.5s ease .2s` (200ms delay) and `transform .6s
+cubic-bezier(.24,1.15,.32,1) .16s` (160ms delay) — the word fades/settles
   in slightly after the dots finish merging, not simultaneously.
 - **Ambient chamber wobble/drift** (organic "breathing" `border-radius`
   and position jitter on the dots at rest): three wobble keyframe sets —
   `cellWobA 11s`, `cellWobB 13s`, `cellWobC 9.5s`, all `ease-in-out
-  infinite` — and three drift sets — `driftA 13s`, `driftB 16s`, `driftC
-  10s`, all `ease-in-out infinite` — deliberately mismatched periods per
+infinite` — and three drift sets — `driftA 13s`, `driftB 16s`, `driftC
+10s`, all `ease-in-out infinite` — deliberately mismatched periods per
   dot so they never fall into visual sync.
 - **"Looking for an opportunity" pulse badge:** `livePulse 2.4s
-  ease-in-out infinite` — `scale(1)↔scale(1.24)` combined with an organic
+ease-in-out infinite` — `scale(1)↔scale(1.24)` combined with an organic
   `border-radius` morph (`60% 40% 55% 45%/45% 55% 40% 60%` ↔ `45% 55% 40%
-  60%/60% 40% 55% 45%`), i.e. the dot doesn't just pulse in size, its shape
+60%/60% 40% 55% 45%`), i.e. the dot doesn't just pulse in size, its shape
   breathes too. **Updated 2026-09-26:** the badge sits at `top: 20px`
   (was `92px`) so it clears the first of the five chambers; the animation
   itself is unchanged.
@@ -126,7 +126,7 @@ fusion metaphor it was built for) — don't apply it generally.
   `x += cos(t·0.37 + phase)·7px`, `y += sin(t·0.31 + phase·1.3)·7px`;
   weight jitter `sin(t·0.55 + phase)` folded into each cell's power-diagram
   weight before re-clipping (`docs/_decoded/distinction-section-v4-standalone/
-  template.html` lines 835–844). Three distinct, deliberately non-integer
+template.html` lines 835–844). Three distinct, deliberately non-integer
   frequencies (`0.55`, `0.37`, `0.31` rad/s) so cells never breathe in
   lockstep — same "mismatched periods" principle as Profile's chamber
   wobble/drift above.
@@ -153,7 +153,7 @@ fusion metaphor it was built for) — don't apply it generally.
   ease-toward-target computed every animation frame:
   `next = current + (target − current) × 0.14`, where `target` is `1` on
   hover-in / `0` on hover-out (`docs/_decoded/projects-section-v2-standalone/
-  template.html` line 798). At 60fps this settles to within ~0.2% of target
+template.html` line 798). At 60fps this settles to within ~0.2% of target
   in roughly 35–40 frames (~550–650ms) — a smooth decelerating approach
   with no overshoot, driving the card's `translateY` lift, its opacity
   relative to whichever card currently has the hover "peak," the doodle
@@ -165,7 +165,7 @@ fusion metaphor it was built for) — don't apply it generally.
   four separate CSS transitions with matched durations — the whole point of
   computing them from one lerp is that they can never drift out of sync.
 - **Repository-pill blob morph:** `border-radius .35s
-  cubic-bezier(.2,.85,.2,1)` — house ease, the pill's four corner radii
+cubic-bezier(.2,.85,.2,1)` — house ease, the pill's four corner radii
   scramble into an irregular blob shape on hover
   (`62% 38% 55% 45%/45% 60% 40% 55%`) and back.
 - **"PROJECTS" stroke-glyph jitter:** per-frame noise-perturbed stroke
@@ -176,7 +176,7 @@ fusion metaphor it was built for) — don't apply it generally.
 ### Contact
 
 - **Magnetic dock:** `transform .24s cubic-bezier(.2,.85,.2,1), box-shadow
-  .24s ease` on each card (house ease) smooths the per-frame
+.24s ease` on each card (house ease) smooths the per-frame
   `translateY`/`scale` values a `pointermove`-driven rAF loop computes from
   the Gaussian falloff `f = exp(-(dx² + dy²))` (`dx`/`dy` normalized by
   `dockSpread`, default `260px`, with the `y` axis using `spread × 2.2` —

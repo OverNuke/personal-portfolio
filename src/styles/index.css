@@ -84,8 +84,5 @@ body,
 body {
   margin: 0;
   background: var(--stage-letterbox-bg);
-  font-family:
-    'Space Grotesk',
-    system-ui,
-    sans-serif;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
 }

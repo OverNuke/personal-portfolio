@@ -27,7 +27,10 @@ import {
 
 for (const viewport of VIEWPORTS) {
   test.describe(`pill landing at ${viewport.width}x${viewport.height} (scale ${viewport.scale})`, () => {
-    test.use({ viewport: { width: viewport.width, height: viewport.height }, reducedMotion: 'reduce' });
+    test.use({
+      viewport: { width: viewport.width, height: viewport.height },
+      reducedMotion: 'reduce',
+    });
 
     test('each pill lands its section top at 0 +-2px', async ({ page }) => {
       await page.goto('/');
@@ -39,7 +42,9 @@ for (const viewport of VIEWPORTS) {
         await clickPill(page, route.pageId);
         await expectSectionAtTop(page, route.pageId);
         await expect(
-          page.getByRole('navigation', { name: 'Screens' }).getByRole('button', { name: route.navLabel, exact: true }),
+          page
+            .getByRole('navigation', { name: 'Screens' })
+            .getByRole('button', { name: route.navLabel, exact: true }),
         ).toHaveAttribute('aria-current', 'page');
       }
     });
@@ -102,7 +107,11 @@ test.describe('pill landing when the viewport is taller than a section (aspect <
     await waitForScrollSettled(page);
     const contact = await page.evaluate(() => {
       const rect = document.getElementById('section-contact')!.getBoundingClientRect();
-      return { top: rect.top, bottom: rect.bottom, docBottom: document.documentElement.scrollHeight - window.scrollY };
+      return {
+        top: rect.top,
+        bottom: rect.bottom,
+        docBottom: document.documentElement.scrollHeight - window.scrollY,
+      };
     });
     // Whole section visible, bottom-aligned to the viewport: top cannot reach 0 without dead space.
     expect(contact.bottom).toBeCloseTo(viewportHeight, 0);
@@ -138,11 +147,16 @@ async function expectHeadingFocused(page: Page, pageId: PageId): Promise<void> {
 for (const viewport of VIEWPORTS) {
   test.describe(`hash deep links at ${viewport.width}x${viewport.height}`, () => {
     // Motion ON: under reduced motion `behavior: 'auto'` is instant too, which would make the instant-load check prove nothing.
-    test.use({ viewport: { width: viewport.width, height: viewport.height }, reducedMotion: 'no-preference' });
+    test.use({
+      viewport: { width: viewport.width, height: viewport.height },
+      reducedMotion: 'no-preference',
+    });
 
     for (const route of routes) {
       const hash = route.hash;
-      test(`a fresh load of /${hash} lands instantly at the section top, focused and announced`, async ({ page }) => {
+      test(`a fresh load of /${hash} lands instantly at the section top, focused and announced`, async ({
+        page,
+      }) => {
         await recordScrollPositions(page);
         // A fresh page => a real load (a same-page goto to another hash would be a same-document navigation).
         await page.goto(`/${hash}`);
@@ -153,14 +167,19 @@ for (const viewport of VIEWPORTS) {
         // Instant: the only positions ever reported are the start and the destination -- a smooth animation would log intermediates.
         const positions = await scrollLog(page);
         for (const y of positions) {
-          expect(Math.abs(y - 0) < 1 || Math.abs(y - target) < 1, `intermediate scrollY ${y} while loading ${hash}`).toBe(true);
+          expect(
+            Math.abs(y - 0) < 1 || Math.abs(y - target) < 1,
+            `intermediate scrollY ${y} while loading ${hash}`,
+          ).toBe(true);
         }
         if (index > 0) expect(positions.length).toBeGreaterThan(0);
 
         await expectHeadingFocused(page, route.pageId);
         await expect(liveText(page)).toHaveText(`${route.navLabel}.`);
         await expect(
-          page.getByRole('navigation', { name: 'Screens' }).getByRole('button', { name: route.navLabel, exact: true }),
+          page
+            .getByRole('navigation', { name: 'Screens' })
+            .getByRole('button', { name: route.navLabel, exact: true }),
         ).toHaveAttribute('aria-current', 'page');
         expect(new URL(page.url()).hash).toBe(hash);
       });
@@ -171,7 +190,9 @@ for (const viewport of VIEWPORTS) {
 test.describe('hash navigation', () => {
   test.use({ viewport: { width: 1152, height: 720 }, reducedMotion: 'no-preference' });
 
-  test('control: a pill click animates (so the instant-load check above can tell the difference)', async ({ page }) => {
+  test('control: a pill click animates (so the instant-load check above can tell the difference)', async ({
+    page,
+  }) => {
     await recordScrollPositions(page);
     await page.goto('/');
     await expect(page.locator('.screen-section')).toHaveCount(5);
@@ -214,7 +235,9 @@ test.describe('hash navigation', () => {
     await expectSectionAtTop(page, 'profile');
   });
 
-  test('an unknown hash falls back to Home without error, focus or announcement', async ({ page }) => {
+  test('an unknown hash falls back to Home without error, focus or announcement', async ({
+    page,
+  }) => {
     test.slow(); // several scrolls/fresh pages under always-on rAF effects
     const errors: string[] = [];
     page.on('console', (message) => {
@@ -232,10 +255,11 @@ test.describe('hash navigation', () => {
       await expectSectionAtTop(fresh, 'home');
       await expect(liveText(fresh)).toHaveText('');
       expect(await fresh.evaluate(() => document.activeElement === document.body), hash).toBe(true);
-      await expect(fresh.getByRole('navigation', { name: 'Screens' }).getByRole('button', { name: 'Home', exact: true })).toHaveAttribute(
-        'aria-current',
-        'page',
-      );
+      await expect(
+        fresh
+          .getByRole('navigation', { name: 'Screens' })
+          .getByRole('button', { name: 'Home', exact: true }),
+      ).toHaveAttribute('aria-current', 'page');
       await fresh.close();
     }
 
@@ -259,7 +283,9 @@ test.describe('hash navigation', () => {
     await expectHeadingFocused(page, 'contact');
   });
 
-  test('manual scrolling moves the active pill but never the hash, focus, history or live region', async ({ page }) => {
+  test('manual scrolling moves the active pill but never the hash, focus, history or live region', async ({
+    page,
+  }) => {
     await page.goto('/#home');
     await expect(page.locator('.screen-section')).toHaveCount(5);
     await expectSectionAtTop(page, 'home');
@@ -267,12 +293,16 @@ test.describe('hash navigation', () => {
     const historyBefore = await page.evaluate(() => history.length);
 
     // Scroll by hand into the middle of Distinctions (instant, so this is not a nav activation).
-    await page.evaluate((y) => window.scrollTo({ top: y, behavior: 'instant' }), 2 * SECTION_HEIGHT * 0.8 + 200);
-    await waitForScrollSettled(page);
-    await expect(page.getByRole('navigation', { name: 'Screens' }).getByRole('button', { name: 'Distinctions', exact: true })).toHaveAttribute(
-      'aria-current',
-      'page',
+    await page.evaluate(
+      (y) => window.scrollTo({ top: y, behavior: 'instant' }),
+      2 * SECTION_HEIGHT * 0.8 + 200,
     );
+    await waitForScrollSettled(page);
+    await expect(
+      page
+        .getByRole('navigation', { name: 'Screens' })
+        .getByRole('button', { name: 'Distinctions', exact: true }),
+    ).toHaveAttribute('aria-current', 'page');
 
     expect(new URL(page.url()).hash).toBe('#home');
     expect(await page.evaluate(() => history.length)).toBe(historyBefore);
@@ -291,7 +321,9 @@ test.describe('legacy path URLs (spec `nav-model` Hash Deep Links, scenario (f))
   // The removed per-screen routes. The site is static (no server-side rewrite), so the host serves the app shell for
   // them and the page must simply be Home: no redirect, no error, no focus/announcement, no hash added.
   for (const path of ['/profile', '/distinction', '/projects']) {
-    test(`a fresh load of ${path} renders Home at the top without redirect or error`, async ({ page }) => {
+    test(`a fresh load of ${path} renders Home at the top without redirect or error`, async ({
+      page,
+    }) => {
       const errors: string[] = [];
       page.on('console', (message) => {
         if (message.type() === 'error') errors.push(message.text());
@@ -307,7 +339,9 @@ test.describe('legacy path URLs (spec `nav-model` Hash Deep Links, scenario (f))
       expect(await page.evaluate(() => window.scrollY)).toBe(0);
       await expectSectionAtTop(page, 'home');
       await expect(
-        page.getByRole('navigation', { name: 'Screens' }).getByRole('button', { name: 'Home', exact: true }),
+        page
+          .getByRole('navigation', { name: 'Screens' })
+          .getByRole('button', { name: 'Home', exact: true }),
       ).toHaveAttribute('aria-current', 'page');
 
       // No redirect: the URL is exactly what was requested, no hash was added or rewritten.

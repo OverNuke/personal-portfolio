@@ -37,7 +37,9 @@ function Contact() {
 
       <Dock />
 
-      <p className="contact-quote">Even an hundred of years isn't enough to appreciate what life is mean to be.</p>
+      <p className="contact-quote">
+        Even an hundred of years isn't enough to appreciate what life is mean to be.
+      </p>
 
       <div className="contact-footer-rule" aria-hidden="true">
         <span className="contact-rule" />

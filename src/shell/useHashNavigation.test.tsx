@@ -30,12 +30,15 @@ describe('useHashNavigation', () => {
     expect(navigate).toHaveBeenCalledWith('distinction', 'instant');
   });
 
-  it.each(['', '#', '#foo', '#section-profile'])('does nothing on mount for the empty/unknown hash %j (stays on Home)', (hash) => {
-    setHash(hash);
-    const navigate = vi.fn();
-    renderHook(() => useHashNavigation(navigate));
-    expect(navigate).not.toHaveBeenCalled();
-  });
+  it.each(['', '#', '#foo', '#section-profile'])(
+    'does nothing on mount for the empty/unknown hash %j (stays on Home)',
+    (hash) => {
+      setHash(hash);
+      const navigate = vi.fn();
+      renderHook(() => useHashNavigation(navigate));
+      expect(navigate).not.toHaveBeenCalled();
+    },
+  );
 
   it('a valid mount hash does not push a history entry', () => {
     setHash('#contact');
@@ -83,21 +86,26 @@ describe('useHashNavigation', () => {
     expect(navigate).toHaveBeenLastCalledWith('contact', 'animated');
   });
 
-  it.each(['', '#', '#foo'])('an empty/unknown hash on back/forward or manual edit (%j) goes Home', (hash) => {
-    const navigate = vi.fn();
-    renderHook(() => useHashNavigation(navigate));
+  it.each(['', '#', '#foo'])(
+    'an empty/unknown hash on back/forward or manual edit (%j) goes Home',
+    (hash) => {
+      const navigate = vi.fn();
+      renderHook(() => useHashNavigation(navigate));
 
-    setHash(hash);
-    window.dispatchEvent(new PopStateEvent('popstate'));
+      setHash(hash);
+      window.dispatchEvent(new PopStateEvent('popstate'));
 
-    expect(navigate).toHaveBeenCalledWith('home', 'animated');
-  });
+      expect(navigate).toHaveBeenCalledWith('home', 'animated');
+    },
+  );
 
   it('uses the latest navigate callback without re-running the mount navigation', () => {
     setHash('#projects');
     const first = vi.fn();
     const second = vi.fn();
-    const { rerender } = renderHook(({ cb }) => useHashNavigation(cb), { initialProps: { cb: first } });
+    const { rerender } = renderHook(({ cb }) => useHashNavigation(cb), {
+      initialProps: { cb: first },
+    });
     rerender({ cb: second });
 
     expect(first).toHaveBeenCalledTimes(1);
@@ -149,7 +157,9 @@ describe('pushSectionHash', () => {
   it('keeps the path and query when it pushes', () => {
     window.history.replaceState(null, '', '/some/path?x=1');
     pushSectionHash('contact');
-    expect(window.location.pathname + window.location.search + window.location.hash).toBe('/some/path?x=1#contact');
+    expect(window.location.pathname + window.location.search + window.location.hash).toBe(
+      '/some/path?x=1#contact',
+    );
   });
 
   it('does not push a duplicate entry when the hash is already that section', () => {

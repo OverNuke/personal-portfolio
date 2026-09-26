@@ -23,7 +23,13 @@ describe('ScanModal placement', () => {
   it('renders the open dialog on <body>, outside the (transformed) tree that hosts it', () => {
     const { container } = render(
       <div data-testid="transformed-host">
-        <ScanModal isOpen title="AWS Cloud Practitioner" meta="2024" imageAlt="" onClose={() => {}} />
+        <ScanModal
+          isOpen
+          title="AWS Cloud Practitioner"
+          meta="2024"
+          imageAlt=""
+          onClose={() => {}}
+        />
       </div>,
     );
 
@@ -33,7 +39,15 @@ describe('ScanModal placement', () => {
   });
 
   it('renders nothing (anywhere) while closed', () => {
-    render(<ScanModal isOpen={false} title="AWS Cloud Practitioner" meta="2024" imageAlt="" onClose={() => {}} />);
+    render(
+      <ScanModal
+        isOpen={false}
+        title="AWS Cloud Practitioner"
+        meta="2024"
+        imageAlt=""
+        onClose={() => {}}
+      />,
+    );
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 });

@@ -28,11 +28,11 @@
 Home is one `position:absolute;inset:0` layer inside the shared
 1440×900 stage (`background:#0e0f0b`), with two z-index bands:
 
-| z-index | Content |
-|---|---|
-| `0` | Ink Flow Background — `dc-import`, `position:absolute;inset:0`, fills the entire 1440×900 stage |
-| `10` | Real content column (wordmark, EN/ES toggle, nav list) |
-| `9000` | Pill nav (persistent chrome, outside Home's own layer — see `03_UX_ARCHITECTURE.MD`) |
+| z-index | Content                                                                                         |
+| ------- | ----------------------------------------------------------------------------------------------- |
+| `0`     | Ink Flow Background — `dc-import`, `position:absolute;inset:0`, fills the entire 1440×900 stage |
+| `10`    | Real content column (wordmark, EN/ES toggle, nav list)                                          |
+| `9000`  | Pill nav (persistent chrome, outside Home's own layer — see `03_UX_ARCHITECTURE.MD`)            |
 
 There is no left-side content at all. The entire left ~900px of the stage is
 given to the Ink Flow Background alone — confirmed by the content column's
@@ -60,24 +60,24 @@ despite the toggle being the second child in markup order.
 - **Wordmark:** `<h1>Kevin.<span style="color:{{accentInk}}">.</span></h1>` —
   wait, precisely: `Kevin` then a `<span>` holding only the period, colored
   with the `accentInk` prop (`#6f7f45` default). `font-family:'Archivo
-  Black',sans-serif; font-size:76px; line-height:.88;
-  letter-spacing:-.035em; text-transform:uppercase`. This is genuinely the
+Black',sans-serif; font-size:76px; line-height:.88;
+letter-spacing:-.035em; text-transform:uppercase`. This is genuinely the
   entire headline — one word, period-stopped, no subtitle or role line
   rendered anywhere in this template (see the note below on the
   unshipped `main-page-standalone` role string).
 - **EN/ES toggle:** a bordered two-cell control —
   `display:flex; align-items:center; gap:0; border:2px solid #14150f;
-  padding:0; flex:none` wrapping:
+padding:0; flex:none` wrapping:
   - EN cell: `data-lang="EN"`, `role="button"`, click → `setLang`.
     `padding:7px 12px 8px; font-family:'Archivo Black',sans-serif;
-    font-size:11px; letter-spacing:.1em; cursor:pointer;
-    background:{{enBg}}; color:{{enFg}}`.
+font-size:11px; letter-spacing:.1em; cursor:pointer;
+background:{{enBg}}; color:{{enFg}}`.
   - A static 2px-wide divider between the two cells: `background:#14150f`,
     `align-self:stretch`.
   - ES cell: identical shape, `data-lang="ES"`, `background:{{esBg}}`,
     `color:{{esFg}}`.
   - State logic (`renderVals()`): `lang === 'EN' ? { bg:'#14150f',
-    fg:'#f6f4ea' } : { bg:'transparent', fg:'#14150f' }`, and the mirror for
+fg:'#f6f4ea' } : { bg:'transparent', fg:'#14150f' }`, and the mirror for
     ES. So the **active** language renders as a solid dark box with light
     text (unaffected by any contrast fix — that pairing is already safe);
     the **inactive** language renders as transparent with `#14150f` text
@@ -122,21 +122,21 @@ padding:11px 0 13px; border-bottom:2px solid rgba(20,21,15,.4);
 color:{{it.color}}; transform:{{it.shift}}; transition:transform .22s
 cubic-bezier(.2,.85,.2,1), color .22s ease` — three child spans:
 
-| Span | Content | Style | Color source |
-|---|---|---|---|
-| Number | `01`–`04` | `font-size:11px; font-weight:700; letter-spacing:.16em` | **Always `#14150f`, regardless of focus state** — this span sets its own explicit color, not inherited from the `<a>`. This means the number is *also* subject to Fix 1 (it sits on the raw `#0e0f0b` background at all times, focused or not) and must switch to the corrected `#f3f2ef` unconditionally — there is no accent variant for the number in the source. |
-| Label | localized text (see Copy below) | `font-family:'Archivo Black',sans-serif; font-size:34px; line-height:1; letter-spacing:-.028em; text-transform:uppercase` | Inherits `{{it.color}}` from the `<a>`: accent (`#6f7f45` default) if this item currently holds the simulated focus, else ink — corrected to `#f3f2ef` per Fix 1 when not focused. At 34px this clears the AA large-text (≥24px) threshold at both colors. |
-| Arrow (`→`) | | `width:22px; flex:none; font-size:19px; opacity:{{it.arrow}}; transition:opacity .22s ease` | Same `{{it.color}}` as the label, but only visible (`opacity:1`) when focused — at `opacity:0` it renders nothing, so its own borderline contrast note in `02_DESIGN_SYSTEM.MD` (accent-on-bg at 19px, ≈4.39:1) only ever matters in the one state where it's visible; see that doc for the optional tighter fix. |
+| Span        | Content                         | Style                                                                                                                     | Color source                                                                                                                                                                                                                                                                                                                                                         |
+| ----------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Number      | `01`–`04`                       | `font-size:11px; font-weight:700; letter-spacing:.16em`                                                                   | **Always `#14150f`, regardless of focus state** — this span sets its own explicit color, not inherited from the `<a>`. This means the number is _also_ subject to Fix 1 (it sits on the raw `#0e0f0b` background at all times, focused or not) and must switch to the corrected `#f3f2ef` unconditionally — there is no accent variant for the number in the source. |
+| Label       | localized text (see Copy below) | `font-family:'Archivo Black',sans-serif; font-size:34px; line-height:1; letter-spacing:-.028em; text-transform:uppercase` | Inherits `{{it.color}}` from the `<a>`: accent (`#6f7f45` default) if this item currently holds the simulated focus, else ink — corrected to `#f3f2ef` per Fix 1 when not focused. At 34px this clears the AA large-text (≥24px) threshold at both colors.                                                                                                           |
+| Arrow (`→`) |                                 | `width:22px; flex:none; font-size:19px; opacity:{{it.arrow}}; transition:opacity .22s ease`                               | Same `{{it.color}}` as the label, but only visible (`opacity:1`) when focused — at `opacity:0` it renders nothing, so its own borderline contrast note in `02_DESIGN_SYSTEM.MD` (accent-on-bg at 19px, ≈4.39:1) only ever matters in the one state where it's visible; see that doc for the optional tighter fix.                                                    |
 
 ### Hover-shift + arrow-reveal — exact interaction
 
 Verified directly from `renderVals()`'s `items` mapping:
 
-| Property | Not focused | Focused |
-|---|---|---|
-| Label + arrow color | corrected ink `#f3f2ef` | accent, `#6f7f45` default |
-| Row horizontal position | `translateX(0)` | `translateX(10px)` |
-| Arrow opacity | `0` | `1` |
+| Property                | Not focused             | Focused                   |
+| ----------------------- | ----------------------- | ------------------------- |
+| Label + arrow color     | corrected ink `#f3f2ef` | accent, `#6f7f45` default |
+| Row horizontal position | `translateX(0)`         | `translateX(10px)`        |
+| Arrow opacity           | `0`                     | `1`                       |
 
 `this.state.focus` (an index into `ORDER`, default `0`) drives all three.
 Both `onMouseEnter` on a row and the arrow-key cycling below write to the
@@ -160,7 +160,7 @@ This is the single most important nuance to get right on port, per
   screen-reader-relevant sense — it only changes which row looks
   highlighted to a sighted mouse-adjacent user.
 - **Port this gap as-is; do not silently merge the two states.** Making
-  arrow-key cycling drive real focus would be a legitimate *future*
+  arrow-key cycling drive real focus would be a legitimate _future_
   enhancement, but it's a new interaction decision, not a faithful port —
   `03_UX_ARCHITECTURE.MD` deliberately flags this for `05_ACCESSIBILITY.MD`
   rather than fixing it unilaterally, and `05_ACCESSIBILITY.MD`'s keyboard
@@ -177,10 +177,10 @@ while Home is the **active section** (`enabled = activeSection === 'home'`);
 while it is, ArrowUp/ArrowDown are `preventDefault()`ed and do not scroll
 the page (a known, disclosed limitation — `05_ACCESSIBILITY.MD`):
 
-| Key | Effect |
-|---|---|
+| Key                         | Effect     |
+| --------------------------- | ---------- |
 | `ArrowRight` or `ArrowDown` | `move(+1)` |
-| `ArrowLeft` or `ArrowUp` | `move(-1)` |
+| `ArrowLeft` or `ArrowUp`    | `move(-1)` |
 
 Both call `e.preventDefault()`. `move(d)` advances with wraparound:
 `focus = (focus + d + ORDER.length) % ORDER.length` — pressing `ArrowRight`
@@ -194,10 +194,10 @@ Two separate dictionaries exist in source, and they do not agree with each
 other — this is confirmed, not a typo to silently reconcile:
 
 ```js
-NAV  = [ 'Home', 'Profile', 'Distinctions', 'Projects', 'Contact' ]   // pill nav — English only
+NAV = ['Home', 'Profile', 'Distinctions', 'Projects', 'Contact']; // pill nav — English only
 COPY = {
-  EN: { about:'Who me?', distinction:'Distinction', projects:'Projects', contact:'Reach out' },
-  ES: { about:'¿Yo?',    distinction:'Distinción',  projects:'Proyectos', contact:'Contacto' }
+  EN: { about: 'Who me?', distinction: 'Distinction', projects: 'Projects', contact: 'Reach out' },
+  ES: { about: '¿Yo?', distinction: 'Distinción', projects: 'Proyectos', contact: 'Contacto' },
 };
 ```
 
@@ -236,15 +236,15 @@ back into silently while building Home.
 Prop surface, from the decoded `data-props` block (`docs/_decoded/index/
 template.html`'s script tag):
 
-| Prop | Default | Range | Notes |
-|---|---|---|---|
-| `accent` (→ `ink`) | `#6f7f45` | options: `#14150f`, `#0c0d0a`, `#3a3f2a`, `#6f7f45` | Also colors the "." in "Kevin." — one prop, two usages |
-| `flowSpeed` | `1.3` | `0.2`–`3`, step `0.1` | |
-| `ringGap` | `7` (px) | `4`–`14`, step `0.5` | |
-| `animate` | `true` | boolean | Must be forced `false` (static frame) under `prefers-reduced-motion: reduce` — see `05_ACCESSIBILITY.MD` |
+| Prop               | Default   | Range                                               | Notes                                                                                                    |
+| ------------------ | --------- | --------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `accent` (→ `ink`) | `#6f7f45` | options: `#14150f`, `#0c0d0a`, `#3a3f2a`, `#6f7f45` | Also colors the "." in "Kevin." — one prop, two usages                                                   |
+| `flowSpeed`        | `1.3`     | `0.2`–`3`, step `0.1`                               |                                                                                                          |
+| `ringGap`          | `7` (px)  | `4`–`14`, step `0.5`                                |                                                                                                          |
+| `animate`          | `true`    | boolean                                             | Must be forced `false` (static frame) under `prefers-reduced-motion: reduce` — see `05_ACCESSIBILITY.MD` |
 
 This component is **not** one of the six top-level decoded mockup slugs, but
-it *is* fully decoded: it's an `ext_resources` entry nested inside
+it _is_ fully decoded: it's an `ext_resources` entry nested inside
 `main-page-standalone`'s own manifest, and `decode-mockup.mjs` writes such
 nested entries out as a readable `.html` asset file
 (`docs/_decoded/main-page-standalone/assets/ffce4155-*.html`) — it was simply
@@ -261,7 +261,7 @@ a tab stop, and — since real text sits at a higher z-index and never depends
 on this layer rendering at all — legibility never depends on its state.
 
 > **Updated 2026-09-21 (post-build correction):** built as `src/pages/home/
-> InkFlowBackground.tsx`, near-1:1 against the real decoded component above
+InkFlowBackground.tsx`, near-1:1 against the real decoded component above
 > (not the original canvas-ripple implementation this doc previously
 > described, which was an invented stand-in — see `04_COMPONENT_RULES.MD`'s
 > matching correction). `animate=false` / `prefers-reduced-motion: reduce`
@@ -293,7 +293,7 @@ or a hand-edited hash), the shell scrolls Home to the viewport top, focus
 moves to Home's primary heading (the `<h1>Kevin.</h1>` wordmark, which keeps
 its stable `tabIndex={-1}` and carries `data-screen-heading`; the shell
 focuses it with `preventScroll`), and the shared `aria-live="polite"` region
-announces "Home." in the same tick. Merely *scrolling* onto Home moves
+announces "Home." in the same tick. Merely _scrolling_ onto Home moves
 neither focus nor the announcement, and an ordinary load with no hash does
 neither. This is the same rule every other screen follows — Home has no
 special-cased entry behavior beyond owning the arrow-key listener described

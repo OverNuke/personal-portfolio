@@ -103,7 +103,14 @@ export function meetsStageViewportOverflowContract(overflowX, overflowY) {
  * hidden/clip on that axis AND its content genuinely exceeds the box --
  * plain overflow:visible content (natural wrapping) is never "clipped".
  */
-export function isTextClipped({ clientWidth, clientHeight, scrollWidth, scrollHeight, overflowX, overflowY }) {
+export function isTextClipped({
+  clientWidth,
+  clientHeight,
+  scrollWidth,
+  scrollHeight,
+  overflowX,
+  overflowY,
+}) {
   const clipsX = isClippingOverflow(overflowX) && scrollWidth - clientWidth > EPSILON;
   const clipsY = isClippingOverflow(overflowY) && scrollHeight - clientHeight > EPSILON;
   return clipsX || clipsY;
@@ -200,7 +207,14 @@ export function parseScale(transformValue) {
  * rebuilds an axis-aligned rect around the recovered center using the
  * element's own rotation-invariant local dimensions.
  */
-export function unrotateElementRect(measuredRect, localWidth, localHeight, angleDegrees, originX, originY) {
+export function unrotateElementRect(
+  measuredRect,
+  localWidth,
+  localHeight,
+  angleDegrees,
+  originX,
+  originY,
+) {
   if (!measuredRect) return measuredRect;
   if (!angleDegrees) return measuredRect;
 

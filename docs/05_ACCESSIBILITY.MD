@@ -15,7 +15,7 @@
 > model (there is no routing since 2026-09-23) this doc's keyboard rules must
 > stay consistent with; `04_COMPONENT_RULES.MD`
 > owns each effect's component contract (props, state machine, bucket
-> placement) — this doc owns *why* each effect is accessible or not, and the
+> placement) — this doc owns _why_ each effect is accessible or not, and the
 > concrete a11y contract layered on top of those component contracts.
 
 ## The Decorative / Auto-Playing Animations pattern
@@ -32,7 +32,7 @@ here):
    such thing as a 90%-decorative animation for this purpose.
 2. **Never a tab stop.** Nothing inside a decorative layer receives
    `tabindex`, and nothing inside it can be reached via Tab. If part of an
-   effect *is* meant to be reachable (an interactive control layered visually
+   effect _is_ meant to be reachable (an interactive control layered visually
    over or beside it), that part is a real, separate, non-`aria-hidden`
    element — not a hole punched in the decorative tree.
 3. **Dismissed on any keypress — for one-shot intro/sting animations.** This
@@ -81,7 +81,7 @@ new decorative or partially-decorative effects this rebuild introduces.
   (`Who me? / Distinction / Projects / Reach out`) are plain `<h1>`/`<a>`/
   `<div>` markup layered on top of the decorative canvas at `z-index:10` — this
   already satisfies "real content lives outside the decorative layer," and
-  nothing about this rebuild should move any of that text *inside* the Ink
+  nothing about this rebuild should move any of that text _inside_ the Ink
   Flow Background component.
 - **No dependency, once corrected (Fix 1 retired 2026-09-21):** an earlier
   pass flagged this real content's default ink (`#14150f`) as sitting on the
@@ -90,11 +90,11 @@ new decorative or partially-decorative effects this rebuild introduces.
   time. It's since been decoded (a nested `ext_resources` entry, not one of
   the six top-level slugs — see `02_DESIGN_SYSTEM.MD`'s "Fix 1 — RETIRED" and
   `04_COMPONENT_RULES.MD`'s matching note) and is a fully **opaque** cream
-  paper (`#f6f4ea`) layer sitting *between* the shell background and the
+  paper (`#f6f4ea`) layer sitting _between_ the shell background and the
   text. Against that real surface the decoded literal `#14150f` is ≈16.6:1 —
   no fix was ever needed, and `#f3f2ef` is no longer used on this screen.
   The underlying principle stands regardless: real content must never be
-  *allowed* to depend on a decorative, `aria-hidden`,
+  _allowed_ to depend on a decorative, `aria-hidden`,
   `prefers-reduced-motion`-short-circuitable layer for its contrast — it
   just turns out this one never did, once its real surface was known.
 - **`prefers-reduced-motion`:** the component's `animate` prop (default
@@ -112,7 +112,7 @@ Two effects, two different accessibility treatments — do not conflate them.
 - **The `<canvas>` ink-bloom backdrop is fully decorative.** It's a
   `requestAnimationFrame` particle system (6 procedurally-regenerated
   "bloom" shapes, `mix-blend-mode:exclusion`, `docs/_decoded/
-  profile-section-v4-standalone/template.html` lines ~460–510) rendered
+profile-section-v4-standalone/template.html` lines ~460–510) rendered
   behind the chamber UI. `aria-hidden="true"`, never a tab stop, carries no
   information — it is atmosphere over the paper→dark gradient, not a status
   signal.
@@ -203,9 +203,9 @@ Two effects, two different accessibility treatments — do not conflate them.
     `02_DESIGN_SYSTEM.MD`.
 - **The cells themselves are real interactive targets, not decorative
   shapes.** Verified directly from `docs/_decoded/
-  distinction-section-v4-standalone/template.html` line ~395: each cell is
+distinction-section-v4-standalone/template.html` line ~395: each cell is
   an SVG `<path role="{{c.role}}" tabindex="{{c.tab}}" aria-label="{{c.aria}}"
-  onMouseEnter/onMouseLeave/onFocus/onBlur/onClick onKeyDown="{{keyOpen}}">`.
+onMouseEnter/onMouseLeave/onFocus/onBlur/onClick onKeyDown="{{keyOpen}}">`.
   The React port must reproduce every one of those attributes literally — a
   real `role`, a real `tabIndex`, a real per-cell `aria-label` (naming the
   certificate, not just "cell 3"), and a keydown handler
@@ -222,10 +222,10 @@ Two effects, two different accessibility treatments — do not conflate them.
     (`aria-label="Close scan viewer"`, decoded line ~502) — not to the
     dialog root, not left on the triggering cell.
   - `Escape` closes it (`this.onKey = (e) => { if (e.key === 'Escape')
-    this.close(); }`, decoded line ~864).
+this.close(); }`, decoded line ~864).
   - `Tab`/`Shift+Tab` are trapped within the dialog's own focusable elements,
     computed live via `querySelectorAll('button, [href],
-    [tabindex]:not([tabindex="-1"])')` — focus never silently escapes to the
+[tabindex]:not([tabindex="-1"])')` — focus never silently escapes to the
     page behind it while open.
   - **On close, focus returns to the triggering cell** — the cell that
     opened the lightbox, not the top of the document and not wherever focus
@@ -241,7 +241,7 @@ Two effects, two different accessibility treatments — do not conflate them.
     therefore rendered with `createPortal(..., document.body)`, so it sits in
     the root stacking context, outside `.stage`. Its overlay is
     `z-index: 9100`, deliberately **above the fixed pill nav (`9000`)**: at
-    the earlier `z-index: 40` the scrim rendered *under* the nav, so a pill
+    the earlier `z-index: 40` the scrim rendered _under_ the nav, so a pill
     could be clicked (and the page scrolled away) while an `aria-modal`
     dialog was open. Verified with a browser probe: `elementFromPoint` over
     the pill hits the overlay, and Escape restores focus to the trigger cell.
@@ -263,7 +263,7 @@ Two effects, two different accessibility treatments — do not conflate them.
   interaction itself.** The Gaussian-falloff pull
   (`f = exp(-(dx² + dy²))`, computed per card from that card's own center,
   driving `translateY`/`scale` — verified at `docs/_decoded/
-  contact-section-v2-standalone/template.html` lines ~574–589) is a
+contact-section-v2-standalone/template.html` lines ~574–589) is a
   continuous hover enhancement layered on top of always-real elements. It
   gets `aria-hidden` treatment in the sense that it carries no independent
   information and must never be the only way a card's affordance is
@@ -284,12 +284,12 @@ Two effects, two different accessibility treatments — do not conflate them.
   don't yet point at a real number or booking page. The visible card text
   (`@overnuke`, `/keffwontwakeup`) is unchanged.
   `04_COMPONENT_RULES.MD`'s contract additionally requires that
-  *if* a future channel is unavailable, it renders as a real disabled
+  _if_ a future channel is unavailable, it renders as a real disabled
   `<button>`, never a styled-to-look-disabled link — not something the
   current decoded markup exercises, but the contract to build against.
   - Every card must be `Tab`-focusable in document order and
     `Enter`/`Space`-activatable exactly as any native link/button already is
-    — no custom key handling is needed here specifically *because* these are
+    — no custom key handling is needed here specifically _because_ these are
     native `<a>`/`<button>` elements, which is the point: don't replace them
     with `<div onClick>` in service of the magnetic effect.
   - **Since not everyone can trigger the mouse-proximity lift** (keyboard
@@ -298,7 +298,7 @@ Two effects, two different accessibility treatments — do not conflate them.
     is now the active one" — must be independently available via
     `:focus-visible` on each card: a real, visible focus treatment (e.g. the
     same lift/shadow-boost the hover state already uses, `box-shadow:0 30px
-    56px rgba(0,0,0,.66)` per the decoded `style-hover`, or an equivalent) at
+56px rgba(0,0,0,.66)` per the decoded `style-hover`, or an equivalent) at
     minimum outline strength, not just the browser's bare default outline.
     The magnetic pull is an enhancement on top of that, never a substitute
     for it.
@@ -308,7 +308,7 @@ Two effects, two different accessibility treatments — do not conflate them.
     its own.
 - **`prefers-reduced-motion`:** the hook (`useMagneticDock`) must
   skip attaching its `pointermove` listener entirely under reduced motion
-  (not just skip *applying* the computed transform) — per
+  (not just skip _applying_ the computed transform) — per
   `04_COMPONENT_RULES.MD`'s explicit call-out that the hook
   (`useMagneticDock.ts`) carries one.
   Cards render at their resting `translateY(0) scale(1)` state, fully
@@ -368,13 +368,13 @@ fully-functional fallback under `prefers-reduced-motion: reduce`. None of
 these are optional or "nice if there's time" — each is required before its
 Phase 8 component counts as done (`09_IMPLEMENTATION_ROADMAP.md` Phase 9).
 
-| Effect | Screen | Reduced-motion fallback | Functionality preserved? |
-|---|---|---|---|
-| Ink Flow Background | Home | `animate` prop forced `false` → static single frame | Yes — real text no longer depends on it for contrast at all (Fix 1) |
-| Ink-bloom canvas | Profile | Static single frame, or no canvas mounted | Yes — purely atmospheric, zero functional role |
-| Goo-filter chamber transitions | Profile | Instant/near-instant state swap, no eased transform or `cellWob*`/`drift*` keyframe wobble | Yes — fusion state, `aria-pressed`, and keyboard activation are all independent of the transition's duration |
-| Voronoi breathing + doodle boil (crayon mascot **and** the 5 molecular doodles, added 2026-09-23) | Distinctions | Cells settle to resting (non-jittered) shape; every doodle pinned to one static, noise-free pose | Yes — cell hit-targets, labels, click/keyboard activation, and the lightbox are all independent of the jitter |
-| Magnetic dock (Gaussian follow) | Contact | `pointermove` listener not attached; cards at rest `translateY(0) scale(1)` | Yes — all 5 cards stay real, focusable, activatable links; `:focus-visible` gives the same affordance the hover lift would have |
+| Effect                                                                                            | Screen       | Reduced-motion fallback                                                                          | Functionality preserved?                                                                                                        |
+| ------------------------------------------------------------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| Ink Flow Background                                                                               | Home         | `animate` prop forced `false` → static single frame                                              | Yes — real text no longer depends on it for contrast at all (Fix 1)                                                             |
+| Ink-bloom canvas                                                                                  | Profile      | Static single frame, or no canvas mounted                                                        | Yes — purely atmospheric, zero functional role                                                                                  |
+| Goo-filter chamber transitions                                                                    | Profile      | Instant/near-instant state swap, no eased transform or `cellWob*`/`drift*` keyframe wobble       | Yes — fusion state, `aria-pressed`, and keyboard activation are all independent of the transition's duration                    |
+| Voronoi breathing + doodle boil (crayon mascot **and** the 5 molecular doodles, added 2026-09-23) | Distinctions | Cells settle to resting (non-jittered) shape; every doodle pinned to one static, noise-free pose | Yes — cell hit-targets, labels, click/keyboard activation, and the lightbox are all independent of the jitter                   |
+| Magnetic dock (Gaussian follow)                                                                   | Contact      | `pointermove` listener not attached; cards at rest `translateY(0) scale(1)`                      | Yes — all 5 cards stay real, focusable, activatable links; `:focus-visible` gives the same affordance the hover lift would have |
 
 ## Keyboard mapping — consistency with `03_UX_ARCHITECTURE.MD`
 
@@ -382,16 +382,16 @@ This doc does not redefine navigation; it enforces the model `03` already
 decided, plus the effect-level keyboard contracts above. Restated together so
 one table covers every keyboard interaction in the app:
 
-| Context | Keys | Behavior |
-|---|---|---|
-| Pill nav (persistent chrome, all screens) | `Tab` to reach a button, `Enter`/`Space` to activate | Real focus, real activation — **scrolls** to the section (`goToSection`; was `navigate(path)` before 2026-09-23), pushes the `#hash`, moves focus to that section's heading, announces it. (DOM order: the nav follows `<main>`, so Tab reaches it after the sections' focusables — see `03_UX_ARCHITECTURE.MD`.) |
-| Home's numbered list — **real** activation | `Tab` to reach a list item, `Enter` to activate | Real focus, real activation — same `goToSection` path (scroll + hash push + heading focus + announce); the links are real `<a href="#profile">` etc. |
-| Home's numbered list — **simulated** highlight | `ArrowRight`/`ArrowDown` (+1), `ArrowLeft`/`ArrowUp` (−1), window-level listener **only while Home is the active section** (`enabled`; was "while Home is mounted" — Home is now always mounted) | **Does not move real keyboard focus** — only re-renders which item is visually highlighted (color + `translateX(10px)` + arrow reveal). See `03_UX_ARCHITECTURE.MD`'s explicit flag: this is a known gap between the simulated highlight and real Tab focus, carried forward as-is from the mockup, not silently fixed here — a build agent must not describe arrow-key cycling as "keyboard navigation of the list" without this caveat. **Known limitation, disclosed 2026-09-23:** while Home is the active section the cycling `preventDefault()`s ArrowUp/ArrowDown, so those keys do **not** scroll the page there (PageUp/PageDown, Space, Home/End and the pill nav still do). Inherited from the mockup; not resolved |
-| Profile chambers | `Tab` to reach, `Enter`/`Space` to toggle `bonded` | Real focus + real activation, `aria-pressed` reflects state |
-| Distinctions cells | `Tab` to reach, `Enter`/`Space` to open lightbox | Real focus + real activation, matches click behavior exactly (`keyOpen` handler) |
-| Distinctions lightbox | `Tab`/`Shift+Tab` trapped inside dialog, `Escape` closes | Focus moves to close button on open, returns to triggering cell on close |
-| Contact cards | `Tab` to reach, `Enter`/`Space` (native link/button activation) | Native elements — no custom handler needed; `:focus-visible` gives the hover-lift's visual affordance |
-| Explicit section navigation — pill / Home list / Profile CTA, **and** hash-driven navigation (load with a valid hash, Back/Forward, hand-edited hash). Replaces the old "Route change" row (2026-09-23; no routes exist) | n/a (not a keypress of its own) | Focus moves to the destination section's own heading (`[data-screen-heading]`, stable `tabIndex={-1}`, `focus({ preventScroll: true })`); `aria-live="polite"` region announces the section by name (`"Profile."`) — both fire in the same tick the scroll starts, per `03_UX_ARCHITECTURE.MD`. **Scroll-driven changes (wheel/touch/keyboard scrolling) and a load with no/empty/unknown hash move neither focus nor the announcement** — only the pill's visual active state follows the scroll |
+| Context                                                                                                                                                                                                                  | Keys                                                                                                                                                                                             | Behavior                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Pill nav (persistent chrome, all screens)                                                                                                                                                                                | `Tab` to reach a button, `Enter`/`Space` to activate                                                                                                                                             | Real focus, real activation — **scrolls** to the section (`goToSection`; was `navigate(path)` before 2026-09-23), pushes the `#hash`, moves focus to that section's heading, announces it. (DOM order: the nav follows `<main>`, so Tab reaches it after the sections' focusables — see `03_UX_ARCHITECTURE.MD`.)                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Home's numbered list — **real** activation                                                                                                                                                                               | `Tab` to reach a list item, `Enter` to activate                                                                                                                                                  | Real focus, real activation — same `goToSection` path (scroll + hash push + heading focus + announce); the links are real `<a href="#profile">` etc.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Home's numbered list — **simulated** highlight                                                                                                                                                                           | `ArrowRight`/`ArrowDown` (+1), `ArrowLeft`/`ArrowUp` (−1), window-level listener **only while Home is the active section** (`enabled`; was "while Home is mounted" — Home is now always mounted) | **Does not move real keyboard focus** — only re-renders which item is visually highlighted (color + `translateX(10px)` + arrow reveal). See `03_UX_ARCHITECTURE.MD`'s explicit flag: this is a known gap between the simulated highlight and real Tab focus, carried forward as-is from the mockup, not silently fixed here — a build agent must not describe arrow-key cycling as "keyboard navigation of the list" without this caveat. **Known limitation, disclosed 2026-09-23:** while Home is the active section the cycling `preventDefault()`s ArrowUp/ArrowDown, so those keys do **not** scroll the page there (PageUp/PageDown, Space, Home/End and the pill nav still do). Inherited from the mockup; not resolved |
+| Profile chambers                                                                                                                                                                                                         | `Tab` to reach, `Enter`/`Space` to toggle `bonded`                                                                                                                                               | Real focus + real activation, `aria-pressed` reflects state                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Distinctions cells                                                                                                                                                                                                       | `Tab` to reach, `Enter`/`Space` to open lightbox                                                                                                                                                 | Real focus + real activation, matches click behavior exactly (`keyOpen` handler)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Distinctions lightbox                                                                                                                                                                                                    | `Tab`/`Shift+Tab` trapped inside dialog, `Escape` closes                                                                                                                                         | Focus moves to close button on open, returns to triggering cell on close                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Contact cards                                                                                                                                                                                                            | `Tab` to reach, `Enter`/`Space` (native link/button activation)                                                                                                                                  | Native elements — no custom handler needed; `:focus-visible` gives the hover-lift's visual affordance                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Explicit section navigation — pill / Home list / Profile CTA, **and** hash-driven navigation (load with a valid hash, Back/Forward, hand-edited hash). Replaces the old "Route change" row (2026-09-23; no routes exist) | n/a (not a keypress of its own)                                                                                                                                                                  | Focus moves to the destination section's own heading (`[data-screen-heading]`, stable `tabIndex={-1}`, `focus({ preventScroll: true })`); `aria-live="polite"` region announces the section by name (`"Profile."`) — both fire in the same tick the scroll starts, per `03_UX_ARCHITECTURE.MD`. **Scroll-driven changes (wheel/touch/keyboard scrolling) and a load with no/empty/unknown hash move neither focus nor the announcement** — only the pill's visual active state follows the scroll                                                                                                                                                                                                                              |
 
 ## What this doc is not
 

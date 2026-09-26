@@ -47,7 +47,7 @@ below) and should not be re-derived from scratch.
 ## The three-way effect-placement rule
 
 Every custom visual/interactive effect in this rebuild falls into exactly one
-of three buckets. Pick the bucket by what the effect actually *is*, not by
+of three buckets. Pick the bucket by what the effect actually _is_, not by
 habit:
 
 1. **Canvas/SVG effect tightly coupled to one component → component-internal
@@ -74,7 +74,7 @@ habit:
    Per the plan's "full visual/interaction fidelity, not simplified"
    mandate, building these for real will likely require an actual
    canvas+`ref`+`useEffect` implementation, not a CSS-only simplification
-   modeled on `InkFlow.tsx`/`ProfileInkField.tsx`. The *placement* rule
+   modeled on `InkFlow.tsx`/`ProfileInkField.tsx`. The _placement_ rule
    still holds regardless of technique — it's one component's own effect,
    so it owns its `ref`+`useEffect` (or CSS-only markup, if a future
    implementer determines that's sufficient for a given effect) internally
@@ -120,7 +120,7 @@ browser rather than a fourth bucket:
   DOM-free function exported from the same module and unit-tested on its
   own:**
   - `useStageScale` (`src/shell/useStageScale.ts`) + `computeStageScale(width)
-    = width / 1440` (width only, uncapped; never viewport height).
+= width / 1440` (width only, uncapped; never viewport height).
   - `useMagneticDock` (`src/pages/contact/useMagneticDock.ts`) +
     `computeMagneticFalloff(pointer, cardCenter, containerHeight = 900)` (the
     per-card Gaussian falloff; the vertical spread scales with the section's
@@ -131,9 +131,9 @@ browser rather than a fourth bucket:
   - `useActiveSection`, `useHashNavigation` (`src/shell/`) — hooks that own an
     `IntersectionObserver` / the `popstate`+`hashchange` listeners; the
     shell's single `navigateToSection` function is injected into
-    `useHashNavigation` so the hook decides only *when* to navigate.
+    `useHashNavigation` so the hook decides only _when_ to navigate.
   - `useLayerHeight` (`src/pages/projects/useLayerHeight.ts`) — a hook
-    (`useLayoutEffect` + `ResizeObserver` on `clientHeight`, *not*
+    (`useLayoutEffect` + `ResizeObserver` on `clientHeight`, _not_
     `getBoundingClientRect`, which includes the shell's scale) that hands the
     Projects SVG layers their real design-space height.
 - **Bucket 3 (plain DOM-free module, render-only consumer):**
@@ -178,7 +178,7 @@ browser rather than a fourth bucket:
   layered on top of this background in the decoded template — this already
   satisfies "the host page's real content must independently carry the same
   information," so don't let a future rewrite accidentally move any of that
-  text *inside* the decorative layer.
+  text _inside_ the decorative layer.
 - **Resolved 2026-09-21 (was an open risk, see `02_DESIGN_SYSTEM.MD` Fix 1):**
   the headline/nav text's default ink color (`#14150f`) had ~1.05:1 contrast
   against the raw page background (`#0e0f0b`) with no backdrop — readable
@@ -248,15 +248,15 @@ browser rather than a fourth bucket:
 - **Cells are real interactive targets, not decorative shapes.** Verified
   directly from `docs/_decoded/distinction-section-v4-standalone/template.html`:
   each cell is an SVG `<path role="{{c.role}}" tabindex="{{c.tab}}"
-  aria-label="{{c.aria}}" onMouseEnter/onMouseLeave/onFocus/onBlur/onClick
-  onKeyDown="{{keyOpen}}">`. The render-only cell-field component must
+aria-label="{{c.aria}}" onMouseEnter/onMouseLeave/onFocus/onBlur/onClick
+onKeyDown="{{keyOpen}}">`. The render-only cell-field component must
   reproduce this exactly: a real `role`, a real `tabindex`, a real
   `aria-label` per cell, and a keydown handler that opens the same way a
   click does — not just a `<path>` with a `cursor:pointer` style and a click
   handler.
 - **The lightbox is `ScanModal.tsx`, extended.** Confirmed contract from
   `src/pages/distinctions/ScanModal.tsx`: `role="dialog"
-  aria-modal="true"`, focus moves to the close button on mount, `Escape`
+aria-modal="true"`, focus moves to the close button on mount, `Escape`
   calls `onClose`, `Tab`/`Shift+Tab` are trapped within the dialog's own
   focusable elements (computed live via
   `querySelectorAll('button, [href], [tabindex]:not([tabindex="-1"])')`),
@@ -311,7 +311,7 @@ browser rather than a fourth bucket:
   `style.transform`/`zIndex` on `pointermove`/`pointerleave` (rAF-batched),
   with no `setState` in the hot path. The math is a **per-card Gaussian
   falloff**, not a flat parallax: `computeMagneticFalloff` computes `dx`/`dy`
-  from each card's *own* center and returns `f = exp(-(dx² + dy²))`, with an
+  from each card's _own_ center and returns `f = exp(-(dx² + dy²))`, with an
   anisotropic spread (`dy` is divided by `spread × 2.2`, and that vertical
   spread is scaled by the container's real height over the 900px baseline it
   was tuned at). `f` drives both a `translateY` lift and a `scale`, so cards

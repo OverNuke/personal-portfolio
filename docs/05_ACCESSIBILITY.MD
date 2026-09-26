@@ -51,20 +51,17 @@ here):
    seeing or running the animation. A decorative effect can never be the only
    place information lives.
 
-> **Added 2026-09-23 — always-mounted screens.** "For as long as its host
-> screen is mounted" used to mean "while that screen is the one showing".
-> With the continuous-scroll shell (`03_UX_ARCHITECTURE.MD`) all five
-> screens are mounted at all times, so every decorative loop below — Home's
-> ink flow, Profile's ink-bloom canvas (the goo chambers are functional UI,
-> not decorative, but their ambient wobble also runs off-screen), Distinctions'
-> Voronoi + doodle layer, Projects' mascot and glyph title, Contact's dock —
-> runs whether or not its section is on screen. The accessibility clauses are
-> unaffected (still fully `aria-hidden`, never a tab stop, real content
-> independent). The cost is performance, not a11y: it is **unmeasured**, and
-> nothing pauses off-screen loops today; pausing loops for sections outside
-> the viewport is a recorded candidate follow-up, not shipped behavior.
-> Under `prefers-reduced-motion: reduce` the same per-effect fallbacks apply
-> to all five simultaneously.
+> **Always-mounted screens.** "For as long as its host screen is mounted"
+> means all the time: with the continuous-scroll shell
+> (`03_UX_ARCHITECTURE.MD`) all five screens are mounted at all times, so
+> every decorative loop below — Home's ink flow, Profile's ink-bloom canvas,
+> Distinctions' Voronoi + doodle layer, Projects' mascot and glyph title,
+> Contact's dock — is mounted whether or not its section is on screen. The
+> accessibility clauses are unaffected (still fully `aria-hidden`, never a tab
+> stop, real content independent). Loops for sections outside the viewport are
+> **paused, not unmounted** (`07_ANIMATION_GUIDELINES.md`, "Off-screen
+> pause"). Under `prefers-reduced-motion: reduce` the same per-effect
+> fallbacks apply to all five simultaneously.
 
 The rest of this doc is that pattern applied, effect by effect, to the five
 new decorative or partially-decorative effects this rebuild introduces.

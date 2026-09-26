@@ -5,7 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { installLayoutStubs, restoreLayoutStubs } from '../test/layoutStubs';
 import type { PageId } from '../routes/registry';
 import { useSectionNav } from './SectionNavContext';
+import { useSectionVisible } from './SectionVisibilityContext';
 import Shell from './Shell';
+import { VIEWPORT_ROOT_MARGIN } from './useSectionVisibility';
 
 const TITLES: Record<PageId, string> = {
   home: 'Kevin',
@@ -21,8 +23,10 @@ const TITLES: Record<PageId, string> = {
 function makePage(id: PageId): ComponentType {
   function Page() {
     const { activeSection, goToSection } = useSectionNav();
+    const visible = useSectionVisible();
     return (
       <div data-testid={`screen-${id}`}>
+        <output data-testid={`visible-${id}`}>{String(visible)}</output>
         <h2 data-screen-heading tabIndex={-1}>
           {TITLES[id]}
         </h2>
@@ -48,18 +52,34 @@ const PAGES = {
   contact: makePage('contact'),
 } satisfies Record<PageId, ComponentType>;
 
-let reportIntersecting: (domId: string) => void = () => {};
+// The shell owns TWO observers: the midline one (`useActiveSection`, pill
+// highlight) and the viewport one (`useSectionVisibility`, pausing effect loops).
+// They are told apart by their root margin, so each test can drive them separately.
+let midlineCallback: IntersectionObserverCallback = () => {};
+let viewportCallback: IntersectionObserverCallback = () => {};
 const scrollIntoView = vi.fn();
+
+function entryFor(domId: string, isIntersecting: boolean) {
+  return { target: document.getElementById(domId) as Element, isIntersecting } as IntersectionObserverEntry;
+}
+
+/** The section is under the viewport midline (drives the pill's active state). */
+function reportIntersecting(domId: string) {
+  act(() => midlineCallback([entryFor(domId, true)], {} as IntersectionObserver));
+}
+
+/** The section entered/left the viewport (drives pausing of its effect loops). */
+function reportVisibility(domId: string, isIntersecting: boolean) {
+  act(() => viewportCallback([entryFor(domId, isIntersecting)], {} as IntersectionObserver));
+}
 
 function installObservers() {
   vi.stubGlobal(
     'IntersectionObserver',
     class {
-      constructor(cb: IntersectionObserverCallback) {
-        reportIntersecting = (domId) => {
-          const target = document.getElementById(domId) as Element;
-          act(() => cb([{ target, isIntersecting: true } as IntersectionObserverEntry], {} as IntersectionObserver));
-        };
+      constructor(cb: IntersectionObserverCallback, options?: IntersectionObserverInit) {
+        if (options?.rootMargin === VIEWPORT_ROOT_MARGIN) viewportCallback = cb;
+        else midlineCallback = cb;
       }
       observe() {}
       disconnect() {}
@@ -114,6 +134,40 @@ describe('Shell (continuous scroll)', () => {
     ]);
     // every page really is mounted at once (nothing is swapped in/out any more)
     expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(5);
+  });
+
+  it('tells each screen whether its section is on screen, so effect loops can pause off-screen (W8)', () => {
+    setup();
+    // fail open: everything is visible until the observer says otherwise
+    for (const id of Object.keys(TITLES)) expect(screen.getByTestId(`visible-${id}`)).toHaveTextContent('true');
+
+    reportVisibility('section-projects', false);
+    expect(screen.getByTestId('visible-projects')).toHaveTextContent('false');
+    expect(screen.getByTestId('visible-home')).toHaveTextContent('true');
+    expect(screen.getByTestId('visible-contact')).toHaveTextContent('true');
+
+    reportVisibility('section-projects', true);
+    expect(screen.getByTestId('visible-projects')).toHaveTextContent('true');
+  });
+
+  it('flags an off-screen section (data-offscreen) so its CSS keyframes can pause too', () => {
+    setup();
+    const section = document.getElementById('section-projects') as HTMLElement;
+    expect(section).not.toHaveAttribute('data-offscreen');
+
+    reportVisibility('section-projects', false);
+    expect(section).toHaveAttribute('data-offscreen');
+    expect(document.getElementById('section-home')).not.toHaveAttribute('data-offscreen');
+
+    reportVisibility('section-projects', true);
+    expect(section).not.toHaveAttribute('data-offscreen');
+  });
+
+  it('keeps a paused section mounted and reachable: pausing is not unmounting', () => {
+    setup();
+    reportVisibility('section-projects', false);
+    expect(screen.getByRole('heading', { name: 'Projects headline' })).toBeInTheDocument();
+    expect(within(screen.getByRole('main')).getAllByRole('region')).toHaveLength(5);
   });
 
   it('puts the pill nav before <main> in DOM order, so it is the first Tab stop and landmark', () => {

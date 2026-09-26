@@ -44,6 +44,17 @@
   position: relative;
 }
 
+/* W8: a section wholly off the viewport (`data-offscreen`, set by Shell) also
+   stops its CSS keyframes -- Home's SVG-filter ink, Profile's drift/wobble, the
+   live pulses. Paused, not removed: the section stays mounted and resumes where
+   it stopped. `!important` because page CSS may set `animation-play-state`. */
+.screen-section[data-offscreen],
+.screen-section[data-offscreen] *,
+.screen-section[data-offscreen] *::before,
+.screen-section[data-offscreen] *::after {
+  animation-play-state: paused !important;
+}
+
 /* Persistent pill nav. Fixed to the VIEWPORT, so it lives outside `.stage`
    (a fixed element inside a transformed ancestor is positioned against that
    ancestor and would scroll away). It keeps the size it had as part of the

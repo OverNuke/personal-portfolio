@@ -16,6 +16,7 @@ import { getTitleStrokePaths } from './glyphStrokes';
 import { layerViewBox } from './projectsLayout';
 import { useLayerHeight } from './useLayerHeight';
 import { usePrefersReducedMotion } from '../../shell/usePrefersReducedMotion';
+import { useSectionVisible } from '../../shell/SectionVisibilityContext';
 
 const FRAME_RATE = 7.5; // Math.floor(t * 7.5), verified at template.html line 600.
 
@@ -29,6 +30,7 @@ function StrokeGlyphTitle({ color }: StrokeGlyphTitleProps) {
   // The overlay covers its parent (`.projects-screen`), not itself.
   const layerHeight = useLayerHeight(() => svgRef.current?.parentElement);
   const reducedMotion = usePrefersReducedMotion();
+  const visible = useSectionVisible();
   const initialPaths = getTitleStrokePaths(0, color);
 
   useEffect(() => {
@@ -45,6 +47,10 @@ function StrokeGlyphTitle({ color }: StrokeGlyphTitleProps) {
       return;
     }
 
+    // Off-screen (W8): keep the last pose, schedule no frames. The effect
+    // re-runs when the section comes back, and the loop resumes.
+    if (!visible) return;
+
     let raf = 0;
     const start = performance.now();
     function tick(now: number) {
@@ -53,7 +59,7 @@ function StrokeGlyphTitle({ color }: StrokeGlyphTitleProps) {
     }
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [color, reducedMotion]);
+  }, [color, reducedMotion, visible]);
 
   return (
     // viewBox tracks the real section height (1 unit = 1 CSS px, top-left

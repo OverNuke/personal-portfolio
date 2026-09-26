@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { usePrefersReducedMotion } from '../../shell/usePrefersReducedMotion';
+import { useSectionVisible } from '../../shell/SectionVisibilityContext';
 
 // Canvas ink-bloom background -- docs/04_COMPONENT_RULES.MD's bucket-1
 // contract: a component-internal ref+useEffect effect, tightly coupled to
@@ -137,6 +138,10 @@ function drawBloom(ctx: CanvasRenderingContext2D, bloom: Bloom) {
 function InkBloomCanvas() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const reducedMotion = usePrefersReducedMotion();
+  const visible = useSectionVisible();
+  // Owned by the component, not the effect: the effect re-runs on every
+  // visibility change, and re-rolling the blooms would visibly restart the ink.
+  const bloomsRef = useRef<Bloom[] | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -150,7 +155,10 @@ function InkBloomCanvas() {
 
     const width = canvas.width;
     const height = canvas.height;
-    const blooms: Bloom[] = Array.from({ length: BLOOM_COUNT }, () => makeBloom(true, width, height));
+    if (!bloomsRef.current) {
+      bloomsRef.current = Array.from({ length: BLOOM_COUNT }, () => makeBloom(true, width, height));
+    }
+    const blooms = bloomsRef.current;
 
     if (reducedMotion) {
       context.clearRect(0, 0, width, height);
@@ -158,6 +166,10 @@ function InkBloomCanvas() {
       context.filter = 'none';
       return;
     }
+
+    // Off-screen (W8): keep the last pose, schedule no frames. The effect
+    // re-runs when the section comes back, and the loop resumes.
+    if (!visible) return;
 
     let raf = 0;
     let last = performance.now();
@@ -180,7 +192,7 @@ function InkBloomCanvas() {
 
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [reducedMotion]);
+  }, [reducedMotion, visible]);
 
   return (
     <canvas ref={canvasRef} width={CANVAS_WIDTH} height={CANVAS_HEIGHT} className="profile-ink-canvas" aria-hidden="true" />

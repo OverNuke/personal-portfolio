@@ -4,10 +4,12 @@ import { routes } from '../routes/registry';
 import type { PageId } from '../routes/registry';
 import PillNav from './PillNav';
 import { SectionNavContext, pageIdFromDomId, sectionDomId } from './SectionNavContext';
+import { SectionVisibilityContext } from './SectionVisibilityContext';
 import { useActiveSection } from './useActiveSection';
 import { pushSectionHash, useHashNavigation } from './useHashNavigation';
 import type { HashNavMode } from './useHashNavigation';
 import { usePrefersReducedMotion } from './usePrefersReducedMotion';
+import { useSectionVisibility } from './useSectionVisibility';
 import { useStageScale } from './useStageScale';
 import './shell.css';
 
@@ -43,6 +45,12 @@ interface ShellProps {
  *    hand-edited hash navigate to that section through the same function
  *    (never pushing again). There is no router, so this is the only URL state.
  *
+ * All five screens stay mounted, but a screen whose section is off the
+ * viewport is told so (`SectionVisibilityContext`, fed by `useSectionVisibility`)
+ * and pauses its continuous effect loops -- pause, never unmount, so the
+ * always-mounted contract above (headings, Tab reachability, scroll landing)
+ * is untouched.
+ *
  * `scrollIntoView` (rather than computing a `scrollTo` offset) is deliberate:
  * the browser resolves the element's real, transform-scaled position itself,
  * so the landing edge is exact at any stage scale.
@@ -58,6 +66,7 @@ function Shell({ pages }: ShellProps) {
   const reducedMotion = usePrefersReducedMotion();
   const { viewportRef, stageRef } = useStageScale();
   const { activeId, lockTo } = useActiveSection(SECTION_IDS);
+  const sectionVisibility = useSectionVisibility(SECTION_IDS);
   const [liveMessage, setLiveMessage] = useState('');
   const activeSection = pageIdFromDomId(activeId);
 
@@ -102,14 +111,19 @@ function Shell({ pages }: ShellProps) {
           <main className="stage" ref={stageRef}>
             {routes.map((route) => {
               const Page = pages[route.pageId];
+              const domId = sectionDomId(route.pageId);
+              const visible = sectionVisibility[domId] ?? true;
               return (
                 <section
                   key={route.pageId}
-                  id={sectionDomId(route.pageId)}
+                  id={domId}
                   className="screen-section"
                   aria-label={route.navLabel}
+                  data-offscreen={visible ? undefined : ''}
                 >
-                  <Page />
+                  <SectionVisibilityContext.Provider value={visible}>
+                    <Page />
+                  </SectionVisibilityContext.Provider>
                 </section>
               );
             })}

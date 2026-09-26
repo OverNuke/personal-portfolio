@@ -25,6 +25,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import type { MutableRefObject, PointerEvent as ReactPointerEvent, RefObject } from 'react';
 import { usePrefersReducedMotion } from '../../shell/usePrefersReducedMotion';
+import { useSectionVisible } from '../../shell/SectionVisibilityContext';
 
 const LERP_FACTOR = 0.14;
 const SETTLE_EPSILON = 0.002;
@@ -77,6 +78,7 @@ function applyGroupStyles(container: HTMLElement, values: Record<string, number>
 export function useCardHover(ids: string[]): CardHoverEngine {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const reducedMotion = usePrefersReducedMotion();
+  const visible = useSectionVisible();
   const hoverIdRef = useRef<string | null>(null);
   const valuesRef = useRef<Record<string, number>>(Object.fromEntries(ids.map((id) => [id, 0])));
   const peakRef = useRef(0);
@@ -90,41 +92,65 @@ export function useCardHover(ids: string[]): CardHoverEngine {
     if (container) applyGroupStyles(container, valuesRef.current, peakRef.current);
   }, [ids]);
 
+  // Wakes the lerp loop below. A no-op whenever no loop exists (reduced motion,
+  // or the section is off-screen): a hover then has nothing to animate, and the
+  // loop's next start catches up to the current hover target.
+  const wakeRef = useRef<() => void>(() => {});
+
   const setHover = useCallback(
     (id: string | null) => {
       hoverIdRef.current = id;
       if (reducedMotion) snapInstant();
+      else wakeRef.current();
     },
     [reducedMotion, snapInstant],
   );
 
-  // The continuous rAF lerp -- reduced motion skips this entirely (per
-  // docs/05's contract for the magnetic dock, extended here) and snaps to
-  // the resting/final state instead via snapInstant above.
+  // The rAF lerp -- reduced motion skips this entirely (per docs/05's contract
+  // for the magnetic dock, extended here) and snaps to the resting/final state
+  // instead via snapInstant above. It only runs while some card is still
+  // moving toward its target: once every value has settled it stops, and
+  // `setHover` wakes it again, so an idle Projects screen schedules no frames.
   useEffect(() => {
+    wakeRef.current = () => {};
     if (reducedMotion) {
       snapInstant();
       return;
     }
+    // Off-screen (W8): keep the last pose, schedule no frames. The effect
+    // re-runs when the section comes back, and the loop resumes.
+    if (!visible) return;
+
     let raf = 0;
     function tick() {
-      raf = requestAnimationFrame(tick);
+      raf = 0;
       const container = containerRef.current;
       let peak = 0;
+      let moving = false;
       ids.forEach((id) => {
         const target = hoverIdRef.current === id ? 1 : 0;
         const cur = valuesRef.current[id] ?? 0;
         const next = cur + (target - cur) * LERP_FACTOR;
         const settled = Math.abs(next - target) < SETTLE_EPSILON ? target : next;
         valuesRef.current[id] = settled;
+        if (settled !== target) moving = true;
         if (settled > peak) peak = settled;
       });
       peakRef.current = peak;
       if (container) applyGroupStyles(container, valuesRef.current, peak);
+      if (moving) raf = requestAnimationFrame(tick);
     }
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [ids, reducedMotion, snapInstant]);
+    function wake() {
+      if (!raf) raf = requestAnimationFrame(tick); // never a second loop
+    }
+    wakeRef.current = wake;
+    wake(); // one frame to paint the resting state (and to catch up after a resume)
+    return () => {
+      cancelAnimationFrame(raf);
+      raf = 0;
+      wakeRef.current = () => {};
+    };
+  }, [ids, reducedMotion, snapInstant, visible]);
 
   const handlePointerOver = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {

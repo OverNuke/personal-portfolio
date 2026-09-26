@@ -189,6 +189,36 @@ fusion metaphor it was built for) — don't apply it generally.
 - **"Open to work" pulse badge:** `livePulse 2.4s ease-in-out infinite` —
   same curve/shape-morph as Profile's badge above, reused verbatim.
 
+## Off-screen pause
+
+All five screens are mounted at once (`03_UX_ARCHITECTURE.MD`), so a continuous
+effect must stop while its section can't be seen. **Pause, never unmount** —
+unmounting would break the always-mounted contract (headings, Tab reachability,
+scroll landing).
+
+- **Signal:** `useSectionVisible()` (`src/shell/SectionVisibilityContext.tsx`),
+  fed by one `IntersectionObserver` in `Shell` (`useSectionVisibility`). It
+  defaults to `true` (fail open: a missing signal means "animate", never
+  "freeze") and is `false` only while the section is wholly off the viewport.
+  The observer's root margin is slightly **negative** (`-4px` top/bottom):
+  900px sections in a 900px viewport touch their neighbours' edges, and a
+  touching neighbour would otherwise count as visible. It is not
+  `activeSection` (one section under the midline): mid-scroll two sections are
+  visible and both keep animating.
+- **rAF loops:** gate the effect — `if (!visible) return;` after the
+  reduced-motion branch, `visible` in the deps. **If the effect's output
+  depends on its deps (section height, colours), paint once before returning
+  while hidden:** in motion mode nothing else paints while paused, so a
+  resize off-screen would otherwise leave stale geometry
+  (`CrayonMascot` paints its resting pose; `VoronoiCellField` paints at the top
+  of every run). State that must survive a pause lives in a ref, not in the
+  effect (`InkBloomCanvas`'s blooms, `VoronoiCellField`'s clock origin), so
+  resuming is invisible.
+- **CSS keyframes:** `Shell` sets `data-offscreen` on a hidden section and
+  `shell.css` pauses every animation inside it (`animation-play-state`).
+- **A new continuous effect follows this rule.** The per-loop contract is
+  `src/pages/loopVisibility.test.tsx`; add the new owner to its list.
+
 ## `prefers-reduced-motion` governance
 
 This doc states timing; `05_ACCESSIBILITY.MD` states the fallback contract

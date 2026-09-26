@@ -183,10 +183,10 @@ component styles, not just documented.
   against the new 5-route registry, and `pnpm run audit:collage` is
   re-enabled in `.github/workflows/ci.yml` (`Audit` step, after the
   Playwright-browser install step).
-- > **Updated 2026-09-24: this bullet is stale.** `pnpm test` now runs
-  > 23 files / 262 tests (Voronoi geometry, dock falloff, doodles, Projects
-  > layout, the scroll shell, hash navigation, the Pages `base` resolver, …)
-  > added by `continuous-scroll-and-doodles` and the deploy fix. The audit
+- > **Updated 2026-09-24: this bullet is stale.** `pnpm test` now also covers
+  > Voronoi geometry, dock falloff, doodles, Projects layout, the scroll shell,
+  > hash navigation and the Pages `base` resolver, added by
+  > `continuous-scroll-and-doodles` and the deploy fix. The audit
   > stayed clean only for the original route-per-screen shell: it was rebuilt
   > for the scroll shell in that change's Phase 10 (0 findings again), and
   > `e2e/` was rewritten against the scroll shell (58 tests). The original
@@ -253,8 +253,7 @@ audit-gate and legacy-path-URL fixes):**
 
 **Gate numbers at close (2026-09-24, final targeted re-verify
 `.../verify-report-rerun`: PASS WITH WARNINGS, 0 CRITICAL):** `pnpm test`
-22 files / 250 passed (262 / 23 files after the deploy fix's
-`vite.base.test.ts` and the a11y fix's DOM-order test); `pnpm typecheck` and `pnpm lint` clean;
+22 files / 250 passed; `pnpm typecheck` and `pnpm lint` clean;
 `pnpm run audit:collage` exit 0 / 0 findings; e2e 58/58 (116/116 with
 `--repeat-each=2`, 0 flaky) **against a throwaway dev-server config only**.
 Post-archive a11y fix (W3/W4): the pill nav now precedes `<main>` in the DOM
@@ -271,8 +270,19 @@ owner's production-build e2e run is green with it.
    failed at "Setup pnpm"; fixed by `packageManager: pnpm@11.17.0`,
    `pnpm/action-setup@v6` and a sub-path `base` (`vite.base.ts`,
    `resolveBase(VITE_BASE)`).
-2. **Still open:** performance (W8), see the known limitations below. Known
-   environment sensitivities: nominal-scale assertions assume overlay
+2. **W8 (off-screen loops) — done 2026-09-25:** a section wholly off the
+   viewport now pauses its rAF loops and CSS keyframes (never unmounts); see
+   `07_ANIMATION_GUIDELINES.md`, "Off-screen pause". Measured (dev server,
+   headless Chromium, 1440×900), parked on Home / Profile / Distinctions /
+   Projects / Contact: active rAF loops 5/5/5/5/5 → 0/1/1/3/0; main-thread task
+   time on Contact 814 → ~80 ms/s; Profile's on-screen fps 32 → 36 (same-session
+   A/B). Verified against the committed suites (e2e 58/58 on the dev server,
+   audit 0 findings). `useCardHover`'s lerp also stops once every card has
+   settled and `setHover` wakes it (parked idle on Projects: 3 → 2 loops).
+   **Still open:** on-screen cost (Home's SVG-filter ink rendered ~5fps in
+   headless software raster, Profile's blurred canvas; both unmeasured on real
+   hardware).
+3. **Environment sensitivities:** nominal-scale assertions assume overlay
    scrollbars (headless Chromium), and Chromium is the only engine covered.
 
 **Resolved since the 2026-09-23 entry:** `scripts/audit.mjs` was rebuilt for
@@ -287,6 +297,4 @@ scenario f).
 heights below 900px unsupported; Contact clamps at the document bottom on
 windows with aspect ratio < 1.6:1 (no trailing spacer); path URLs are not
 deep links (they load Home); ArrowUp/ArrowDown do not scroll while Home is
-the active section; all five screens' effect loops run simultaneously,
-including off-screen (performance unmeasured — pausing off-screen loops is a
-candidate follow-up); Firefox/WebKit are unverified.
+the active section; Firefox/WebKit are unverified.

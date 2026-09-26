@@ -16,6 +16,7 @@
 import { useEffect, useRef } from 'react';
 import type { MutableRefObject, RefObject } from 'react';
 import { usePrefersReducedMotion } from '../../shell/usePrefersReducedMotion';
+import { useSectionVisible } from '../../shell/SectionVisibilityContext';
 import { buildMascotStrokes, MASCOT_PATH_IDS, MAXTAGS } from './mascotStrokes';
 import type { ProjectMeasure, Rect } from './mascotStrokes';
 import { layerViewBox } from './projectsLayout';
@@ -68,6 +69,7 @@ function measureProjects(container: HTMLElement): Record<string, ProjectMeasure>
 function CrayonMascot({ containerRef, valuesRef, blueColor, hotColor }: CrayonMascotProps) {
   const pathRefs = useRef(new Map<string, SVGPathElement>());
   const reducedMotion = usePrefersReducedMotion();
+  const visible = useSectionVisible();
   // This overlay covers the same box as the cards layer (both `inset:0`).
   const layerHeight = useLayerHeight(() => containerRef.current);
 
@@ -110,6 +112,16 @@ function CrayonMascot({ containerRef, valuesRef, blueColor, hotColor }: CrayonMa
       return () => observer.disconnect();
     }
 
+    // Off-screen (W8): schedule no frames. In motion mode only the loop paints,
+    // so paint the resting pose once first -- otherwise a mount or a height
+    // change while hidden leaves the paths on stale geometry (the viewBox, being
+    // React state, would still move). The effect re-runs when the section comes
+    // back and the loop resumes.
+    if (!visible) {
+      paint(0, false);
+      return;
+    }
+
     let raf = 0;
     const start = performance.now();
     function tick(now: number) {
@@ -118,7 +130,7 @@ function CrayonMascot({ containerRef, valuesRef, blueColor, hotColor }: CrayonMa
     }
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [containerRef, valuesRef, blueColor, hotColor, reducedMotion, layerHeight]);
+  }, [containerRef, valuesRef, blueColor, hotColor, reducedMotion, layerHeight, visible]);
 
   return (
     // viewBox tracks the real section height (1 unit = 1 CSS px, top-left

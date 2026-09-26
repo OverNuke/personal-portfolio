@@ -21,6 +21,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent, MouseEvent } from 'react';
 import { usePrefersReducedMotion } from '../../shell/usePrefersReducedMotion';
+import { useSectionVisible } from '../../shell/SectionVisibilityContext';
 import {
   CELL_SEEDS,
   CERT_CELL_IDS,
@@ -84,6 +85,11 @@ interface VoronoiCellFieldProps {
 
 function VoronoiCellField({ onOpenCell }: VoronoiCellFieldProps) {
   const reducedMotion = usePrefersReducedMotion();
+  const visible = useSectionVisible();
+  // The animation clock's origin: created once and kept across pauses, so a
+  // section scrolling back into view resumes at the wall-clock phase instead of
+  // snapping back to t=0.
+  const startRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const cellPathRefs = useRef(new Map<string, SVGPathElement>());
   const doodlePathRefs = useRef(new Map<string, SVGPathElement>());
@@ -215,7 +221,9 @@ function VoronoiCellField({ onOpenCell }: VoronoiCellFieldProps) {
     // useLayoutEffect measuring `height` runs before this passive effect,
     // so this reflects the real measured height, not the DESIGN_HEIGHT
     // fallback, except on the very first commit before layout has run.
-    paint(0, !reducedMotion);
+    if (startRef.current === null) startRef.current = performance.now();
+    const start = startRef.current;
+    paint(reducedMotion ? 0 : (performance.now() - start) / 1000, !reducedMotion);
 
     if (reducedMotion) {
       // No continuous rAF loop, no pointermove listener -- cells settle to
@@ -226,8 +234,13 @@ function VoronoiCellField({ onOpenCell }: VoronoiCellFieldProps) {
       return;
     }
 
+    // Off-screen (W8): keep the last pose, schedule nothing, listen to nothing.
+    if (!visible) {
+      pointerRef.current = null; // a stale position would mis-aim the mascot on resume
+      return;
+    }
+
     let raf = 0;
-    const start = performance.now();
 
     function handlePointerMove(event: PointerEvent) {
       pointerRef.current = { x: event.clientX, y: event.clientY };
@@ -255,7 +268,7 @@ function VoronoiCellField({ onOpenCell }: VoronoiCellFieldProps) {
       container.removeEventListener('pointermove', handlePointerMove);
       container.removeEventListener('pointerleave', handlePointerLeave);
     };
-  }, [paint, reducedMotion]);
+  }, [paint, reducedMotion, visible]);
 
   const setHover = useCallback(
     (id: string | null) => {

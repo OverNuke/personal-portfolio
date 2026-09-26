@@ -51,7 +51,8 @@ of three buckets. Pick the bucket by what the effect actually *is*, not by
 habit:
 
 1. **Canvas/SVG effect tightly coupled to one component → component-internal
-   `ref` + `useEffect`, with a `prefers-reduced-motion` short-circuit.**
+   `ref` + `useEffect`, with a `prefers-reduced-motion` short-circuit and an
+   off-screen pause (`07_ANIMATION_GUIDELINES.md`).**
    **Honest caveat, checked against both pre-reset candidates:**
    `src/pages/home/InkFlow.tsx` and `src/pages/profile/ProfileInkField.tsx`
    are the two decorative-background components that actually shipped in the

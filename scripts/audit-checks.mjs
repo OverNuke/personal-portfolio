@@ -11,7 +11,7 @@
  * scrolling page), uniformly scaled by `transform: scale()` from the viewport
  * WIDTH alone on narrower viewports (src/shell/useStageScale.ts) -- not a
  * responsively-reflowing layout. The geometry predicates below are unchanged
- * from the quarantined version (`_quarantine/scripts/audit-checks.mjs`) --
+ * from the pre-reset version of this file --
  * the geometry math (rotation reconstruction, intersection, clipping,
  * target-size) is stack-agnostic and still correct. What changed is which
  * viewport widths this module's constants describe and how
@@ -188,7 +188,7 @@ export function parseScale(transformValue) {
  * an axis-aligned box's own bounding box only ever GROWS under any nonzero
  * rotation, so rotating an already-inflated AABB a second time compounds
  * the inflation instead of canceling it (verified empirically in the
- * original quarantined investigation this logic was ported from).
+ * original pre-reset investigation this logic was ported from).
  *
  * What IS exact, regardless of angle, is: (1) the midpoint of a rotated
  * rectangle's own AABB is always the rectangle's true geometric center

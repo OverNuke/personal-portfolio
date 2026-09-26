@@ -74,8 +74,8 @@ effect does not exist anywhere in this mockup.** Do not build one under the
 assumption it's a recovered mockup behavior — it would be invented, not
 ported.
 
-This matters because the project's *quarantined* old shell
-(`_quarantine/src/shell/Shell.tsx`, cited in `03_UX_ARCHITECTURE.MD`) did
+This matters because the project's pre-reset old shell
+(`Shell.tsx`, since deleted) did
 have a named transition system (`Crease`/`PageLayer`, referenced historically
 in this repo's docs as "REFORM/ENTER"). That system doesn't carry forward
 as-is for two independent reasons: (1) it animated an *overlay page opening

@@ -101,8 +101,13 @@ test('keyboard: Tab reaches the pill nav and Enter navigates', async ({ page }) 
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
 
+  // The nav precedes <main> in the DOM, so it owns the first Tab stops (no .focus() shortcut: this proves the real order).
+  expect(await pillNav(page).evaluate((nav) => !!(nav.compareDocumentPosition(document.querySelector('main')!) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
+
+  await page.keyboard.press('Tab');
+  await expect(pillNav(page).getByRole('button', { name: 'Home', exact: true })).toBeFocused();
+  await page.keyboard.press('Tab');
   const profileButton = pillNav(page).getByRole('button', { name: 'Profile', exact: true });
-  await profileButton.focus();
   await expect(profileButton).toBeFocused();
 
   await page.keyboard.press('Enter');

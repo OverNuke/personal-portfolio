@@ -3,7 +3,7 @@
 > Rewritten 2026-09-21 from the decoded mockup. **Every hex value below was
 > read directly from `docs/_decoded/*/template.html`** (inline styles,
 > `@keyframes`, and the `data-props` JSON blob each screen's `dc-props`
-> script embeds) — none are copied from the prior (quarantined) doc without
+> script embeds) — none are copied from the prior (since-deleted) doc without
 > re-verification. Contrast ratios were computed by hand with the standard
 > WCAG relative-luminance formula; see the flags at the bottom before treating
 > any pairing as settled.

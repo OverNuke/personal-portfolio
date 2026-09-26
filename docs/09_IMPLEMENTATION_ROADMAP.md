@@ -7,13 +7,12 @@
 > could be confirmed at the time this doc was written; a later phase should
 > update them rather than treat this file as frozen history.
 
-## Phase 1 — Archive old docs/src to `_quarantine/` — **DONE**
+## Phase 1 — Archive old docs/src — **DONE** (archive since deleted)
 
 Old `docs/00`–`14` and the old `src/` (except `src/assets/plates/*` and
-`src/assets/doodle/*`, promoted forward) were moved to `_quarantine/`
-(gitignored). Confirmed present: `_quarantine/docs/*`, `_quarantine/src/**`.
-Nothing was deleted — per repo hygiene rules, untracked work is moved, never
-deleted.
+`src/assets/doodle/*`, promoted forward) were parked in a gitignored
+`_quarantine/` holding pen during the reset. That directory no longer exists
+and nothing in the repo references it.
 
 ## Phase 2 — Decode mockup via `scripts/decode-mockup.mjs` — **DONE**
 
@@ -47,8 +46,8 @@ This phase. Produced:
 
 - `docs/03_UX_ARCHITECTURE.MD` — pill nav, Home's keyboard arrow-cycling
   (verified against the decoded script's exact keymap), the reconciliation
-  of routing with the old `Shell.tsx`/`usePageTurn` focus/live-region
-  pattern, and the five-route table.
+  of routing with the pre-reset shell's focus/live-region pattern, and the
+  five-route table (both since rewritten for the scroll shell).
 - `docs/04_COMPONENT_RULES.MD` — page/subfolder pattern, the three-way
   effect-placement rule with named precedents, and a contract per custom
   effect (Home ink flow, Profile ink-bloom + goo chambers, Distinctions
@@ -129,7 +128,9 @@ remains retired/superseded, confirmed, no further action.
 > Status updated 2026-09-21 (Phase 11 close-out). **Updated 2026-09-23:** the
 > "routing", "route switch" and "fixed 1440×900 stage" halves of this phase
 > were replaced by `continuous-scroll-and-doodles` (see the section at the end
-> of this doc): there is no router, and the stage is a scrolling stack.
+> of this doc): there is no router, and the stage is a scrolling stack. The
+> registry's entries are now hashes (`#home` … `#contact`), not the paths
+> listed below; the "per-route heading focus" is per-section.
 
 Confirmed built: `src/routes/registry.ts` has the 5-entry table
 (`/`, `/profile`, `/distinction`, `/projects`, `/contact`), the fixed
@@ -182,15 +183,14 @@ component styles, not just documented.
   against the new 5-route registry, and `pnpm run audit:collage` is
   re-enabled in `.github/workflows/ci.yml` (`Audit` step, after the
   Playwright-browser install step).
-- > **Updated 2026-09-23: this bullet is now stale.** `pnpm test` runs
-  > 21 files / 235 tests (Voronoi geometry, dock falloff, doodles, Projects
-  > layout, the scroll shell, hash navigation, …) added by
-  > `continuous-scroll-and-doodles`. Also stale: "`scripts/audit.mjs` runs
-  > clean (0 findings)" and "`e2e/smoke.spec.ts` was rewritten against the new
-  > 5-route registry" — `scripts/audit.mjs` still targets the removed
-  > route-per-screen model (see the follow-ups below), and `e2e/` was
-  > rewritten again against the scroll shell (55 tests). The original text is
-  > kept below as history.
+- > **Updated 2026-09-24: this bullet is stale.** `pnpm test` now runs
+  > 23 files / 262 tests (Voronoi geometry, dock falloff, doodles, Projects
+  > layout, the scroll shell, hash navigation, the Pages `base` resolver, …)
+  > added by `continuous-scroll-and-doodles` and the deploy fix. The audit
+  > stayed clean only for the original route-per-screen shell: it was rebuilt
+  > for the scroll shell in that change's Phase 10 (0 findings again), and
+  > `e2e/` was rewritten against the scroll shell (58 tests). The original
+  > text is kept below as history.
 - **Honest gap, not glossed over:** `pnpm test` passes with **zero Vitest
   unit tests** in the rebuilt component tree — only Playwright e2e/a11y
   checks were performed during Phases 9/10. `vite.config.ts` sets
@@ -217,13 +217,17 @@ were checked and found already accurate — no redundant notes added for
 those. This closes out the full reset plan
 (`drop-all-the-decision-mighty-pelican.md`).
 
-## Change `continuous-scroll-and-doodles` — continuous scroll + molecular doodles — **IMPLEMENTATION DONE, NOT YET ARCHIVED**
+## Change `continuous-scroll-and-doodles` — continuous scroll + molecular doodles — **DONE, ARCHIVED 2026-09-24**
 
-> Recorded 2026-09-23. A spec-driven change (Strict TDD; artifacts in engram
-> under `sdd/continuous-scroll-and-doodles/*`), applied on top of Phases 1–11
-> above. Supersedes, in the docs, the discrete route-per-screen model.
+> Recorded 2026-09-23; **updated 2026-09-24** (archived, 27/27 tasks; the
+> audit gate is fixed — see "Gate numbers" and "Follow-ups" below). A
+> spec-driven change (Strict TDD; artifacts in engram under
+> `sdd/continuous-scroll-and-doodles/*`, archive report in
+> `.../archive-report`; no `openspec/` directory), applied on top of Phases
+> 1–11 above. Supersedes, in the docs, the discrete route-per-screen model.
 
-**What shipped (25/25 tasks):**
+**What shipped (27/27 tasks, Phases 1–10; the original 25 plus Phase 10's
+audit-gate and legacy-path-URL fixes):**
 
 - **Height-fluid effects (Phases 1–5):** Distinctions' Voronoi geometry,
   Contact's magnetic dock, Profile's column centering, Projects' glyph/mascot
@@ -247,34 +251,37 @@ those. This closes out the full reset plan
   10, 11, 14`. `13_ASSET_SPEC.md` unchanged (no asset changed: the doodles
   are code, not assets).
 
-**Gate numbers at close (2026-09-23):** `pnpm test` 21 files / 235 passed;
-`pnpm typecheck` and `pnpm lint` clean; e2e 55/55 (110/110 with
-`--repeat-each=2`) **against a throwaway dev-server config only**.
+**Gate numbers at close (2026-09-24, final targeted re-verify
+`.../verify-report-rerun`: PASS WITH WARNINGS, 0 CRITICAL):** `pnpm test`
+22 files / 250 passed (262 / 23 files after the deploy fix's
+`vite.base.test.ts` and the a11y fix's DOM-order test); `pnpm typecheck` and `pnpm lint` clean;
+`pnpm run audit:collage` exit 0 / 0 findings; e2e 58/58 (116/116 with
+`--repeat-each=2`, 0 flaky) **against a throwaway dev-server config only**.
+Post-archive a11y fix (W3/W4): the pill nav now precedes `<main>` in the DOM
+(first Tab stop), pinned by `Shell.test.tsx` and by `smoke.spec.ts`'s
+keyboard test, which now presses a real Tab instead of `.focus()`; the
+owner's production-build e2e run is green with it.
 
-**Open before archive:**
+**Follow-ups after archive:**
 
-1. A **fresh full verify** superseding the targeted verify (#471/#473).
-2. **`pnpm e2e` (build + `playwright test` against `pnpm preview`) has never
-   run.** The owner rule forbids running it locally; **CI would be its first
-   run.** Two known environment sensitivities to expect there: nominal-scale
-   assertions assume overlay scrollbars (headless Chromium), and Chromium is
-   the only engine covered.
-3. **`scripts/audit.mjs` FAILS and `ci.yml`'s `Audit` step is live — CI
-   would go red before it reaches E2E.** Measured 2026-09-23 by running
-   `pnpm run audit:collage` locally (it starts its own dev server; not a
-   build): exit 1, **20 findings**, all the same `horizontal-scroll` check
-   (5 routes x 4 widths): it asserts `.stage-viewport` is `overflow:
-   hidden/hidden` for the old "letterboxed 1440x900" stage, but the scroll
-   shell deliberately uses `overflow-x: clip` (`shell.css`). The script is
-   also structurally stale: `ROUTES = ['/', '/profile', '/distinction',
-   '/projects', '/contact']` (every entry now loads Home — path URLs are not
-   deep links) and it waits on `.screen-layer--enter
-   [data-screen-heading]`, a selector that no longer exists (that wait is
-   `.catch`-swallowed). `CLAUDE.md`/`AGENTS.md` still say the audit step is a
-   TODO; it is not — it is enabled in `ci.yml`. Options for the user: rebuild
-   `scripts/audit.mjs` for the scroll shell, or drop/disable the CI step in
-   the meantime. Not fixed here (out of scope for a docs task; the script is
-   being rebuilt post-reset).
+1. **Resolved (owner-run, 2026-09-25):** `pnpm build && pnpm e2e` (production
+   build + `playwright test`) passes; GitHub Pages is enabled (Source =
+   GitHub Actions) and the latest CI/Deploy run deployed the site to
+   `https://overnuke.github.io/personal-portfolio/`. CI/Deploy had previously
+   failed at "Setup pnpm"; fixed by `packageManager: pnpm@11.17.0`,
+   `pnpm/action-setup@v6` and a sub-path `base` (`vite.base.ts`,
+   `resolveBase(VITE_BASE)`).
+2. **Still open:** performance (W8), see the known limitations below. Known
+   environment sensitivities: nominal-scale assertions assume overlay
+   scrollbars (headless Chromium), and Chromium is the only engine covered.
+
+**Resolved since the 2026-09-23 entry:** `scripts/audit.mjs` was rebuilt for
+the scroll shell (Phase 10.1: it now sweeps the five hash URLs at four widths,
+asserts the shipped `overflow-x: clip` contract and reads sections from the
+route registry), so `ci.yml`'s `Audit` step is live **and green** — the
+"audit FAILS / CI would go red" note that stood here is obsolete. Path URLs
+(`/profile`) are covered by an e2e test asserting they load Home (spec
+scenario f).
 
 **Known limitations / decisions recorded (see the specs for wording):**
 heights below 900px unsupported; Contact clamps at the document bottom on

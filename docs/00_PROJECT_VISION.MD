@@ -1,7 +1,7 @@
 # 00. Project Vision
 
 > Rewritten 2026-09-21 from the decoded mockup (`docs/_decoded/*/template.html`),
-> after the prior abstract "collage/chaos" version of this doc was quarantined
+> after the prior abstract "collage/chaos" version of this doc was retired
 > for describing an aesthetic the real design never had. Every claim below was
 > checked against the decoded templates; anything I couldn't verify says so.
 

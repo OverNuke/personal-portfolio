@@ -1,7 +1,7 @@
 # 11. Handoff — Home
 
 > Full rewrite, 2026-09-21 (Phase 6). The prior `11_HANDOFF_HOME.md` is
-> quarantined and describes the old dashboard-grid Home — **do not** carry
+> retired and describes the old dashboard-grid Home — **do not** carry
 > any of its layout, copy, or interaction claims forward. Everything below
 > is read directly from `docs/_decoded/index/template.html` (the canonical
 > Home source — see `02_DESIGN_SYSTEM.MD`'s note on why `index/` wins over

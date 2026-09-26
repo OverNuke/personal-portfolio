@@ -49,7 +49,10 @@ interface ShellProps {
  *
  * The pill nav renders outside `.stage`: a `position: fixed` element inside a
  * transformed ancestor is positioned against that ancestor, not the viewport,
- * so it would scroll away with the page.
+ * so it would scroll away with the page. It is also the FIRST child of the
+ * viewport, ahead of `<main>`: it is fixed-positioned (z-index 9000), so DOM
+ * order has no visual effect, but it makes the nav the first Tab stop and the
+ * first landmark a screen reader meets.
  */
 function Shell({ pages }: ShellProps) {
   const reducedMotion = usePrefersReducedMotion();
@@ -94,6 +97,7 @@ function Shell({ pages }: ShellProps) {
   return (
     <SectionNavContext.Provider value={navValue}>
       <div className="stage-viewport" ref={viewportRef}>
+        <PillNav activeId={activeSection} onNavigate={goToSection} />
         <div className="stage-scaler">
           <main className="stage" ref={stageRef}>
             {routes.map((route) => {
@@ -111,7 +115,6 @@ function Shell({ pages }: ShellProps) {
             })}
           </main>
         </div>
-        <PillNav activeId={activeSection} onNavigate={goToSection} />
         <div aria-live="polite" className="sr-only">
           {liveMessage}
         </div>

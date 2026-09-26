@@ -11,7 +11,7 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
-    exclude: ['node_modules/**', 'e2e/**', '_quarantine/**'],
+    exclude: ['node_modules/**', 'e2e/**'],
     // Originally added because the rebuilt component tree had no Vitest unit
     // tests (post-reset verification relied on Playwright e2e/a11y checks).
     // That gap is closed (`pnpm test` now runs a real suite -- see

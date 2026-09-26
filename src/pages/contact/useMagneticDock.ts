@@ -4,7 +4,7 @@ import { usePrefersReducedMotion } from '../../shell/usePrefersReducedMotion';
 // Per-card Gaussian falloff, verified verbatim at
 // docs/_decoded/contact-section-v2-standalone/template.html lines 574-589
 // (`dockStrength` default 22%, `dockSpread` default 260px). This is NOT the
-// quarantined _quarantine/src/pages/contact/useDockFollow.ts math -- that
+// pre-reset useDockFollow.ts math (since deleted) -- that
 // version computed dx/dy from the *container's* center and applied a flat
 // per-card-index parallax factor. Per docs/04_COMPONENT_RULES.MD, the real
 // effect computes dx/dy from each card's OWN center and drives lift/scale
@@ -44,13 +44,13 @@ export function computeMagneticFalloff(
 }
 
 /**
- * A continuous, non-committing hover effect (same rationale the quarantined
+ * A continuous, non-committing hover effect (same rationale the pre-reset
  * hook's own comment gave: no state machine, no gesture-inertia
  * requirements) -- writes `transform`/`zIndex` directly to each card's style
  * on `pointermove`/`pointerleave`, never through `setState`, so a re-render
  * never happens on mousemove.
  *
- * Reduced-motion short-circuit (missing from the quarantined version, added
+ * Reduced-motion short-circuit (missing from the pre-reset version, added
  * here per docs/05_ACCESSIBILITY.MD): the `pointermove` listener is never
  * attached at all when the user prefers reduced motion, not just suppressed
  * after computing -- cards stay at their untransformed resting state and no

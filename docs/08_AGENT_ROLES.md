@@ -2,7 +2,7 @@
 
 > Rewritten 2026-09-21 for the post-reset doc set (`00`–`13`, minus `12`,
 > which is retired). Table shape (agent name, `Reads`, `Responsibilities`)
-> follows the structural convention of the quarantined `08_AGENT_ROLES.md`,
+> follows the structural convention of the pre-reset `08_AGENT_ROLES.md`,
 > but every doc reference below reflects the current numbered-doc set, not
 > the old one — several of the old file's reads no longer exist or point at
 > the wrong doc for what it now covers.

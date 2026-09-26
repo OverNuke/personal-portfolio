@@ -6,8 +6,8 @@
  * Rebuilt against the React port's real shell (docs/00, docs/03) after the
  * full-reset rebuild from the decoded mockups, then updated for the
  * continuous-scroll shell (change `continuous-scroll-and-doodles`). Reuses the
- * check *logic* from `_quarantine/scripts/audit.mjs` /
- * `_quarantine/scripts/audit-checks.mjs` (occlusion, WCAG 2.5.8 target-size,
+ * check *logic* from the pre-reset `scripts/audit.mjs` /
+ * `scripts/audit-checks.mjs` (occlusion, WCAG 2.5.8 target-size,
  * clipped-text, horizontal containment) and adapts the sweep strategy to this
  * app's real, load-bearing difference from the old design:
  *
@@ -62,7 +62,7 @@
  *      never a scroll container on y) -- a static guard, defense in depth, not
  *      a measured leak.
  *
- * Dropped from the quarantined version: the `keep-out` check
+ * Dropped from the pre-reset version: the `keep-out` check
  * (`.profile-ink-field` doesn't exist in this rebuild -- Profile's ink-bloom
  * canvas has an audited-independent contrast fix instead, see docs/02 Fix 1
  * applied to Home and the equivalent Profile treatment) and the
@@ -228,7 +228,7 @@ async function waitForStable(page, section) {
   // text renders in a fallback font with different metrics, which can wrap
   // a heading differently and briefly sit closer to (or overlap) adjacent
   // text than it does once the real font's metrics apply (root-caused in
-  // the original quarantined investigation this wait was ported from).
+  // the original pre-reset investigation this wait was ported from).
   await page.evaluate(() => document.fonts.ready).catch(() => {});
 
   // Give layout two animation frames to settle after the font-load reflow

@@ -8,7 +8,7 @@ interface LangContextValue {
 }
 
 // Held at the shell level (App.tsx), above <Shell/>, per docs/03: both the
-// decoded mockup's own `state.lang` and the old quarantined Shell.tsx kept
+// decoded mockup's own `state.lang` and the old pre-reset Shell.tsx kept
 // this above any individual screen so toggling it survives navigation.
 // Context (not a prop) because the shell renders the five screens as opaque
 // components (no router any more), so it can't pass a prop to each one.

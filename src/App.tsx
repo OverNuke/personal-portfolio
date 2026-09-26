@@ -20,7 +20,7 @@ const PAGES: Record<PageId, ComponentType> = {
 
 /**
  * `lang` (EN/ES) lives here, at the shell level above the screens, per docs/03
- * -- both the decoded mockup's own `state.lang` and the old quarantined
+ * -- both the decoded mockup's own `state.lang` and the old pre-reset
  * Shell.tsx held it above any individual screen so it survives navigation.
  * Passed down via React context rather than props: only 5 leaf pages need
  * it, and the shell renders them as opaque components.

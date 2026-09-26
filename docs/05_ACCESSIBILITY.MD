@@ -1,7 +1,7 @@
 # 05. Accessibility
 
 > Written 2026-09-21 (Phase 6 of the rebuild). This is a full rewrite — the
-> prior `05_ACCESSIBILITY.MD` is quarantined and was **not** read to produce
+> prior `05_ACCESSIBILITY.MD` was deleted in the reset and was **not** read to produce
 > this doc (off-limits per this batch's instructions). What follows is derived
 > from two sources only: (1) the decorative-animation pattern as currently
 > described in this repo's own root `CLAUDE.md` ("Key architectural decisions
@@ -121,8 +121,8 @@ Two effects, two different accessibility treatments — do not conflate them.
   signal.
 - **The 4 chambers are real, keyboard-operable UI — not decorative, and must
   stay out of the `aria-hidden` tree entirely.** Verified against both the
-  decoded template's `status` field and the quarantined `Chamber.tsx`
-  precedent cited in `04_COMPONENT_RULES.MD`: each chamber is
+  decoded template's `status` field and the shipped `Chamber.tsx`
+  cited in `04_COMPONENT_RULES.MD`: each chamber is
   `role="button" tabIndex={0} aria-pressed={state === 'bonded'}`, with a
   real three-state machine (`'separate' | 'binding' | 'bonded'`). This is a
   skill-tag "fusion" interaction — separate dot labels merge into one fused
@@ -213,7 +213,7 @@ Two effects, two different accessibility treatments — do not conflate them.
   identically to a click. A `<path>` with only a `cursor:pointer` style and a
   click handler is **not** an acceptable port of this contract.
 - **The lightbox (`ScanModal.tsx`, extended per `04_COMPONENT_RULES.MD`) is a
-  real, keyboard-dismissable modal**, confirmed against both the quarantined
+  real, keyboard-dismissable modal**, confirmed against both the shipped
   component's contract and the decoded template's own gate
   (`if (!id || this.props.lightbox === false) return;`, line ~828):
   - `role="dialog" aria-modal="true"` on the dialog surface.
@@ -228,10 +228,9 @@ Two effects, two different accessibility treatments — do not conflate them.
     page behind it while open.
   - **On close, focus returns to the triggering cell** — the cell that
     opened the lightbox, not the top of the document and not wherever focus
-    happens to land by default. This mirrors the one-directional
-    focus-restoration behavior `03_UX_ARCHITECTURE.MD` documents (as history)
-    for the old `Shell.tsx`/`usePageTurn` pattern (restore on close, not on
-    open) — same intent, applied here to a modal rather than a route.
+    happens to land by default. Restore-on-close only (nothing moves focus
+    on open beyond the close button below) — the modal analogue of the shell's
+    explicit-activation focus rule.
   - Clicking the overlay outside the dialog also closes it; a click on the
     dialog itself stops propagation so it doesn't self-close.
   - **Portal and stacking (added 2026-09-23, verified in
@@ -298,11 +297,11 @@ Two effects, two different accessibility treatments — do not conflate them.
     bordered spans framing the card) is pure CSS decoration —
     `aria-hidden="true"`, no component logic, no focus/interaction role of
     its own.
-- **`prefers-reduced-motion`:** the hook (`useDockFollow`-equivalent) must
+- **`prefers-reduced-motion`:** the hook (`useMagneticDock`) must
   skip attaching its `pointermove` listener entirely under reduced motion
   (not just skip *applying* the computed transform) — per
-  `04_COMPONENT_RULES.MD`'s explicit call-out that the quarantined
-  `useDockFollow.ts` has no such short-circuit and must gain one on port.
+  `04_COMPONENT_RULES.MD`'s explicit call-out that the hook
+  (`useMagneticDock.ts`) carries one.
   Cards render at their resting `translateY(0) scale(1)` state, fully
   functional as links, with no continuous mousemove computation running in
   the background.

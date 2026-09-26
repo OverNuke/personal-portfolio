@@ -116,6 +116,13 @@ describe('Shell (continuous scroll)', () => {
     expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(5);
   });
 
+  it('puts the pill nav before <main> in DOM order, so it is the first Tab stop and landmark', () => {
+    setup();
+    const nav = screen.getByRole('navigation', { name: 'Screens' });
+    const main = screen.getByRole('main');
+    expect(nav.compareDocumentPosition(main) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('a pill activation scrolls THAT section to the top, focuses ITS heading and announces it', async () => {
     const user = userEvent.setup();
     const { container } = setup();

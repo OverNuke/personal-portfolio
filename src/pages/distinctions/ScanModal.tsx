@@ -3,7 +3,7 @@
 // built fresh here per docs/04_COMPONENT_RULES.MD's contract, which is
 // itself derived verbatim from the decoded template's own gate
 // (`if (!id || this.props.lightbox === false) return;`, template.html line
-// 828) and the quarantined ScanModal.tsx precedent's contract cited there.
+// 828) and the pre-reset ScanModal.tsx precedent's contract cited there.
 //
 // Real, keyboard-dismissable dialog (docs/05):
 // - `role="dialog" aria-modal="true"`.
@@ -13,7 +13,7 @@
 //   this.close(); }`, template.html line 864).
 // - `Tab`/`Shift+Tab` trapped within the dialog's own focusable elements,
 //   computed live via `querySelectorAll('button, [href],
-//   [tabindex]:not([tabindex="-1"])')` (verbatim from the quarantined
+//   [tabindex]:not([tabindex="-1"])')` (verbatim from the pre-reset
 //   contract).
 // - Clicking the overlay closes it; a click on the dialog itself stops
 //   propagation.

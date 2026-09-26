@@ -1,9 +1,9 @@
 # 03. UX Architecture
 
 > Rewritten 2026-09-21 from the decoded mockup (`docs/_decoded/index/template.html`)
-> and cross-checked against the quarantined routing/shell infrastructure
-> (`_quarantine/src/shell/Shell.tsx`, `_quarantine/src/shell/usePageTurn.ts`,
-> `_quarantine/src/routes/registry.ts`) that the approved reset plan says to
+> and cross-checked against the pre-reset routing/shell infrastructure
+> (its `Shell.tsx`, `usePageTurn.ts` and `routes/registry.ts`, since deleted)
+> that the approved reset plan said to
 > **keep and extend**, not discard. Every navigation behavior below —
 > the pill-nav layout, the keyboard mapping, the old focus/live-region
 > mechanism — was read from source, not inferred. See `00_PROJECT_VISION.MD`
@@ -159,8 +159,8 @@ for `05_ACCESSIBILITY.MD` rather than silently fixing or silently copying it.
 > now stacked sections of one scrolling document, so there is no route to
 > change; the router was removed. The old pattern's *intent* — a keyboard/AT
 > user is never left on a stale or invisible element, and every explicit
-> navigation is announced — is preserved and re-scoped below. The retired
-> route-model reasoning is kept further down as history.
+> navigation is announced — is preserved and re-scoped below (see "Decisions
+> carried over from the route model").
 
 ### One navigation path
 
@@ -263,115 +263,28 @@ sections land at the viewport top within ±2px (measured 0.00px at 864×540,
 All five sections are real, always-mounted document content, reachable by
 Tab and assistive technology at all times. That is intended for a scrolling
 page, and it is why no `inert`/`aria-hidden` is applied to "inactive"
-sections (see the retired decision 6 below). Each screen keeps its own single
+sections (see decision 6 below). Each screen keeps its own single
 `[data-screen-heading]` (`tabIndex={-1}`); each `<section>` carries an
 `aria-label` from `navLabel`.
 
-### History: what the old `Shell.tsx` / `usePageTurn.ts` pattern actually did
+### Decisions carried over from the route model
 
-> Retained for provenance only — this described the quarantined route/overlay
-> shell and does not describe the shipped app. `05_ACCESSIBILITY.MD`'s
-> lightbox focus-restoration note still cites it as the origin of the
-> "restore focus on close" intent.
+The pre-scroll route model resolved six numbered decisions. Their status in
+the shipped scroll shell, item by item:
 
-Read from `_quarantine/src/shell/Shell.tsx` and
-`_quarantine/src/shell/usePageTurn.ts`. The old routing model was **not**
-five peer screens — it was one persistent Home layer with four other routes
-opening as an overlay "page" on top of it:
-
-- `usePageTurn()` wraps `useLocation()`/`useNavigate()`. `isOpen` was simply
-  `location.pathname !== '/'` — any non-root path meant "a page is open over
-  Home."
-- `openFrom(triggerEl, path)` captured the exact DOM element that was clicked
-  (`triggerRef.current = triggerEl`) *before* calling `navigate(path)`. A
-  `busyRef` guard rejected a second `navigate()` fired in the same tick (e.g.
-  a double-click), cleared once `location.pathname` actually changed — not
-  gated on any animation finishing.
-- On close (`handleExited`, called once the page's exit transition finished),
-  focus was returned programmatically to that captured trigger element
-  (`triggerRef.current?.focus()`) — so a keyboard user who opened "Projects"
-  from a specific link lands back on that exact link, not at the top of the
-  document. **This restoration is one-directional — it only fires on close.**
-  Nothing in `Shell.tsx` moves focus anywhere on *open*; a keyboard user
-  navigating into Profile keeps whatever focus they already had (typically
-  still on the link they just activated) until they navigate back out. The
-  old a11y infra is thinner here than "focus management on every
-  transition" might suggest — it's specifically "restore focus when an
-  overlay page closes," not a general open-and-close focus contract.
-- A single `aria-live="polite"` region (`liveMessage` state, rendered as a
-  `.sr-only` div) announced every transition in plain text: `"{LABEL} module
-  opened."` on open, `"{LABEL} closed. Home."` on close.
-- While a page was open, the underlying Home layer (`.shell-gate`) was given
-  both `inert` **and** `aria-hidden` simultaneously, so keyboard and
-  assistive-tech users genuinely could not reach it — not just visually
-  hidden.
-- The persistent chrome (`SystemHeader`, `NavModule`) lived inside
-  `.shell-gate` alongside Home, outside the routed `PageLayer` overlay, so it
-  never remounted when a page opened or closed.
-
-### What does and doesn't carry forward — SUPERSEDED 2026-09-23
-
-> **SUPERSEDED 2026-09-23.** The six numbered decisions below were the
-> route-model resolution. Their current status, item by item: (1) React
-> Router as source of truth — **replaced**: the scroll position (pill
-> highlight) plus the URL hash; no router exists. (2) pill and Home list call
-> `navigate(path)` — **replaced** by `goToSection` (scroll + focus + announce
-> + `pushState`). (3) focus moves to the destination heading "on every route
-> change" — **kept, re-scoped** to explicit activation and hash-driven
-> navigation; scroll-driven changes never move focus (table above). (4) the
-> `aria-live` announcement by destination name — **kept**, same scoping.
-> (5) persistent chrome outside the route switch — **kept**: the pill nav
-> renders once outside the stage. (6) no `inert`/`aria-hidden` needed because
-> non-active screens aren't mounted — **the premise is now false**: all five
-> sections *are* mounted at once, and the conclusion (no `inert`) holds for a
-> different reason — they are all real, reachable page content. The original
-> text is kept below unedited as history.
-
-The mockup's five screens are **peers** — Home is just another pill-nav
-destination and another full-screen replacement, not a permanent base layer
-with things opening on top of it. That means the overlay half of the old
-pattern (`Crease`/`PageLayer`'s open/close "page-turn" animation, and Home
-specifically being the thing that goes `inert` while something else is
-"open") does not map onto this model as-is. **That visual-transition
-question is explicitly out of scope for this doc** — it belongs to
-`07_ANIMATION_GUIDELINES.md` / `14_REFORM_MOTION.md` in a later phase.
-
-What *is* decided here, because it's an architecture/UX call and not a motion
-one:
-
-1. **React Router stays the single source of truth for which screen is
-   active.** The route (`useLocation`, or simply which route element is
-   rendered) replaces `state.screen` outright — no bare local state duplicating
-   what the URL already says.
-2. **The pill nav and Home's list are the two direct-navigation triggers**,
-   and both call `navigate(path)` under the hood instead of the mockup's
-   `setState({ screen })`.
-3. **Focus management is a new rule here, not a literal carry-forward —
-   the old pattern only ever restored focus on close, never moved it on
-   open** (see above). Since the new model has no persistent Home layer to
-   restore focus to (any of five peer screens can be the "previous" one,
-   and there's no overlay-close event to hang a restoration on), this doc
-   extends the old pattern's *intent* — a keyboard/AT user should never be
-   left with focus on a now-invisible or unrelated element — into a new,
-   symmetric rule: on every route change, move focus to the new screen's
-   primary heading/landmark (e.g. an `h1`/`h2` with a stable `tabIndex={-1}`
-   + `.focus()` on mount). Treat this as new architecture decided in this
-   doc, not as something recovered from the old shell.
-4. **The `aria-live="polite"` announcement region is kept, reworded for a
-   peer-screen model.** Instead of "module opened" / "closed. Home.", each
-   route change announces the destination screen by name (e.g. `"Profile."`,
-   `"Home."`). One shared live region, rendered once outside the routed
-   switch, same as the old `Shell.tsx`.
-5. **Persistent chrome stays outside the route switch.** The pill nav (and
-   any future system-header equivalent) renders once, alongside the
-   `<Routes>` element, not inside any individual page component — this is
-   the same structural decision the old Shell made by keeping
-   `SystemHeader`/`NavModule` inside `.shell-gate` rather than inside
-   `PageLayer`.
-6. **`inert`/`aria-hidden` on a non-active screen is not needed under the new
-   model**, because non-active screens are not simultaneously mounted the way
-   Home was under the old overlay model — routing only mounts the active
-   screen. This simplifies rather than loses the old protection.
+1. **React Router as the source of truth for the active screen — replaced.**
+   The scroll position (pill highlight) plus the URL hash; no router exists.
+2. **The pill and Home list call `navigate(path)` — replaced** by
+   `goToSection` (scroll + focus + announce + `pushState`).
+3. **Focus moves to the destination heading — kept, re-scoped** to explicit
+   activation and hash-driven navigation; scroll-driven changes never move
+   focus (table above).
+4. **The `aria-live` announcement by destination name — kept**, same scoping.
+5. **Persistent chrome outside the switch — kept:** the pill nav renders once,
+   outside the stage.
+6. **No `inert`/`aria-hidden` on non-active screens — kept, for a different
+   reason:** all five sections are mounted at once and are all real,
+   reachable page content.
 
 ## Two label sets — don't conflate them
 
@@ -402,7 +315,7 @@ explicitly rather than leaving it ambiguous.
 > by `react-router-dom`). **SUPERSEDED** — there are no routes or paths. The
 > registry (`src/routes/registry.ts`, still the single source of truth for
 > the section list, order and labels) now carries a `hash` per entry instead
-> of a `path`. It extends the old four-entry `_quarantine` registry (which
+> of a `path`. It extends the old pre-reset four-entry registry (which
 > had no Home entry because Home was implicit) to five real entries and
 > renames `certifications` to `distinction` to match the mockup's own naming
 > (`docs/_decoded/index/template.html`'s `screen: 'distinction'`).
@@ -425,7 +338,7 @@ path URLs are unsupported (see "Hash deep links" above).
 ## Where language state lives
 
 Both the decoded script (`state.lang` on the shell-level `Component`) and the
-old `_quarantine/src/shell/Shell.tsx` (`useState<'en' | 'es'>('en')` at the
+pre-reset `Shell.tsx` (`useState<'en' | 'es'>('en')` at the
 shell level, passed down as a prop) hold the EN/ES toggle **above** any
 individual screen, not inside one. This carries forward: `lang` lives in
 shell-level state, not inside `Home.tsx` or any other page component, so

@@ -2,7 +2,7 @@
 
 > Rewritten 2026-09-21. Every version and dependency below was read directly
 > from the tracked `package.json` at repo root, not carried forward from the
-> prior (quarantined) doc — that doc's Framer Motion mention is explicitly
+> prior (since-deleted) doc — that doc's Framer Motion mention is explicitly
 > corrected below, not repeated.
 
 ## Core
@@ -42,12 +42,12 @@ dependency (verified: no match for `framer` in either `dependencies` or
 **CSS custom properties plus native browser APIs** — CSS `@keyframes`/custom
 properties, `<canvas>` with `requestAnimationFrame`, inline SVG (including
 SMIL-free, per-frame-driven paths), and the Web Animations API where a
-declarative CSS animation isn't expressive enough. The existing
-`_quarantine/src/pages/home/InkFlow.tsx` is the reference precedent for this
-rule in practice: it's plain CSS `@keyframes` layers, not a JS animation
-library, specifically because (per that file's own comment) a CSS
-`@keyframes` rule is genuinely stopped by `prefers-reduced-motion`, while a
-JS-driven or SMIL-driven animation isn't automatically. Full motion timing
+declarative CSS animation isn't expressive enough. The shipped
+`src/pages/home/InkFlowBackground.tsx` is the reference precedent for this
+rule in practice: it's layered CSS (`@keyframes` in `home.css`), not a JS
+animation library, because a CSS `@keyframes` rule is genuinely stopped by
+`prefers-reduced-motion`, while a JS-driven or SMIL-driven animation isn't
+automatically. Full motion timing
 and philosophy live in `07_ANIMATION_GUIDELINES.md` / `14_REFORM_MOTION.md`
 (a later phase) — this doc's job is only to state plainly, for anyone
 scaffolding a new effect, that reaching for an animation library is not this
@@ -94,8 +94,11 @@ Not third-party dependencies, but part of the stack's actual build pipeline
   `mockup/*.html` into `docs/_decoded/` (see the plan and
   `13_ASSET_SPEC.md`); not part of the production build, a reading/authoring
   aid only.
-- `scripts/audit.mjs` (rebuild target, see `09_IMPLEMENTATION_ROADMAP.md`) —
-  wired as `pnpm run audit:collage`.
+- `scripts/audit.mjs` — occlusion/target-size/clipped-text/horizontal-scroll
+  audit of the scroll shell (each section loaded by its hash URL, at
+  1440/1280/1100/390px; sections read from `src/routes/registry.ts`). Wired as
+  `pnpm run audit:collage` and run in CI (`ci.yml`'s `Audit` step). Rebuilt
+  for the scroll shell 2026-09-23 (Phase 10); see `09_IMPLEMENTATION_ROADMAP.md`.
 
 ## What this doc is not
 

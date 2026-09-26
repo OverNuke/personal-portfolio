@@ -20,7 +20,7 @@ interface ChamberProps {
  * activated by click or Enter/Space, exactly matching the decoded template's
  * `onClick`/`onKeyDown` pair (`if (e.key === 'Enter' || e.key === ' ')
  * { e.preventDefault(); ...toggle } `, template.html line 448) and the
- * quarantined `Chamber.tsx` precedent's contract.
+ * pre-reset `Chamber.tsx` precedent's contract.
  *
  * Visual fusion (dots merging into the fused word) tracks the decoded
  * source's own `on = hover === i || locked` (template.html line 421) --

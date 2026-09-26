@@ -1,9 +1,9 @@
 # 04. Component Rules
 
-> Rewritten 2026-09-21 from the decoded mockup and the quarantined reference
-> implementations the approved reset plan says to reuse as precedent
-> (`_quarantine/src/pages/**`). Every contract below cites the specific
-> decoded template line/behavior or quarantined file it's derived from —
+> Rewritten 2026-09-21 from the decoded mockup and the pre-reset reference
+> implementations the approved reset plan said to reuse as precedent
+> (since ported into `src/pages/**`). Every contract below cites the specific
+> decoded template line/behavior or shipped file it's derived from —
 > this doc does not invent new component boundaries, it documents the ones
 > the plan already fixed and adds the detail needed to build against them.
 
@@ -27,11 +27,11 @@ src/pages/Contact.tsx
 
 Local, screen-specific pieces live in a same-named lowercase subfolder next
 to the page, never inside a shared/generic `components/` bucket. Verified
-precedents from `_quarantine/src/pages/`:
+precedents (shipped files under `src/pages/`):
 
 - `src/pages/profile/Chamber.tsx`, `src/pages/profile/ProfileInkField.tsx`,
   `src/pages/profile/profile.css`
-- `src/pages/contact/Dock.tsx`, `src/pages/contact/useDockFollow.ts`,
+- `src/pages/contact/Dock.tsx`, `src/pages/contact/useMagneticDock.ts`,
   `src/pages/contact/contact.css`
 - `src/pages/distinctions/ScanModal.tsx`, `src/pages/distinctions/distinctions.css`
 - `src/pages/projects/ProjectCard.tsx`, `src/pages/projects/projects.css`
@@ -52,7 +52,7 @@ habit:
 
 1. **Canvas/SVG effect tightly coupled to one component → component-internal
    `ref` + `useEffect`, with a `prefers-reduced-motion` short-circuit.**
-   **Honest caveat, checked against both quarantined candidates:**
+   **Honest caveat, checked against both pre-reset candidates:**
    `src/pages/home/InkFlow.tsx` and `src/pages/profile/ProfileInkField.tsx`
    are the two decorative-background components that actually shipped in the
    old build, and **neither is a `ref`+`useEffect` canvas example** — both
@@ -77,7 +77,7 @@ habit:
    still holds regardless of technique — it's one component's own effect,
    so it owns its `ref`+`useEffect` (or CSS-only markup, if a future
    implementer determines that's sufficient for a given effect) internally
-   rather than exposing a hook — but don't cite the two quarantined files as
+   rather than exposing a hook — but don't cite the two pre-reset files as
    proof a canvas is unnecessary; they simply never attempted one.
    **Corrected 2026-09-21:** Home's Ink Flow Background did turn out to be a
    CSS-only exception, once actually found — it's a nested `ext_resources`
@@ -90,7 +90,7 @@ habit:
    needed, unlike this paragraph's prediction. Profile's ink-bloom remains a
    real canvas per this paragraph's original reasoning.
 2. **Reusable/testable interaction logic → custom hook, component stays
-   render-only.** Precedent: `src/pages/contact/useDockFollow.ts`, consumed
+   render-only.** Implemented by `src/pages/contact/useMagneticDock.ts`, consumed
    by `src/pages/contact/Dock.tsx`. The hook owns a `containerRef` and a
    `cardRefs` array, listens for `pointermove`/`pointerleave` on the
    container, and writes `transform` directly to each card's DOM style
@@ -100,7 +100,7 @@ habit:
    effect logic; it only maps data to elements and attaches the refs the
    hook gives it.
 3. **Pure computation → a plain, DOM-free TS module, consumed by a
-   render-only component.** No quarantined file demonstrates this one
+   render-only component.** No pre-reset file demonstrates this one
    directly (the old build didn't yet have a real Voronoi implementation),
    but the plan names the target explicitly: `src/pages/distinctions/voronoi.ts`
    for the weighted-Voronoi half-plane-clipping math. Keeping it as a plain
@@ -206,9 +206,9 @@ browser rather than a fourth bucket:
 - **Bucket:** none of the three placement buckets, deliberately — this is
   **functional UI**, not a decorative effect, and must not be built like one.
 - **Verified state machine** (matches both the decoded template's `status`
-  field and `_quarantine/src/pages/profile/Chamber.tsx` exactly):
+  field and the shipped `src/pages/profile/Chamber.tsx` exactly):
   `'separate' | 'binding' | 'bonded'`.
-- **Contract, per the quarantined `Chamber.tsx` precedent:**
+- **Contract, as implemented by `Chamber.tsx`:**
   - Props: `chamber` (data: index, dot labels, fused word), `state`
     (`ChamberState`), `onEnter`, `onLeave`, `onToggleBonded`.
   - Markup: `role="button"`, `tabIndex={0}`, `aria-pressed={state === 'bonded'}`.
@@ -248,7 +248,7 @@ browser rather than a fourth bucket:
   click does — not just a `<path>` with a `cursor:pointer` style and a click
   handler.
 - **The lightbox is `ScanModal.tsx`, extended.** Confirmed contract from
-  `_quarantine/src/pages/distinctions/ScanModal.tsx`: `role="dialog"
+  `src/pages/distinctions/ScanModal.tsx`: `role="dialog"
   aria-modal="true"`, focus moves to the close button on mount, `Escape`
   calls `onClose`, `Tab`/`Shift+Tab` are trapped within the dialog's own
   focusable elements (computed live via
@@ -297,31 +297,24 @@ browser rather than a fourth bucket:
 
 ### Contact — magnetic dock
 
-- **Bucket:** custom hook (bucket 2) + render-only component — precedent is
-  exact, not analogous: `_quarantine/src/pages/contact/useDockFollow.ts` +
-  `_quarantine/src/pages/contact/Dock.tsx`.
-- **Hook shape is the real precedent; the hook's math is not — fix this on
-  port, don't copy it verbatim.** The quarantined
-  `useDockFollow.ts` takes `cardCount`, returns `{ containerRef, cardRefs }`,
-  and writes directly to each card's `style.transform` on `pointermove`/
-  `pointerleave` with no `setState` in the hot path — **keep all of that
-  shape.** But its actual math computes `dx`/`dy` from the **container's**
-  center and applies a uniform `factor = 0.02 + i * 0.006` per card index,
-  producing a flat parallax drift where every card moves by roughly the same
-  amount regardless of where the cursor actually is relative to that card.
-  That is **not** the mockup's effect. `01_ART_DIRECTION.MD` (verified
-  against the decoded template) specifies a Gaussian falloff computed
-  **per card, from that card's own center**: `f = exp(-(dx² + dy²))`,
-  driving both a lift (`translateY`) and a `scale` in proportion to `f` —
-  cards near the cursor are pulled and grow, cards further away
-  participate visibly less rather than sharing one uniform drift. Per the
-  plan's "full visual/interaction fidelity, not simplified" mandate, the
-  hook's math must be replaced with this per-card Gaussian falloff before
-  this counts as ported, not left as the quarantined placeholder version.
-  The hook must also add a `prefers-reduced-motion` short-circuit — the
-  quarantined version has none — that skips attaching the `pointermove`
-  listener entirely (or no-ops it) so reduced-motion users get static cards
-  instead of a suppressed-but-still-computed effect.
+- **Bucket:** custom hook (bucket 2) + render-only component —
+  `src/pages/contact/useMagneticDock.ts` + `src/pages/contact/Dock.tsx`.
+- **Hook shape and math (`useMagneticDock.ts`).** `useMagneticDock(cardCount)`
+  returns `{ containerRef, cardRefs }` and writes directly to each card's
+  `style.transform`/`zIndex` on `pointermove`/`pointerleave` (rAF-batched),
+  with no `setState` in the hot path. The math is a **per-card Gaussian
+  falloff**, not a flat parallax: `computeMagneticFalloff` computes `dx`/`dy`
+  from each card's *own* center and returns `f = exp(-(dx² + dy²))`, with an
+  anisotropic spread (`dy` is divided by `spread × 2.2`, and that vertical
+  spread is scaled by the container's real height over the 900px baseline it
+  was tuned at). `f` drives both a `translateY` lift and a `scale`, so cards
+  near the cursor are pulled and grow while distant ones barely move
+  (`01_ART_DIRECTION.MD`, verified against the decoded template). The pointer
+  is converted back into the dock's unscaled coordinate space before the
+  falloff is computed, so it stays correct at any `--stage-scale`. Under
+  `prefers-reduced-motion` the `pointermove` listener is never attached at
+  all, so reduced-motion users get static cards instead of a
+  suppressed-but-still-computed effect.
 - **Component contract:** `Dock.tsx` stays render-only — it maps channel
   data (Email, GitHub, WhatsApp, LinkedIn, Book a call) to real `<a href>` or
   `<button>` elements (a `disabled` channel renders as a real disabled

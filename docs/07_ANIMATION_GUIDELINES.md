@@ -201,8 +201,8 @@ event) before starting continuous/ambient motion, and prefer a CSS
 because a CSS `@keyframes` animation is stopped by an
 `@media (prefers-reduced-motion: reduce) { animation: none }` override in a
 way a hand-rolled JS loop is not automatically — this is also why
-`06_FRONTEND_STACK.MD` cites `_quarantine/src/pages/home/InkFlow.tsx`'s own
-code comment as the precedent for preferring CSS where the effect doesn't
+`06_FRONTEND_STACK.MD` cites `src/pages/home/InkFlowBackground.tsx`
+as the precedent for preferring CSS where the effect doesn't
 strictly need per-frame pixel control (Profile's ink-bloom canvas and
 Projects' stroke-glyph jitter do need it — genuine per-frame regeneration —
 and must implement their own explicit reduced-motion short-circuit instead).

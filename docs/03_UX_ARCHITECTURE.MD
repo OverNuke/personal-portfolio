@@ -205,6 +205,21 @@ Scroll-driven changes only move the pill's visual active state, driven by an
 viewport's vertical midline (`rootMargin: -50% 0 -50% 0`), so exactly one
 section is active at a time and it stays correct for any section height.
 
+> **Two signals, not one (added 2026-09-26, `mobile-visibility-scanmodal`).**
+> `activeSection` (the single midline band above — drives the pill highlight
+> and Home's arrow-key scope) is **not** the same thing as a section's
+> _visibility_ (any overlap with the viewport, slightly negative root margin —
+> drives pausing continuous effects, owned by `07_ANIMATION_GUIDELINES.md`
+> "Off-screen pause"). They are two separate observers, must not be unified,
+> and neither changes when the other does (pinned by `Shell.test.tsx`).
+> The **phone case** is why: at a 390px viewport the stage scale is ~0.27, so
+> the whole five-section stack is only ~1220px tall against an ~844px viewport
+> — four or five sections overlap the viewport at once (measured at 390×844:
+> four at the top and bottom of the ~375px scroll range, five around
+> `scrollY` ≈ 200; a real phone's shorter viewport under browser chrome shows
+> fewer) while exactly one is active. "Active" says nothing about which
+> sections are visible.
+
 ### Hash deep links
 
 Deep links are URL hashes: `#home`, `#profile`, `#distinctions`, `#projects`,

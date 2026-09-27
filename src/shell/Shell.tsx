@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import type { ComponentType } from 'react';
+import type { ComponentType, ReactElement } from 'react';
 import { routes } from '../routes/registry';
 import type { PageId } from '../routes/registry';
 import PillNav from './PillNav';
@@ -103,6 +103,23 @@ function Shell({ pages }: ShellProps) {
 
   const navValue = useMemo(() => ({ activeSection, goToSection }), [activeSection, goToSection]);
 
+  // The screens take no props, so an element that keeps its identity makes React
+  // bail out of re-rendering it. Without this, every visibility flip or midline
+  // change (frequent mid-scroll, and on a phone several sections flip at once)
+  // would re-render all five heavy screens just to move a wrapper attribute.
+  // Screens that CONSUME a context (`SectionVisibilityContext`, `SectionNavContext`)
+  // still update through it, bail-out or not.
+  const pageElements = useMemo(
+    () =>
+      Object.fromEntries(
+        routes.map((route) => {
+          const Page = pages[route.pageId];
+          return [route.pageId, <Page />];
+        }),
+      ) as Record<PageId, ReactElement>,
+    [pages],
+  );
+
   return (
     <SectionNavContext.Provider value={navValue}>
       <div className="stage-viewport" ref={viewportRef}>
@@ -110,7 +127,6 @@ function Shell({ pages }: ShellProps) {
         <div className="stage-scaler">
           <main className="stage" ref={stageRef}>
             {routes.map((route) => {
-              const Page = pages[route.pageId];
               const domId = sectionDomId(route.pageId);
               const visible = sectionVisibility[domId] ?? true;
               return (
@@ -122,7 +138,7 @@ function Shell({ pages }: ShellProps) {
                   data-offscreen={visible ? undefined : ''}
                 >
                   <SectionVisibilityContext.Provider value={visible}>
-                    <Page />
+                    {pageElements[route.pageId]}
                   </SectionVisibilityContext.Provider>
                 </section>
               );

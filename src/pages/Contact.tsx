@@ -38,7 +38,7 @@ function Contact() {
       <Dock />
 
       <p className="contact-quote">
-        Even an hundred of years isn't enough to appreciate what life is mean to be.
+        The smallest acts of kindness can change someone’s day.
       </p>
 
       <div className="contact-footer-rule" aria-hidden="true">

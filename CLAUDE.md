@@ -42,7 +42,7 @@ pnpm lint            # eslint . (add lint:fix to auto-fix)
 pnpm format          # prettier --write . (add format:check to only check)
 pnpm test            # vitest run (add test:watch for watch mode)
 pnpm run decode:mockup  # scripts/decode-mockup.mjs — unpacks mockup/*.html into docs/_decoded/
-pnpm run audit:collage  # scripts/audit.mjs — occlusion/target-size/clipped-text/horizontal-scroll audit of each section (loaded by its hash URL) at 1440/1280/1100/390px (always `pnpm run`, never bare `pnpm audit` — that's pnpm's own dependency-audit subcommand)
+pnpm run audit:collage  # scripts/audit.mjs — occlusion/target-size/clipped-text/horizontal-scroll audit of each section (loaded by its hash URL) at 1440/1280/1100/390px, plus a 390px pass that opens every Distinctions lightbox (gating: overflow/clipped text/target size) and reports pill-nav/cell target sizes without failing (known gap, docs/05) (always `pnpm run`, never bare `pnpm audit` — that's pnpm's own dependency-audit subcommand)
 pnpm e2e             # pnpm build && playwright test — real browser specs under e2e/ (smoke, layout guard, scroll/hash nav)
 ```
 

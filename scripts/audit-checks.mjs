@@ -46,6 +46,11 @@ export const STAGE_HEIGHT = 900;
 // WCAG 2.2 SC 2.5.8 (Target Size Minimum, AA): 24x24 CSS px.
 export const MIN_TARGET_SIZE = 24;
 
+// The phone viewport of the lightbox + report-only pass (iPhone 13 CSS size).
+// Width matches the narrowest entry of VIEWPORT_WIDTHS; the height is the phone's
+// own, since the lightbox's top-reachability depends on it.
+export const PHONE_VIEWPORT = { width: 390, height: 844 };
+
 /**
  * Whether two axis-aligned rects genuinely overlap (more than EPSILON of
  * shared area on both axes). Edge-touching rects (e.g. adjacent grid cells)
@@ -251,4 +256,113 @@ export function findNearestRotatedAncestorIndex(ancestorTransforms) {
     if (parseRotationDegrees(ancestorTransforms[i]) !== 0) return i;
   }
   return null;
+}
+
+/**
+ * The targets (`{ selector, rect }`) smaller than `min` x `min` CSS px on either
+ * axis (WCAG 2.5.8). Used for the REPORT-ONLY phone-scale findings on the
+ * scaled pill nav and Voronoi cells, where the stage scale (~0.27 at 390px)
+ * shrinks every target; see `shouldFailRun` for why those never gate.
+ */
+export function findSmallTargets(elements, min = MIN_TARGET_SIZE) {
+  return elements.filter((el) => !meetsMinTargetSize(el.rect, min));
+}
+
+/**
+ * Whether the lightbox dialog's box sits inside a `viewportWidth`-wide
+ * viewport: no edge past the left/right sides (EPSILON of sub-pixel noise
+ * allowed) and a top that is not above the fold, so its header stays
+ * reachable. A missing rect (nothing measured) never fits.
+ */
+export function dialogFitsViewport(rect, viewportWidth, epsilon = EPSILON) {
+  if (!rect) return false;
+  return rect.x >= -epsilon && rect.right <= viewportWidth + epsilon && rect.y >= -epsilon;
+}
+
+/**
+ * The lightbox checks at phone width, as findings `{ type, detail }`
+ * (`type` is one of `lightbox-not-opened | lightbox-overflow |
+ * lightbox-clipped-text | lightbox-target-size`). These are GATING: the
+ * dialog is portaled outside the scaled stage and lays out in real CSS px
+ * (docs/00's recorded exception), so any of them is a real defect.
+ *
+ * `snapshot`: `{ documentScrollWidth, documentClientWidth, dialogRect,
+ * controls: [{ selector, rect }], clipCandidates: [...isTextClipped input
+ * + selector] }`, collected in the browser by scripts/audit.mjs.
+ */
+export function checkLightbox(snapshot, viewportWidth) {
+  if (!snapshot.dialogRect) {
+    return [
+      {
+        type: 'lightbox-not-opened',
+        detail: 'no [role="dialog"] was found after activating the cell',
+      },
+    ];
+  }
+
+  const findings = [];
+  const { documentScrollWidth, documentClientWidth, dialogRect } = snapshot;
+
+  if (hasHorizontalOverflow(documentScrollWidth, documentClientWidth)) {
+    findings.push({
+      type: 'lightbox-overflow',
+      detail: `document scrollWidth ${documentScrollWidth} > clientWidth ${documentClientWidth}`,
+    });
+  }
+  if (!dialogFitsViewport(dialogRect, viewportWidth)) {
+    findings.push({
+      type: 'lightbox-overflow',
+      detail:
+        `dialog spans x ${Math.round(dialogRect.x)}..${Math.round(dialogRect.right)}, ` +
+        `y from ${Math.round(dialogRect.y)}, outside the ${viewportWidth}px viewport`,
+    });
+  }
+
+  for (const el of snapshot.clipCandidates) {
+    if (isTextClipped(el)) {
+      findings.push({
+        type: 'lightbox-clipped-text',
+        detail: `"${el.selector}" clips its own text (overflow ${el.overflowX}/${el.overflowY})`,
+      });
+    }
+  }
+
+  for (const el of findSmallTargets(snapshot.controls)) {
+    findings.push({
+      type: 'lightbox-target-size',
+      detail:
+        `"${el.selector}" is ${Math.round(el.rect.width)}x${Math.round(el.rect.height)}px, ` +
+        `below ${MIN_TARGET_SIZE}x${MIN_TARGET_SIZE}px`,
+    });
+  }
+
+  return findings;
+}
+
+/**
+ * Whether the audit run must exit non-zero. A finding gates unless it is
+ * `skipped` (a check that could not run) or `reportOnly` (a known, documented
+ * gap that must be SHOWN but not fail CI: the pill nav's and Voronoi cells'
+ * sub-24px targets at phone scale, whose fix is the follow-up change
+ * `mobile-pill-nav`). Everything else -- the desktop checks and every
+ * lightbox finding -- fails the run.
+ */
+export function shouldFailRun(findings) {
+  return findings.some((f) => !f.skipped && !f.reportOnly);
+}
+
+/**
+ * Whether the dialog that opened is the one for the cell that was activated:
+ * the cell's `aria-label` is "Open scan — {title}" (VoronoiCellField.tsx) and
+ * the dialog's heading is that same `{title}`. The audit force-clicks Voronoi
+ * cells that move every frame, so a click could land on a neighbour; without this
+ * check the audit would measure the wrong dialog and still report the run green.
+ * Whitespace is normalised; an exact title match (not a suffix) is required;
+ * missing input never matches.
+ */
+export function lightboxMatchesCell(cellLabel, dialogTitle) {
+  const squash = (text) => (typeof text === 'string' ? text.replace(/\s+/g, ' ').trim() : '');
+  const title = squash(dialogTitle);
+  if (!title || !squash(cellLabel)) return false;
+  return squash(cellLabel).replace(/^Open scan\s*[—-]\s*/, '') === title;
 }

@@ -284,6 +284,32 @@ aria-modal="true"`, focus moves to the close button on mount, `Escape`
   `createPortal(..., document.body)` (a `position: fixed` overlay inside the
   transformed stage would be positioned against the stage) at `z-index: 9100`,
   above the fixed pill nav (`9000`); see `05_ACCESSIBILITY.MD`.
+- **"Open full size" link and phone layout (2026-09-26,
+  `mobile-visibility-scanmodal`).** Extends the contract above; nothing in it
+  is removed.
+  - When `imageSrc` exists the footer holds an `<a class="distinctions-modal__open">`
+    **before** the close button: `href` = the imported (Vite, base-prefixed)
+    asset URL, `target="_blank"`, `rel="noopener noreferrer"`, the `↗` is
+    `aria-hidden` and a `sr-only` "(opens in new tab)" carries the new-tab
+    warning. It opens the scan at real pixels in the browser's own viewer,
+    where pinch-zoom works — the escape hatch for a plate that is hard to read
+    in a phone-width dialog. The placeholder branch (no scan) renders no link.
+  - **Tab-trap order is now `[link, close]`** (the trap already queries
+    `button, [href], ...` live, so the link is included automatically). Focus
+    still opens on the close button; restoring focus to the cell stays owned
+    by `Distinctions.tsx`.
+  - **≤640px block** (`distinctions.css`, real CSS px because the modal is
+    portaled outside the scaled stage — the recorded exception in
+    `00_PROJECT_VISION.MD`): the dialog fits the viewport with no horizontal
+    overflow; the header stacks (title above a wrapping meta); the scan is
+    `position: static` with an intrinsic height (the desktop absolute-fill
+    collapses the plate); the overlay is start-aligned, scrolls, and has
+    `overscroll-behavior: contain`; close and link are ≥44×44px. Each `dvh`
+    has a `vh` fallback line before it. Above 640px nothing changes.
+  - Guards: `ScanModal.test.tsx` (link attributes, trap order, the whole
+    a11y contract), `e2e/mobile-modal.spec.ts` (390px fit / no overflow /
+    44px controls; 1280px unchanged), and `scripts/audit.mjs`'s phone pass
+    (every cell's lightbox opened at 390px).
 
 ### Projects — stroke-glyph title
 

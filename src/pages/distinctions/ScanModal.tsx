@@ -257,18 +257,36 @@ function ScanModal({ isOpen, title, meta, imageSrc, imageAlt, onClose }: ScanMod
 
         <div className="distinctions-modal__footer">
           <span className="distinctions-modal__footer-label">scan viewer</span>
-          {/* Real, native <button> -- Enter/Space activation needs no
-              custom key handling, matching this repo's established Contact
-              -card precedent for native interactive elements (docs/05). */}
-          <button
-            ref={closeButtonRef}
-            type="button"
-            className="distinctions-modal__close"
-            aria-label="Close scan viewer"
-            onClick={onClose}
-          >
-            close · esc
-          </button>
+          <div className="distinctions-modal__actions">
+            {/* Escape hatch for phones, where the scaled-down plate is hard to
+                read: the imported (base-prefixed) asset URL in a new tab, where
+                the browser's own pinch-zoom works at real pixels. Before the
+                close button in DOM order, so the Tab trap reads [link, close];
+                focus still opens on close. Only when a scan exists. */}
+            {imageSrc && (
+              <a
+                href={imageSrc}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="distinctions-modal__open"
+              >
+                Open full size <span aria-hidden="true">↗</span>
+                <span className="sr-only">(opens in new tab)</span>
+              </a>
+            )}
+            {/* Real, native <button> -- Enter/Space activation needs no
+                custom key handling, matching this repo's established Contact
+                -card precedent for native interactive elements (docs/05). */}
+            <button
+              ref={closeButtonRef}
+              type="button"
+              className="distinctions-modal__close"
+              aria-label="Close scan viewer"
+              onClick={onClose}
+            >
+              close · esc
+            </button>
+          </div>
         </div>
       </div>
     </div>,

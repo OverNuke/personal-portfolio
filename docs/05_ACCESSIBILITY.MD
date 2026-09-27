@@ -247,6 +247,18 @@ this.close(); }`, decoded line ~864).
     the pill hits the overlay, and Escape restores focus to the trigger cell.
     Note the rest of the page is not made `inert` while the dialog is open;
     the focus trap and the overlay are what contain interaction.
+  - **On phones (added 2026-09-26, `mobile-visibility-scanmodal`).** The
+    modal is in real CSS px (`00_PROJECT_VISION.MD` exception; layout contract
+    in `04_COMPONENT_RULES.MD`), so its targets are measured as they render:
+    close and "Open full size" are ≥44×44px (above WCAG 2.5.8's 24px minimum),
+    the dialog never exceeds the viewport width (no 2-D scrolling to reach a
+    control — WCAG 1.4.10), and the overlay scrolls with `overscroll-behavior:
+contain` so a tall plate never traps the user or scrolls the page behind
+    it. The link adds a new-tab warning to its accessible name (`sr-only`
+    "(opens in new tab)"; WCAG 3.2.5 is advisory, the warning is cheap) and
+    joins the Tab trap in DOM order `[link, close]`; everything else in the
+    list above is unchanged. `scripts/audit.mjs` opens every cell's lightbox
+    at 390px and **gates** on overflow, clipped text and target size.
 - **`prefers-reduced-motion`:** the Voronoi field's own sinusoidal
   "breathing" (position jitter via `Math.cos(t*0.37+phase)*7`,
   `Math.sin(t*0.31+phase*1.3)*7`, weight jitter via `Math.sin(t*0.55+phase)`
@@ -392,6 +404,39 @@ one table covers every keyboard interaction in the app:
 | Distinctions lightbox                                                                                                                                                                                                    | `Tab`/`Shift+Tab` trapped inside dialog, `Escape` closes                                                                                                                                         | Focus moves to close button on open, returns to triggering cell on close                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | Contact cards                                                                                                                                                                                                            | `Tab` to reach, `Enter`/`Space` (native link/button activation)                                                                                                                                  | Native elements — no custom handler needed; `:focus-visible` gives the hover-lift's visual affordance                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | Explicit section navigation — pill / Home list / Profile CTA, **and** hash-driven navigation (load with a valid hash, Back/Forward, hand-edited hash). Replaces the old "Route change" row (2026-09-23; no routes exist) | n/a (not a keypress of its own)                                                                                                                                                                  | Focus moves to the destination section's own heading (`[data-screen-heading]`, stable `tabIndex={-1}`, `focus({ preventScroll: true })`); `aria-live="polite"` region announces the section by name (`"Profile."`) — both fire in the same tick the scroll starts, per `03_UX_ARCHITECTURE.MD`. **Scroll-driven changes (wheel/touch/keyboard scrolling) and a load with no/empty/unknown hash move neither focus nor the announcement** — only the pill's visual active state follows the scroll                                                                                                                                                                                                                              |
+
+## OPEN GAP — phone-scale target size (WCAG 2.5.8), recorded 2026-09-26
+
+**Status: known, reported, not fixed.** Everything inside `.stage` is scaled
+by `viewport width / 1440` (`00_PROJECT_VISION.MD`), so on a 390px phone
+(scale ≈ 0.27) its targets shrink with it. `scripts/audit.mjs` measures the
+rendered rects at 390×844 (`pnpm run audit:collage`, run 2026-09-26) and
+**reports** them without failing the run:
+
+- **Pill nav — fails 2.5.8.** All five buttons render **9px tall** (16×9
+  Home, 22×9 Profile, 33×9 Distinctions, 24×9 Projects, 22×9 Contact), against
+  the 24×24px minimum. The nav is the site's only persistent navigation, so
+  this is the most user-visible part of the gap.
+- **Voronoi cells — no finding at bounding-box level.** The smallest cell
+  bounding box at 390px is ~75×84px (`ai`; `toefl` is 131×60), far above 24px.
+  This is a bounding box, not the polygon's inscribed size — a narrow cell
+  could still hold a smaller usable target — so it is _measured, not proven_.
+
+Why it is not fixed here: it is a scope decision, not an impossibility. The
+nav is `position: fixed` but carries `transform: scale(var(--stage-scale))`
+(`shell.css` `.pill-nav`), so a ~32.5px design-height button renders ~8.8px.
+Measured inputs for the follow-up (390×844, 2026-09-26): the nav is ~469
+design-px wide and offset 20 design-px from the left; reaching a 24px button
+needs a nav-only scale of ≈0.74 (24 / 32.5), at which the nav spans ≈361px —
+it fits a 390px viewport but would overflow a 360px one by ~1px, so a
+nav-only scale floor alone is not the whole answer. Whether to do that, keep
+the nav un-scaled, or give it a phone layout touches the fixed-design-width
+decision (`00_PROJECT_VISION.MD`), so it is deferred and **out of scope** for
+`mobile-visibility-scanmodal`. **Follow-up change: `mobile-pill-nav`** (record
+the decision in `00_PROJECT_VISION.MD` first). Until then the gap is knowingly
+open; the audit keeps it visible under "Reported, NOT gating" so it cannot be
+silently forgotten. Keyboard operability is unaffected (Tab, Enter/Space work
+at any size); the failure is the pointer/touch target-size minimum.
 
 ## What this doc is not
 

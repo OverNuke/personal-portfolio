@@ -79,6 +79,20 @@ update here first.
 >   (aspect ratio below 1.6:1) the last section, Contact, cannot reach the
 >   viewport top — see `03_UX_ARCHITECTURE.MD`.
 
+> **Exception recorded 2026-09-26 (`mobile-visibility-scanmodal`): the
+> Distinctions lightbox is laid out in real CSS px on phones.** Reason:
+> accessibility outranks vision in the conflict order (`CLAUDE.md`), and at a
+> 390px viewport the stage scale is ~0.27. `ScanModal` is portaled to `<body>`,
+> outside `.stage`, so it is _not_ scaled by that factor — and the desktop
+> dialog overflowed the viewport, collapsed the scan's plate and left a ~35px
+> close target. It therefore has its own `@media (max-width: 640px)` block in
+> real pixels. This is the **one** place the "no breakpoints, no reflow" rule
+> above bends: the stage itself is unchanged (still 1440px, width-scaled, no
+> breakpoints, no mobile layout), and no other section gets a phone layout
+> under this exception. The modal's contract is owned by
+> `04_COMPONENT_RULES.MD`, its a11y by `05_ACCESSIBILITY.MD`, and the plate
+> pixel-size consequence by `13_ASSET_SPEC.md`.
+
 ## The five screens
 
 - **Home** — an animated ink-flow backdrop (`dc-import name="Ink Flow

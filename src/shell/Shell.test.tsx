@@ -109,11 +109,11 @@ describe('Shell (continuous scroll)', () => {
     setHash('');
   });
 
-  function setup(reducedMotion = false, hash = '') {
+  function setup(reducedMotion = false, hash = '', pages: Record<PageId, ComponentType> = PAGES) {
     setHash(hash);
     installLayoutStubs({ reducedMotion });
     installObservers();
-    return render(<Shell pages={PAGES} />);
+    return render(<Shell pages={pages} />);
   }
 
   it('stacks all 5 screens in one page under a single <main>, each a named section', () => {
@@ -172,6 +172,136 @@ describe('Shell (continuous scroll)', () => {
     reportVisibility('section-projects', false);
     expect(screen.getByRole('heading', { name: 'Projects headline' })).toBeInTheDocument();
     expect(within(screen.getByRole('main')).getAllByRole('region')).toHaveLength(5);
+  });
+
+  describe('a visibility or midline report does not re-render unaffected pages', () => {
+    // Stand-ins that read NO context (unlike `makePage`), so the only thing that can re-render
+    // one is its parent handing it a new element -- which is exactly what the shell must not do.
+    const renders: Record<PageId, number> = {
+      home: 0,
+      profile: 0,
+      distinction: 0,
+      projects: 0,
+      contact: 0,
+    };
+    function makeCountingPage(id: PageId): ComponentType {
+      function CountingPage() {
+        renders[id] += 1;
+        return (
+          <h2 data-screen-heading tabIndex={-1}>
+            {TITLES[id]}
+          </h2>
+        );
+      }
+      return CountingPage;
+    }
+    const COUNTING_PAGES = {
+      home: makeCountingPage('home'),
+      profile: makeCountingPage('profile'),
+      distinction: makeCountingPage('distinction'),
+      projects: makeCountingPage('projects'),
+      contact: makeCountingPage('contact'),
+    } satisfies Record<PageId, ComponentType>;
+
+    beforeEach(() => {
+      for (const id of Object.keys(renders) as PageId[]) renders[id] = 0;
+    });
+
+    it('mounts each page exactly once (baseline for the counts below)', () => {
+      setup(false, '', COUNTING_PAGES);
+      expect(renders).toEqual({ home: 1, profile: 1, distinction: 1, projects: 1, contact: 1 });
+    });
+
+    it('a section leaving and re-entering the viewport changes only its wrapper attribute', () => {
+      setup(false, '', COUNTING_PAGES);
+      const section = document.getElementById('section-projects') as HTMLElement;
+
+      reportVisibility('section-projects', false);
+      // the shell DID re-render (the attribute moved) ...
+      expect(section).toHaveAttribute('data-offscreen');
+      // ... yet not one page did
+      expect(renders).toEqual({ home: 1, profile: 1, distinction: 1, projects: 1, contact: 1 });
+
+      reportVisibility('section-projects', true);
+      expect(section).not.toHaveAttribute('data-offscreen');
+      expect(renders).toEqual({ home: 1, profile: 1, distinction: 1, projects: 1, contact: 1 });
+    });
+
+    it('the midline moving to another section (pill highlight) re-renders no page either', () => {
+      setup(false, '', COUNTING_PAGES);
+
+      reportIntersecting('section-distinction');
+
+      expect(screen.getByRole('button', { name: 'Distinctions' })).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
+      expect(renders).toEqual({ home: 1, profile: 1, distinction: 1, projects: 1, contact: 1 });
+    });
+
+    it('still re-renders a page when the `pages` prop itself changes', () => {
+      const { rerender } = setup(false, '', COUNTING_PAGES);
+      rerender(<Shell pages={{ ...COUNTING_PAGES }} />);
+      expect(renders).toEqual({ home: 2, profile: 2, distinction: 2, projects: 2, contact: 2 });
+    });
+  });
+
+  describe('the two signals stay distinct (a phone shows 3-4 sections while 1 is active)', () => {
+    const currentPills = () =>
+      within(screen.getByRole('navigation', { name: 'Screens' }))
+        .getAllByRole('button')
+        .filter((button) => button.hasAttribute('aria-current'));
+    const visibleSections = () =>
+      within(screen.getByRole('main'))
+        .getAllByRole('region')
+        .filter((section) => !section.hasAttribute('data-offscreen'))
+        .map((section) => section.id);
+
+    /** Stage scale ~0.27: sections 2-4 overlap the viewport, the midline sits in Profile. */
+    function scrollToPhoneState() {
+      reportVisibility('section-contact', false);
+      reportIntersecting('section-profile');
+    }
+
+    it('several sections lack data-offscreen while exactly one pill is current', () => {
+      setup();
+      scrollToPhoneState();
+
+      expect(visibleSections()).toEqual([
+        'section-home',
+        'section-profile',
+        'section-distinction',
+        'section-projects',
+      ]);
+      expect(currentPills().map((pill) => pill.textContent)).toEqual(['Profile']);
+    });
+
+    it('a midline change flips no visibility flag', () => {
+      setup();
+      scrollToPhoneState();
+      const before = visibleSections();
+
+      reportIntersecting('section-projects');
+
+      expect(currentPills().map((pill) => pill.textContent)).toEqual(['Projects']);
+      expect(visibleSections()).toEqual(before);
+    });
+
+    it('a visibility change moves no pill highlight', () => {
+      setup();
+      scrollToPhoneState();
+
+      reportVisibility('section-contact', true);
+      reportVisibility('section-home', false);
+
+      expect(visibleSections()).toEqual([
+        'section-profile',
+        'section-distinction',
+        'section-projects',
+        'section-contact',
+      ]);
+      expect(currentPills().map((pill) => pill.textContent)).toEqual(['Profile']);
+    });
   });
 
   it('puts the pill nav before <main> in DOM order, so it is the first Tab stop and landmark', () => {

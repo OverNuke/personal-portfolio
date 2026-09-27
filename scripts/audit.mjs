@@ -62,6 +62,26 @@
  *      never a scroll container on y) -- a static guard, defense in depth, not
  *      a measured leak.
  *
+ *   3. Pass 3 (change `mobile-visibility-scanmodal`) is the ONE place this
+ *      script deliberately measures at a phone width (390x844, the one width
+ *      where the stage scale is ~0.27), and it splits by what is scaled:
+ *        - The Distinctions lightbox (`ScanModal`) is portaled to <body>,
+ *          OUTSIDE `.stage`, so it lays out in real CSS px -- the recorded
+ *          exception to the fixed-1440 design (docs/00). Every cell's lightbox
+ *          is opened and checked for horizontal overflow / dialog outside the
+ *          viewport, clipped text and target size. These findings GATE (exit 1),
+ *          and a cell that opens no dialog is one too.
+ *        - The pill nav and the Voronoi cells ARE scaled with the stage, so
+ *          their rects are shrunk by the scale. WCAG 2.5.8 is about rendered CSS
+ *          px, so a sub-24px result is a genuine (known) gap -- but fixing it
+ *          is a redesign, out of scope here (follow-up change
+ *          `mobile-pill-nav`, docs/05). They are REPORTED under their own
+ *          heading and never fail the run (`shouldFailRun`). Pass 1 still
+ *          refuses to run at a non-native scale; pass 3 deliberately does not
+ *          reuse `assertNativeScale`/`assertSectionAtTop` (at ~0.27 the whole
+ *          stack is ~1220px tall, so a section's top can never reach the
+ *          viewport top) and labels its reported sizes as scaled.
+ *
  * Dropped from the pre-reset version: the `keep-out` check
  * (`.profile-ink-field` doesn't exist in this rebuild -- Profile's ink-bloom
  * canvas has an audited-independent contrast fix instead, see docs/02 Fix 1
@@ -76,7 +96,8 @@
  * `audit:collage` npm script stays a bare `node scripts/audit.mjs` -- no
  * `pnpm build`/`pnpm preview` prerequisite, and no base-URL override.
  *
- * Exit codes: 0 = no findings, 1 = findings reported, 2 = tool/infra error
+ * Exit codes: 0 = no gating findings (report-only phone-scale target sizes
+ * are printed but do not count), 1 = gating findings reported, 2 = tool/infra error
  * (so CI/tasks can tell "the gate ran and found problems" apart from
  * "the gate itself is broken").
  */
@@ -87,16 +108,21 @@ import { chromium } from '@playwright/test';
 import { createServer } from 'vite';
 import {
   MIN_TARGET_SIZE,
+  PHONE_VIEWPORT,
   STAGE_HEIGHT,
   STAGE_WIDTH,
   VIEWPORT_HEIGHT,
   VIEWPORT_WIDTHS,
+  checkLightbox,
+  findSmallTargets,
   hasHorizontalOverflow,
   isTextClipped,
+  lightboxMatchesCell,
   meetsMinTargetSize,
   meetsStageViewportOverflowContract,
   parseScale,
   rectsIntersect,
+  shouldFailRun,
   unrotateElementRect,
 } from './audit-checks.mjs';
 
@@ -129,6 +155,7 @@ async function main() {
   let server;
   let browser;
   const findings = [];
+  let lightboxRuns;
 
   try {
     server = await createServer({
@@ -185,13 +212,231 @@ async function main() {
         findings.push(...runOverflowChecks(section.hash, width, overflow));
       }
     }
+
+    // Pass 3: phone width. Report-only pill-nav / Voronoi target sizes, then
+    // every Distinctions lightbox opened and checked as a real-px dialog.
+    const distinctions = sections.find((s) => s.pageId === 'distinction');
+    if (!distinctions) throw new Error('src/routes/registry.ts has no "distinction" section.');
+    await page.setViewportSize(PHONE_VIEWPORT);
+    await loadFresh(page, `${baseUrl}${distinctions.url}`);
+    await waitForStable(page, distinctions);
+    findings.push(...runPhoneTargetReport(await page.evaluate(collectPhoneTargets)));
+    lightboxRuns = await auditLightboxes(page, distinctions, findings);
   } finally {
     await browser?.close();
     await server?.close();
   }
 
-  report(findings);
-  process.exitCode = findings.some((f) => !f.skipped) ? 1 : 0;
+  report(findings, lightboxRuns);
+  process.exitCode = shouldFailRun(findings) ? 1 : 0;
+}
+
+/**
+ * Pass 3, lightbox half. For each interactive Voronoi cell: scroll it into view,
+ * activate it, wait for the dialog (and its scan, if any), measure, close with
+ * Escape. A cell whose activation opens no dialog yields a gating
+ * `lightbox-not-opened` finding (checkLightbox with no dialogRect). Returns one
+ * `{ id, opened }` per cell for the summary line. A dialog that does not close
+ * on Escape throws (infra error, exit 2): every later measurement would be stale.
+ */
+async function auditLightboxes(page, section, findings) {
+  const ids = await page.evaluate(() =>
+    Array.from(document.querySelectorAll('[data-card]')).map((el) => el.dataset.card),
+  );
+  if (ids.length === 0) {
+    throw new Error('[distinctions] no [data-card] cells found -- cannot audit the lightbox.');
+  }
+
+  const runs = [];
+  for (const id of ids) {
+    const cell = page.locator(`#${section.sectionId} [data-card="${id}"]`);
+    let clickError = null;
+    try {
+      // `force`: skips only Playwright's actionability wait, which never settles
+      // here -- the Voronoi cells "breathe" (their box moves every frame), so the
+      // stable-position check times out on some cells. It still scrolls the cell
+      // into view and sends a real pointer click at its centre; if something
+      // covers the cell the click misses and the "no dialog" finding below fires.
+      await cell.click({ force: true, timeout: 5000 });
+      await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
+      // A plate with no intrinsic size yet has no height to measure.
+      await page
+        .waitForFunction(
+          () => {
+            const img = document.querySelector('.distinctions-modal__scan');
+            return !img || (img.complete && img.naturalWidth > 0);
+          },
+          undefined,
+          { timeout: 5000 },
+        )
+        .catch(() => {});
+      await page.evaluate(
+        () =>
+          new Promise((resolve) => {
+            requestAnimationFrame(() => requestAnimationFrame(resolve));
+          }),
+      );
+    } catch (error) {
+      clickError = String(error.message ?? error).split('\n')[0];
+    }
+
+    const snapshot = await page.evaluate(collectLightboxSnapshot);
+    const opened = snapshot.dialogRect !== null;
+    // The forced click can land on a moving neighbour: make sure the dialog measured
+    // is the one for THIS cell, or the findings below would be attributed to it wrongly.
+    if (opened) {
+      const cellLabel = await cell.getAttribute('aria-label');
+      if (!lightboxMatchesCell(cellLabel, snapshot.dialogTitle)) {
+        findings.push({
+          type: 'lightbox-wrong-dialog',
+          message:
+            `[${section.hash} @ ${PHONE_VIEWPORT.width}px, lightbox "${id}"] opened the dialog ` +
+            `"${snapshot.dialogTitle}" but the cell is labelled "${cellLabel}"`,
+        });
+      }
+    }
+    for (const f of checkLightbox(snapshot, PHONE_VIEWPORT.width)) {
+      findings.push({
+        type: f.type,
+        message:
+          `[${section.hash} @ ${PHONE_VIEWPORT.width}px, lightbox "${id}"] ${f.detail}` +
+          (clickError && !opened ? ` (${clickError})` : ''),
+      });
+    }
+    runs.push({ id, opened });
+
+    if (opened) {
+      await page.keyboard.press('Escape');
+      const closed = await page
+        .waitForSelector('[role="dialog"]', { state: 'detached', timeout: 3000 })
+        .then(() => true)
+        .catch(() => false);
+      if (!closed) {
+        throw new Error(
+          `[${section.hash}] lightbox "${id}" did not close on Escape -- refusing to measure the next cell against a stale dialog.`,
+        );
+      }
+    }
+  }
+  return runs;
+}
+
+// Runs inside the browser via page.evaluate (self-contained, like
+// collectSnapshot). The scaled, report-only targets of the phone pass: the
+// fixed pill nav's buttons and the Voronoi cell paths. Rects are AS RENDERED
+// (already multiplied by the ~0.27 stage scale), which is what WCAG 2.5.8 measures.
+function collectPhoneTargets() {
+  const rectOf = (el) => {
+    const r = el.getBoundingClientRect();
+    return { x: r.x, y: r.y, width: r.width, height: r.height, right: r.right };
+  };
+  const pillNav = Array.from(document.querySelectorAll('.pill-nav__button')).map((el) => ({
+    selector: `.pill-nav__button "${(el.textContent ?? '').trim()}"`,
+    rect: rectOf(el),
+  }));
+  const cells = Array.from(document.querySelectorAll('[data-card]')).map((el) => ({
+    selector: `cell [data-card="${el.dataset.card}"]`,
+    rect: rectOf(el),
+  }));
+  return { pillNav, cells };
+}
+
+// Runs inside the browser via page.evaluate. Scope is the portaled dialog (the
+// section walk of collectSnapshot cannot see it: it lives under <body>).
+// `dialogRect` is null when no dialog is mounted. The ~1px sr-only spans
+// ("(opens in new tab)") and the aria-hidden arrow are excluded like everywhere
+// else in this file.
+function collectLightboxSnapshot() {
+  const docEl = document.documentElement;
+  const dialog = document.querySelector('[role="dialog"]');
+  const base = { documentScrollWidth: docEl.scrollWidth, documentClientWidth: docEl.clientWidth };
+  if (!dialog) {
+    return { ...base, dialogRect: null, dialogTitle: null, controls: [], clipCandidates: [] };
+  }
+
+  const rectOf = (el) => {
+    const r = el.getBoundingClientRect();
+    return { x: r.x, y: r.y, width: r.width, height: r.height, right: r.right };
+  };
+  const describe = (el) => {
+    if (el.id) return `#${el.id}`;
+    if (typeof el.className === 'string' && el.className.trim()) {
+      return `${el.tagName.toLowerCase()}.${el.className.trim().split(/\s+/).join('.')}`;
+    }
+    return el.tagName.toLowerCase();
+  };
+  const isAncestorHidden = (el) => {
+    for (let node = el; node; node = node.parentElement) {
+      if (node.hasAttribute?.('inert')) return true;
+      if (node.getAttribute?.('aria-hidden') === 'true') return true;
+    }
+    return false;
+  };
+  const isRendered = (el) => {
+    const style = getComputedStyle(el);
+    if (style.display === 'none' || style.visibility === 'hidden') return false;
+    if (parseFloat(style.opacity) === 0) return false;
+    const r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  };
+  // Same ~1px sr-only rule as isVisuallyHidden in audit-checks.mjs.
+  const isVisuallyHiddenRect = (r) => r.width <= 1 && r.height <= 1;
+
+  const controls = [];
+  for (const el of Array.from(
+    dialog.querySelectorAll('a, button, [role="button"], input, select, textarea'),
+  )) {
+    if (isAncestorHidden(el) || !isRendered(el)) continue;
+    const rect = rectOf(el);
+    if (isVisuallyHiddenRect(rect)) continue;
+    controls.push({ selector: describe(el), rect });
+  }
+
+  const clipCandidates = [];
+  const walker = document.createTreeWalker(dialog, NodeFilter.SHOW_ELEMENT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    const el = node;
+    if (isAncestorHidden(el) || !isRendered(el)) continue;
+    const ownText = Array.from(el.childNodes)
+      .filter((n) => n.nodeType === Node.TEXT_NODE)
+      .map((n) => n.textContent ?? '')
+      .join('')
+      .trim();
+    if (!ownText || isVisuallyHiddenRect(rectOf(el))) continue;
+    const style = getComputedStyle(el);
+    clipCandidates.push({
+      selector: describe(el),
+      clientWidth: el.clientWidth,
+      clientHeight: el.clientHeight,
+      scrollWidth: el.scrollWidth,
+      scrollHeight: el.scrollHeight,
+      overflowX: style.overflowX,
+      overflowY: style.overflowY,
+    });
+  }
+
+  const titleEl = document.getElementById('distinctions-modal-title');
+  return {
+    ...base,
+    dialogRect: rectOf(dialog),
+    dialogTitle: titleEl?.textContent ?? null,
+    controls,
+    clipCandidates,
+  };
+}
+
+// Turns the phone pass's scaled pill-nav / cell rects into REPORT-ONLY target-size
+// findings (never gating -- see shouldFailRun).
+function runPhoneTargetReport({ pillNav, cells }) {
+  const at = (message) => `[@ ${PHONE_VIEWPORT.width}px, scaled with the stage] ${message}`;
+  return [...findSmallTargets(pillNav), ...findSmallTargets(cells)].map((el) => ({
+    type: 'target-size',
+    reportOnly: true,
+    message: at(
+      `${el.selector} is ${Math.round(el.rect.width)}x${Math.round(el.rect.height)}px, ` +
+        `below ${MIN_TARGET_SIZE}x${MIN_TARGET_SIZE}px`,
+    ),
+  }));
 }
 
 /**
@@ -406,7 +651,8 @@ function collectSnapshot(sectionId) {
   // viewport top) plus the fixed pill nav, which overlays it. Off-screen
   // sections are skipped: they cannot overlap the section in view, and
   // including them would repeat the same findings for every hash. No
-  // dialog-scoping is needed (the Distinctions lightbox is never opened here).
+  // dialog-scoping is needed: the Distinctions lightbox is never opened in this
+  // pass (it is audited at 390px by pass 3 -- collectLightboxSnapshot).
   const sectionRoot = document.getElementById(sectionId);
   const pillNav = document.querySelector('.pill-nav');
   if (!sectionRoot) throw new Error(`#${sectionId} not found -- cannot audit this section.`);
@@ -653,13 +899,28 @@ function runOverflowChecks(hash, width, snapshot) {
   return results;
 }
 
-function report(findings) {
-  const real = findings.filter((f) => !f.skipped);
+function report(findings, lightboxRuns) {
+  const real = findings.filter((f) => !f.skipped && !f.reportOnly);
+  const reported = findings.filter((f) => !f.skipped && f.reportOnly);
   const skipped = findings.filter((f) => f.skipped);
 
-  console.log(`\nCollage audit — ${real.length} finding(s), ${skipped.length} check(s) skipped\n`);
+  console.log(
+    `\nCollage audit — ${real.length} finding(s), ${reported.length} reported (non-gating), ` +
+      `${skipped.length} check(s) skipped\n`,
+  );
 
-  for (const type of ['occlusion', 'target-size', 'clipped-text', 'horizontal-scroll']) {
+  const gatingTypes = [
+    'occlusion',
+    'target-size',
+    'clipped-text',
+    'horizontal-scroll',
+    'lightbox-not-opened',
+    'lightbox-wrong-dialog',
+    'lightbox-overflow',
+    'lightbox-clipped-text',
+    'lightbox-target-size',
+  ];
+  for (const type of gatingTypes) {
     const group = real.filter((f) => f.type === type);
     if (group.length === 0) continue;
     console.log(`${type} (${group.length}):`);
@@ -671,7 +932,25 @@ function report(findings) {
   }
 
   if (real.length === 0) {
-    console.log('No occlusion/target-size/clipped-text/horizontal-scroll findings.');
+    console.log('No occlusion/target-size/clipped-text/horizontal-scroll/lightbox findings.');
+  }
+
+  // Always printed, clean or not, so a green run shows the lightbox WAS exercised.
+  const opened = lightboxRuns.filter((r) => r.opened).length;
+  const count = (prefix) => real.filter((f) => f.type === `lightbox-${prefix}`).length;
+  console.log(
+    `\nLightbox @ ${PHONE_VIEWPORT.width}px: ${opened}/${lightboxRuns.length} opened ` +
+      `(${lightboxRuns.map((r) => r.id).join(', ')}) — ` +
+      `${count('not-opened')} not opened, ${count('wrong-dialog')} wrong dialog, ${count('overflow')} overflow, ` +
+      `${count('clipped-text')} clipped text, ${count('target-size')} target-size`,
+  );
+
+  if (reported.length > 0) {
+    console.log(
+      `\nReported, NOT gating — phone-scale targets that shrink with the stage (${reported.length}); ` +
+        `WCAG 2.5.8 gap, fix deferred to follow-up change \`mobile-pill-nav\` (docs/05):`,
+    );
+    for (const f of reported) console.log(`  - ${f.message}`);
   }
   console.log('');
 }

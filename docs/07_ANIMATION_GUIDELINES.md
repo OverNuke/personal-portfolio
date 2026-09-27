@@ -221,6 +221,42 @@ scroll landing).
 - **A new continuous effect follows this rule.** The per-loop contract is
   `src/pages/loopVisibility.test.tsx`; add the new owner to its list.
 
+### Phone case (added 2026-09-26, `mobile-visibility-scanmodal`)
+
+The "mid-scroll two sections are visible" line above is a desktop statement.
+At a 390px viewport the stage scale is ~0.27, the whole stack is ~1220px
+tall against an ~844px viewport, so **four or five sections are visible at
+once** (all their effects run; measured at 390×844 — details in
+`03_UX_ARCHITECTURE.MD`) while exactly one is `activeSection` — the two
+signals are separate on purpose.
+
+- **What shipped:** `Shell` memoises the page _elements_ (`pageElements`, a
+  `useMemo` map keyed by page id, deps `[pages]`) and renders them inside each
+  provider. A visibility flip therefore changes only that section's wrapper
+  (`data-offscreen`); no page component re-renders (`Shell.test.tsx`, with
+  context-free stand-in pages). Pages that use `useSectionNav` (Profile) still
+  re-render on midline changes — accepted.
+- **Dark flash on phones — root cause UNCONFIRMED.** The owner reported
+  sections "going dark" (background colour, content missing) while scrolling
+  on a phone. No code path clears a canvas or hides content while paused, and
+  emulated-phone runs (`e2e/mobile-scroll.spec.ts`, Pixel 7, touch
+  scroll through CDP) do **not** reproduce it: Home stays paper-coloured and
+  the `data-offscreen` toggle counts are recorded as annotations only, so a
+  green run is **inconclusive**, not proof of a fix. The real-device probe
+  (remote DevTools on a phone: CSS pause off; magenta `.stage` /
+  cyan `.stage-viewport`; Paint flashing / Layer borders) was **not run —
+  skipped by user decision, 2026-09-26.** So no fix for the flash is shipped;
+  do not read `pageElements` as one.
+- **The recorded plan, kept for if it recurs.** Fix by evidence, one rung at a
+  time; nothing below is implemented:
+
+  | Observation on a real device                     | Fix (named as in the change's design)                                                                                                                                                                                              |
+  | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | A section's visibility flaps (URL bar, boundary) | **A5** — `hideDelayMs` hysteresis in `useSectionVisibility`: show immediately (fail open), defer hide, cancel on re-show; `0` = today's synchronous behaviour; keep the negative root margin.                                      |
+  | Magenta flash (the section is un-rastered)       | **A6** — "lite" compositing at `(max-width: 720px)` (scale ≤0.5): drop Home's SVG turbulence/displacement layers, Profile's canvas `ctx.filter` blur and the goo filter; keep blends; add fallback background colours per section. |
+  | Flash disappears with the CSS pause turned off   | **A7** — per-effect pause replaces the blanket `animation-play-state: paused` rule in `shell.css`.                                                                                                                                 |
+  | Nothing reproduces                               | Stop; the memoisation alone stands.                                                                                                                                                                                                |
+
 ## `prefers-reduced-motion` governance
 
 This doc states timing; `05_ACCESSIBILITY.MD` states the fallback contract

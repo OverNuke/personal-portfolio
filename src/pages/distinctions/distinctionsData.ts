@@ -27,6 +27,10 @@ import notaScan from '../../assets/plates/certificates/nota.png';
 import exaverScan from '../../assets/plates/certificates/exaver.png';
 import angloScan from '../../assets/plates/certificates/anglo.png';
 import sepToelfScan from '../../assets/plates/certificates/sepToelf.png';
+import powerbiScan from '../../assets/plates/certificates/powerbi.png';
+import aiScan from '../../assets/plates/certificates/ai.png';
+import aiInitScan from '../../assets/plates/certificates/aiinit.png';
+import propadeuticScan from '../../assets/plates/certificates/propadeutic.png';
 
 export interface CertCell {
   id: string;
@@ -44,30 +48,39 @@ export interface CertCell {
 }
 
 /**
- * Certificate-scan mapping -- judgment call (5 real scan files exist for 9
- * cells; the decoded template itself never states a mapping, since its own
- * `<image-slot>` is a bundler-editor placeholder the author drops a file
- * into by hand, not a data-bound `src`). Resolved by name correspondence,
- * verified against `docs/13_ASSET_SPEC.md`'s file list:
+ * Certificate-scan mapping -- judgment call (the decoded template itself
+ * never states a mapping, since its own `<image-slot>` is a bundler-editor
+ * placeholder the author drops a file into by hand, not a data-bound `src`).
+ * Resolved by name correspondence, verified against
+ * `docs/13_ASSET_SPEC.md`'s file list:
  * - `anfeca` / `nota` / `exaver` -- direct 1:1, filenames match the cell id
  *   verbatim.
- * - `english` (English Certificate, issued by "Anglo Mexicano") ->
+ * - `english` -> `anglo.png`. Updated 2026-09-26 (user-decided): the scan is
+ *   not an English certificate, it is a SEV/DGB "Diploma" from Colegio
+ *   Anglo-Mexicano de Coatzacoalcos for the "Capacitacion para el Trabajo:
+ *   Tecnologias de la Informacion y la Comunicacion" (9 Jul 2021). The cell's
+ *   title and lightbox meta now say so ("ICT Training Diploma", "Colegio
+ *   Anglo-Mexicano · Coatzacoalcos · 2021"), which DEPARTS FROM THE MOCKUP's
+ *   "English Certificate" copy on purpose, same reasoning as `toefl` below.
+ *   The id stays `english` (Voronoi seed + geometry tests) and the plate stays
  *   `anglo.png`.
- * - `toefl` (TOEFL Certificate, issued by ETS) -> `sepToelf.png` (SEP is
- *   Mexico's federal education ministry, whose recognition/apostille
- *   often accompanies a TOEFL/ETS certificate for local academic use --
- *   the filename's own "Toelf" segment is the strongest signal here).
- * - `powerbi`, `ai`, `aiinit`, `propadeutic` -- all four are 2025/2026
- *   -dated certs with NO corresponding file anywhere in the asset
- *   manifest (`docs/13_ASSET_SPEC.md`'s Certificates table lists exactly
- *   5 files, and none of the 4 remaining names appear under any other
- *   spelling). Rather than reuse one of the 5 real scans as a stand-in
- *   for a document it doesn't actually depict, these 4 cells open the
- *   lightbox with an honest "scan not yet available" placeholder --
- *   which is what the decoded `<image-slot placeholder="Drop the scan">`
- *   itself natively renders when empty, so this isn't a gap the port
- *   invented, it's the source's own empty state, kept instead of papered
- *   over.
+ * - `toefl` -> `sepToelf.png`. Updated 2026-09-26: the scan is not a TOEFL /
+ *   ETS document, it is the SEP English-specialty diploma from the
+ *   Coatzacoalcos institute (4 Dec 2018). The cell's title and metas now say
+ *   so ("SEP English Diploma", "SEP · 2018"), which DEPARTS FROM THE MOCKUP's
+ *   "TOEFL Certificate" / "ETS · 2018" copy on purpose -- the site must not
+ *   claim a certificate its own scan contradicts. The id stays `toefl` so
+ *   the Voronoi seed and its geometry tests are untouched.
+ * - `powerbi` / `ai` / `propadeutic` -- added 2026-09-26, rasterized from
+ *   `raw/certificates/` PDFs (origins in `docs/13_ASSET_SPEC.md`).
+ * - `aiinit` -- added 2026-09-26 (owner-confirmed): the image-only
+ *   `raw/certificates/Certificado-BIG-School-*.pdf` is the "Certificado de
+ *   Iniciacion al Desarrollo con IA" (mouredev + BIG school, 26/06/2026). Its
+ *   embedded image was fitted onto a black 1440x920 plate.
+ *   Every cell now has a scan; `distinctionsData.test.ts` pins the (now
+ *   empty) scan-less allow-list, and ScanModal's "scan not yet available"
+ *   placeholder (the decoded `<image-slot placeholder="Drop the scan">`
+ *   empty state) stays as the fallback for any future cell without one.
  */
 export const CERTIFICATIONS: CertCell[] = [
   {
@@ -97,17 +110,17 @@ export const CERTIFICATIONS: CertCell[] = [
   {
     id: 'english',
     number: '04',
-    title: 'English Certificate',
+    title: 'ICT Training Diploma',
     labelMeta: 'Anglo Mexicano · 2021',
-    lightboxMeta: 'Anglo Mexicano · 2021',
+    lightboxMeta: 'Colegio Anglo-Mexicano · Coatzacoalcos · 2021',
     certificateImage: angloScan,
   },
   {
     id: 'toefl',
     number: '05',
-    title: 'TOEFL Certificate',
-    labelMeta: 'ETS · 2018',
-    lightboxMeta: 'ETS · 2018',
+    title: 'SEP English Diploma',
+    labelMeta: 'SEP · 2018',
+    lightboxMeta: 'SEP · Coatzacoalcos · 2018',
     certificateImage: sepToelfScan,
   },
   {
@@ -116,6 +129,7 @@ export const CERTIFICATIONS: CertCell[] = [
     title: 'Introduction to Power BI',
     labelMeta: 'CONISOFT · 2025',
     lightboxMeta: 'CONISOFT · 2025',
+    certificateImage: powerbiScan,
   },
   {
     id: 'ai',
@@ -123,6 +137,7 @@ export const CERTIFICATIONS: CertCell[] = [
     title: 'AI Fundamentals',
     labelMeta: 'DataCamp · 2026',
     lightboxMeta: 'DataCamp · 2026',
+    certificateImage: aiScan,
   },
   {
     id: 'aiinit',
@@ -130,6 +145,7 @@ export const CERTIFICATIONS: CertCell[] = [
     title: 'AI Initiation',
     labelMeta: 'MoureDev · 2026',
     lightboxMeta: 'MoureDev · 2026',
+    certificateImage: aiInitScan,
   },
   {
     id: 'propadeutic',
@@ -137,6 +153,7 @@ export const CERTIFICATIONS: CertCell[] = [
     title: 'Propadeutic Certificate',
     labelMeta: 'TecNM · CCPIA · 2026',
     lightboxMeta: 'TecNM · CCPIA · 2026',
+    certificateImage: propadeuticScan,
   },
 ];
 

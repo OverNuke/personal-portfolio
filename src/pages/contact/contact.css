@@ -365,6 +365,7 @@
   height: 96px;
   align-self: flex-start;
   background: #e9e7e0;
+  object-fit: cover;
 }
 
 .contact-dock__footer {

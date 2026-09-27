@@ -51,19 +51,19 @@ describe('PROJECTS mockup copy', () => {
       'p1',
       'Barbershop',
       'Employee and appointment records, built end to end for the web development course — full CRUD, containerised, shipped to production.',
-      'the appointment grid — rebuilt twice before it held',
+      'Focus on backend logic, but involved in all steps of the development lifecycle',
     ],
     [
       'p2',
       'Acopiatech',
       'Mobile app for e-waste donation and collection routing, field-tested on local routes.',
-      'route picker — Maps API doing the heavy lifting',
+      'We actually did it! Got third place in the ANFECA 2025!',
     ],
     [
       'p3',
       'Odoo Custom Module',
       'Document management module built for a local company, folded into their existing ERP.',
-      'document handoff, collapsed into one screen',
+      'Giving maintenance and new features to a private codebase, with no public repository',
     ],
   ])('%s keeps its title, description and annotation', (id, title, description, annotation) => {
     const project = byId(id);

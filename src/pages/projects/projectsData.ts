@@ -109,7 +109,7 @@ export const PROJECTS: ProjectData[] = [
       hoverRadius: '62% 38% 55% 45% / 45% 60% 40% 55%',
     },
     annotation: {
-      text: 'the appointment grid — rebuilt twice before it held',
+      text: 'Focus on backend logic, but involved in all steps of the development lifecycle',
       left: 430,
       top: 300,
       width: 150,
@@ -149,7 +149,7 @@ export const PROJECTS: ProjectData[] = [
       hoverRadius: '55% 45% 62% 38% / 40% 55% 45% 60%',
     },
     annotation: {
-      text: 'route picker — Maps API doing the heavy lifting',
+      text: 'We actually did it! Got third place in the ANFECA 2025!',
       left: 952,
       top: 142,
       width: 170,
@@ -184,7 +184,7 @@ export const PROJECTS: ProjectData[] = [
     tagsWidth: 250,
     privateLabel: { left: 1108, top: 606, width: 250 },
     annotation: {
-      text: 'document handoff, collapsed into one screen',
+      text: 'Giving maintenance and new features to a private codebase, with no public repository',
       left: 820,
       top: 672,
       width: 200,

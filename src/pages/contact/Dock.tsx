@@ -32,10 +32,20 @@ function Dock() {
               </span>
             </div>
 
-            {channel.qrPlaceholder && (
-              // No real QR asset exists in the decoded manifest yet (see
-              // channels.ts) -- an empty placeholder carries no information
-              // the real `href` above doesn't already provide.
+            {channel.qrImage && (
+              // Decorative: the card's own `href` already provides the same
+              // destination (see channels.ts).
+              <img
+                src={channel.qrImage}
+                alt=""
+                aria-hidden="true"
+                className="contact-dock__qr"
+              />
+            )}
+            {channel.qrPlaceholder && !channel.qrImage && (
+              // No real QR asset exists yet (see channels.ts) -- an empty
+              // placeholder carries no information the real `href` above
+              // doesn't already provide.
               <div className="contact-dock__qr" aria-hidden="true" />
             )}
 

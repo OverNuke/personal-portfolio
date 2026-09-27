@@ -20,11 +20,26 @@ describe('channels destinations', () => {
     expect(byId('email').href).toBe('mailto:ksfgarcia24@gmail.com');
   });
 
-  // Mockup placeholders: no phone number or booking slug exists yet, and none
-  // may be invented.
-  it('keeps the WhatsApp and Book-a-call placeholders exactly as the mockup has them', () => {
-    expect(byId('whatsapp').href).toBe('https://wa.me/');
-    expect(byId('book-a-call').href).toBe('https://cal.com/');
+  it('points WhatsApp at the real QR-code chat link', () => {
+    expect(byId('whatsapp').href).toBe('https://wa.me/qr/PKLHNEL4XMKDG1');
+  });
+
+  it('points Book-a-call at the real Cal.com 30-minute event', () => {
+    expect(byId('book-a-call').href).toBe('https://cal.com/d/wSQggcU1aGAVd3nJRwkAgq/30min');
+  });
+});
+
+describe('channels QR image', () => {
+  it('gives WhatsApp a real QR image and drops the empty placeholder', () => {
+    expect(byId('whatsapp').qrImage).toBeTruthy();
+    expect(byId('whatsapp').qrPlaceholder).toBeFalsy();
+  });
+
+  it('leaves every other channel without a QR image or placeholder', () => {
+    for (const id of ['email', 'github', 'linkedin', 'book-a-call']) {
+      expect(byId(id).qrImage).toBeUndefined();
+      expect(byId(id).qrPlaceholder).toBeUndefined();
+    }
   });
 });
 

@@ -1,10 +1,12 @@
 // Real Contact channel content, verified against
 // docs/_decoded/contact-section-v2-standalone/template.html lines 407-516.
-// Email/GitHub/LinkedIn are real, live destinations; the GitHub and LinkedIn
-// hrefs were migrated on 2026-09-26 from the owner's local metadata file
-// (visible handles are unchanged). WhatsApp and Book-a-call remain the
-// mockup's own placeholder hrefs (`wa.me/`, `cal.com/` with no ID) -- do not
-// invent a phone number or booking slug, per this batch's instructions.
+// All five channels are now real, live destinations. Email/GitHub/LinkedIn
+// were migrated on 2026-09-26 from the owner's local metadata file (visible
+// handles are unchanged). WhatsApp's `wa.me/qr/...` link and Book-a-call's
+// Cal.com (free-plan) 30-minute event link were supplied by the owner on
+// 2026-09-27, replacing the mockup's own placeholder hrefs.
+import whatsappQr from '../../assets/contact/Whatsapp_contact.jpeg';
+
 export interface ContactChannel {
   id: string;
   /** Card position label, e.g. "01" -- rendered as "(01)". */
@@ -26,9 +28,13 @@ export interface ContactChannel {
   detailLines?: string[];
   /** WhatsApp only -- the mockup has an `<image-slot>` placeholder here with
    *  no real QR asset in the decoded manifest (docs/13_ASSET_SPEC.md doesn't
-   *  list one). Rendered as an empty, aria-hidden placeholder box until a
-   *  real QR image exists. */
+   *  list one). Rendered as an empty, aria-hidden placeholder box for any
+   *  channel that sets this without a `qrImage`. */
   qrPlaceholder?: boolean;
+  /** WhatsApp only -- a real QR code image, decorative (aria-hidden) since
+   *  the card's own `href` already provides the same destination; scanning
+   *  it is a same-info shortcut for a second device, per docs/13_ASSET_SPEC.md. */
+  qrImage?: string;
   ctaLabel: string;
 }
 
@@ -59,9 +65,9 @@ export const channels: ContactChannel[] = [
     index: '03',
     label: 'WhatsApp',
     headlineSize: 30,
-    href: 'https://wa.me/',
+    href: 'https://wa.me/qr/PKLHNEL4XMKDG1',
     external: true,
-    qrPlaceholder: true,
+    qrImage: whatsappQr,
     ctaLabel: 'scan · direct chat',
   },
   {
@@ -79,7 +85,7 @@ export const channels: ContactChannel[] = [
     index: '05',
     label: 'Book a call',
     headlineSize: 30,
-    href: 'https://cal.com/',
+    href: 'https://cal.com/d/wSQggcU1aGAVd3nJRwkAgq/30min',
     external: true,
     ctaLabel: '30 min · gmt-6',
   },

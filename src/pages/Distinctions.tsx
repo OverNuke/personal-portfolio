@@ -1,4 +1,6 @@
 import { useRef, useState } from 'react';
+import { format, pick } from '../i18n/types';
+import { useLang } from '../shell/LangContext';
 import VoronoiCellField from './distinctions/VoronoiCellField';
 import type { FocusableTrigger } from './distinctions/VoronoiCellField';
 import ScanModal from './distinctions/ScanModal';
@@ -25,6 +27,7 @@ import './distinctions/distinctions.css';
 // the docs/05 contract ("focus returns to the triggering cell on close")
 // by itself.
 function Distinctions() {
+  const { lang, t } = useLang();
   const [openCellId, setOpenCellId] = useState<string | null>(null);
   const triggerRef = useRef<FocusableTrigger | null>(null);
 
@@ -46,10 +49,14 @@ function Distinctions() {
       <VoronoiCellField onOpenCell={handleOpenCell} />
       <ScanModal
         isOpen={openCert != null}
-        title={openCert?.title ?? ''}
-        meta={openCert?.lightboxMeta ?? ''}
+        title={openCert ? pick(openCert.title, lang) : ''}
+        meta={openCert ? pick(openCert.lightboxMeta, lang) : ''}
         imageSrc={openCert?.certificateImage}
-        imageAlt={openCert ? `${openCert.title} certificate scan` : ''}
+        imageAlt={
+          openCert
+            ? format(t.distinctions.scanCertificateAlt, { title: pick(openCert.title, lang) })
+            : ''
+        }
         onClose={handleClose}
       />
     </div>

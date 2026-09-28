@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import type { ComponentType, ReactElement } from 'react';
 import { routes } from '../routes/registry';
 import type { PageId } from '../routes/registry';
+import { useLang } from './LangContext';
 import PillNav from './PillNav';
 import { SectionNavContext, pageIdFromDomId, sectionDomId } from './SectionNavContext';
 import { SectionVisibilityContext } from './SectionVisibilityContext';
@@ -64,6 +65,7 @@ interface ShellProps {
  */
 function Shell({ pages }: ShellProps) {
   const reducedMotion = usePrefersReducedMotion();
+  const { t } = useLang();
   const { viewportRef, stageRef } = useStageScale();
   const { activeId, lockTo } = useActiveSection(SECTION_IDS);
   const sectionVisibility = useSectionVisibility(SECTION_IDS);
@@ -72,7 +74,12 @@ function Shell({ pages }: ShellProps) {
 
   // The ONE navigation path: scroll + pill lock + focus + announce. Explicit
   // activation (`goToSection`, below) and hash-driven navigation (deep link on
-  // load, Back/Forward, a hand-edited hash) both go through it.
+  // load, Back/Forward, a hand-edited hash) both go through it. `t` (and so
+  // this callback's identity) changes when the language toggles, but that
+  // never re-triggers a scroll: `useHashNavigation` reads `navigate` through a
+  // ref, only ever invoking it from its own one-shot mount effect or its
+  // popstate/hashchange listeners, never as a reaction to `navigate` itself
+  // changing (see useHashNavigation.ts).
   const navigateToSection = useCallback(
     (pageId: PageId, mode: HashNavMode): boolean => {
       const domId = sectionDomId(pageId);
@@ -84,11 +91,10 @@ function Shell({ pages }: ShellProps) {
       section.scrollIntoView({ block: 'start', behavior });
       // Scoped to THIS section's heading -- each of the 5 screens carries its own `[data-screen-heading]`.
       section.querySelector<HTMLElement>('[data-screen-heading]')?.focus({ preventScroll: true });
-      const route = routes.find((r) => r.pageId === pageId);
-      setLiveMessage(route ? `${route.navLabel}.` : '');
+      setLiveMessage(`${t.nav.pill[pageId]}.`);
       return true;
     },
-    [lockTo, reducedMotion],
+    [lockTo, reducedMotion, t],
   );
 
   // Explicit activation additionally records the section in the URL hash.
@@ -134,7 +140,7 @@ function Shell({ pages }: ShellProps) {
                   key={route.pageId}
                   id={domId}
                   className="screen-section"
-                  aria-label={route.navLabel}
+                  aria-label={t.nav.pill[route.pageId]}
                   data-offscreen={visible ? undefined : ''}
                 >
                   <SectionVisibilityContext.Provider value={visible}>

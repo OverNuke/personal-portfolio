@@ -12,6 +12,8 @@
 // handwritten annotation aside and the doodle rings/arrows/underlines are
 // hover/focus-reveal enhancement layered on top.
 import type { CSSProperties } from 'react';
+import { pick } from '../../i18n/types';
+import { useLang } from '../../shell/LangContext';
 import type { ProjectData } from './projectsData';
 
 interface FocusHandlers {
@@ -25,6 +27,12 @@ interface ProjectCardProps {
 }
 
 function ProjectCard({ project, bindFocus }: ProjectCardProps) {
+  // Static chrome labels ("Repository ↗", "private repository", "flagship")
+  // come from the dictionary via this component's own `useLang()` call --
+  // same leaf-level pattern as PillNav/ScanModal. Per-item content
+  // (title/description/...) is `Localized<string>` on `project` itself,
+  // resolved below via `pick(field, lang)`.
+  const { lang, t } = useLang();
   const {
     id,
     name,
@@ -80,11 +88,11 @@ function ProjectCard({ project, bindFocus }: ProjectCardProps) {
           data-mk="photo"
           style={{ width: photoSize, height: photoSize }}
         >
-          <img src={photo} alt={photoAlt} />
+          <img src={photo} alt={pick(photoAlt, lang)} />
         </div>
         <div className="projects-card__meta">
           <span className="projects-card__name">{name}</span>
-          <span className="projects-card__metaline">{metaLine}</span>
+          <span className="projects-card__metaline">{pick(metaLine, lang)}</span>
         </div>
       </div>
 
@@ -97,7 +105,7 @@ function ProjectCard({ project, bindFocus }: ProjectCardProps) {
           data-lift={lift}
           style={{ transform: `rotate(${rotation - 1.2}deg)` }}
         >
-          flagship
+          {t.projects.flagshipBadge}
         </div>
       )}
 
@@ -113,7 +121,7 @@ function ProjectCard({ project, bindFocus }: ProjectCardProps) {
         <div className="projects-copy__eyebrow">
           <span>{eyebrowIndex}</span>
           <span className="projects-copy__rule" aria-hidden="true" />
-          <span>{eyebrowLabel}</span>
+          <span>{pick(eyebrowLabel, lang)}</span>
         </div>
         <h3
           className="projects-copy__title"
@@ -121,10 +129,10 @@ function ProjectCard({ project, bindFocus }: ProjectCardProps) {
           data-mk="title"
           style={{ fontSize: titleFontSize }}
         >
-          {title}
+          {pick(title, lang)}
         </h3>
         <p className="projects-copy__description" style={{ fontSize: descriptionFontSize }}>
-          {description}
+          {pick(description, lang)}
         </p>
       </div>
 
@@ -162,7 +170,7 @@ function ProjectCard({ project, bindFocus }: ProjectCardProps) {
           }
           {...bindFocus(id)}
         >
-          Repository ↗
+          {t.projects.repositoryLink}
         </a>
       )}
 
@@ -175,7 +183,7 @@ function ProjectCard({ project, bindFocus }: ProjectCardProps) {
           data-lift={5}
           style={{ left: privateLabel.left, top: privateLabel.top, width: privateLabel.width }}
         >
-          <span>private repository</span>
+          <span>{t.projects.privateRepository}</span>
           <span className="projects-private-label__rule" aria-hidden="true" />
         </div>
       )}
@@ -186,7 +194,7 @@ function ProjectCard({ project, bindFocus }: ProjectCardProps) {
         data-mk="note"
         style={{ left: annotation.left, top: annotation.top, width: annotation.width, opacity: 0 }}
       >
-        {annotation.text}
+        {pick(annotation.text, lang)}
       </div>
     </>
   );

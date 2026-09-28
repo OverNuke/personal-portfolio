@@ -272,6 +272,25 @@ describe('lightboxMatchesCell', () => {
     expect(lightboxMatchesCell('Open scan — ANFECA Diploma', null)).toBe(false);
     expect(lightboxMatchesCell('Open scan — ANFECA Diploma', '')).toBe(false);
   });
+
+  // Phase 6 (bilingual audit): the aria-label's leading boilerplate is
+  // t.distinctions.openScanAriaLabel, which is "Open scan — {title}" in en
+  // but "Ver documento — {title}" in es (src/i18n/es.ts) -- a different
+  // string, not just a different language flag. The stripped prefix must be
+  // derived from the shared em-dash separator, not a hardcoded "Open scan"
+  // literal, or every es-locale lightbox check would report a false
+  // lightbox-wrong-dialog finding.
+  it('matches an es-locale label ("Ver documento — ...") against the same title', () => {
+    expect(lightboxMatchesCell('Ver documento — Diploma SEP de Inglés', 'Diploma SEP de Inglés')).toBe(
+      true,
+    );
+  });
+
+  it('rejects a neighbouring cell dialog under the es-locale label', () => {
+    expect(lightboxMatchesCell('Ver documento — Diploma SEP de Inglés', 'ANFECA Diploma')).toBe(
+      false,
+    );
+  });
 });
 
 describe('shouldFailRun', () => {

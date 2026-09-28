@@ -58,7 +58,7 @@ There is no `tools/halftone.py` — an earlier plan referenced a halftone-preset
 - Before deleting an untracked file (git cannot recover it), ask the user whether it's important. If they say it isn't, delete it directly — there is no `_quarantine/` holding pen any more.
 - `.claude/`, `.atl/`, `.impeccable/` are gitignored agent tool state (as is `docs/_decoded/`, below); don't commit them.
 - `docs/_decoded/` (gitignored) is `scripts/decode-mockup.mjs`'s output — a reading aid for porting the real mockup content, not shipped code. Re-run the script if it's missing or the mockup files change; don't hand-edit its contents.
-
+/resu
 ## What this project is
 
 **KEVIN_PORTFOLIO** — a developer portfolio deliberately built as _not_ a website: a fixed-design-width, continuous-scroll, 5-section single-page app (Home, Profile, Distinctions, Projects, Contact) with screen-specific, hand-built visual effects (canvas ink-bloom, SVG goo-filter chambers, a weighted-Voronoi credential layout, hand-lettered SVG titles, mouse-proximity hover physics) rather than a conventional dashboard grid. See `00_PROJECT_VISION.MD` for the full concept and `10_PROJECT_MANIFESTO.md` for the reasoning behind it.

@@ -353,16 +353,22 @@ export function shouldFailRun(findings) {
 
 /**
  * Whether the dialog that opened is the one for the cell that was activated:
- * the cell's `aria-label` is "Open scan — {title}" (VoronoiCellField.tsx) and
- * the dialog's heading is that same `{title}`. The audit force-clicks Voronoi
- * cells that move every frame, so a click could land on a neighbour; without this
- * check the audit would measure the wrong dialog and still report the run green.
- * Whitespace is normalised; an exact title match (not a suffix) is required;
- * missing input never matches.
+ * the cell's `aria-label` is `t.distinctions.openScanAriaLabel` formatted with
+ * the cert title (VoronoiCellField.tsx) -- "Open scan — {title}" in en, "Ver
+ * documento — {title}" in es (src/i18n/{en,es}.ts) -- and the dialog's heading
+ * is that same `{title}`. The audit force-clicks Voronoi cells that move every
+ * frame, so a click could land on a neighbour; without this check the audit
+ * would measure the wrong dialog and still report the run green. The leading
+ * boilerplate is stripped up to and including the shared em-dash separator
+ * ("—") rather than a hardcoded English "Open scan" literal (Phase 6,
+ * bilingual audit): the two locales' prefixes are different STRINGS, not just
+ * different languages of the same string, so a locale-specific literal would
+ * only ever match one of them. Whitespace is normalised; an exact title match
+ * (not a suffix) is required; missing input never matches.
  */
 export function lightboxMatchesCell(cellLabel, dialogTitle) {
   const squash = (text) => (typeof text === 'string' ? text.replace(/\s+/g, ' ').trim() : '');
   const title = squash(dialogTitle);
   if (!title || !squash(cellLabel)) return false;
-  return squash(cellLabel).replace(/^Open scan\s*[—-]\s*/, '') === title;
+  return squash(cellLabel).replace(/^[^—]*—\s*/, '') === title;
 }

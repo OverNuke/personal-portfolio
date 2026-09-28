@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
+import { en } from '../src/i18n/en';
 import { routes } from '../src/routes/registry';
 import type { PageId } from '../src/routes/registry';
 import {
@@ -43,8 +44,8 @@ for (const viewport of VIEWPORTS) {
         await expectSectionAtTop(page, route.pageId);
         await expect(
           page
-            .getByRole('navigation', { name: 'Screens' })
-            .getByRole('button', { name: route.navLabel, exact: true }),
+            .getByRole('navigation', { name: en.shell.screens })
+            .getByRole('button', { name: en.nav.pill[route.pageId], exact: true }),
         ).toHaveAttribute('aria-current', 'page');
       }
     });
@@ -175,11 +176,11 @@ for (const viewport of VIEWPORTS) {
         if (index > 0) expect(positions.length).toBeGreaterThan(0);
 
         await expectHeadingFocused(page, route.pageId);
-        await expect(liveText(page)).toHaveText(`${route.navLabel}.`);
+        await expect(liveText(page)).toHaveText(`${en.nav.pill[route.pageId]}.`);
         await expect(
           page
-            .getByRole('navigation', { name: 'Screens' })
-            .getByRole('button', { name: route.navLabel, exact: true }),
+            .getByRole('navigation', { name: en.shell.screens })
+            .getByRole('button', { name: en.nav.pill[route.pageId], exact: true }),
         ).toHaveAttribute('aria-current', 'page');
         expect(new URL(page.url()).hash).toBe(hash);
       });

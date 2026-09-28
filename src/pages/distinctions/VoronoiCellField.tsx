@@ -20,6 +20,8 @@
 // `interactive = c.kind === 'rec'` gate exactly.
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent, MouseEvent } from 'react';
+import { format, pick } from '../../i18n/types';
+import { useLang } from '../../shell/LangContext';
 import { usePrefersReducedMotion } from '../../shell/usePrefersReducedMotion';
 import { useSectionVisible } from '../../shell/SectionVisibilityContext';
 import {
@@ -35,7 +37,7 @@ import {
   computeLiveSeeds,
 } from './voronoi';
 import type { CellGeometry } from './voronoi';
-import { CERTIFICATIONS_BY_ID, TITLE_CELL } from './distinctionsData';
+import { CERTIFICATIONS_BY_ID } from './distinctionsData';
 import { computeLabelSizing } from './labelSizing';
 import { buildAllDoodleStrokes } from './doodleFrame';
 import DoodleLayer from './DoodleLayer';
@@ -90,6 +92,7 @@ interface VoronoiCellFieldProps {
 function VoronoiCellField({ onOpenCell }: VoronoiCellFieldProps) {
   const reducedMotion = usePrefersReducedMotion();
   const visible = useSectionVisible();
+  const { lang, t } = useLang();
   // The animation clock's origin: created once and kept across pauses, so a
   // section scrolling back into view resumes at the wall-clock phase instead of
   // snapping back to t=0.
@@ -350,7 +353,11 @@ function VoronoiCellField({ onOpenCell }: VoronoiCellFieldProps) {
               strokeWidth={0.9}
               role={interactive ? 'button' : 'presentation'}
               tabIndex={interactive ? 0 : -1}
-              aria-label={interactive && cert ? `Open scan — ${cert.title}` : undefined}
+              aria-label={
+                interactive && cert
+                  ? format(t.distinctions.openScanAriaLabel, { title: pick(cert.title, lang) })
+                  : undefined
+              }
               aria-hidden={interactive ? undefined : true}
               style={{ cursor: interactive ? 'pointer' : 'default' }}
               onMouseEnter={interactive ? () => handleEnter(seed.id) : undefined}
@@ -373,9 +380,9 @@ function VoronoiCellField({ onOpenCell }: VoronoiCellFieldProps) {
           style={{ width: labelSizing.title?.width }}
         >
           <h2 data-screen-heading tabIndex={-1} className="distinctions-heading">
-            {TITLE_CELL.heading}
+            {t.distinctions.heading}
           </h2>
-          <p className="distinctions-intro">{TITLE_CELL.intro}</p>
+          <p className="distinctions-intro">{t.distinctions.intro}</p>
         </div>
 
         {CERT_CELL_IDS.map((id) => {
@@ -392,9 +399,9 @@ function VoronoiCellField({ onOpenCell }: VoronoiCellFieldProps) {
             >
               <span className="distinctions-label__number">{cert.number}</span>
               <span className="distinctions-label__name" style={{ fontSize: sizing?.fontSize }}>
-                {cert.title}
+                {pick(cert.title, lang)}
               </span>
-              <span className="distinctions-label__meta">{cert.labelMeta}</span>
+              <span className="distinctions-label__meta">{pick(cert.labelMeta, lang)}</span>
             </div>
           );
         })}

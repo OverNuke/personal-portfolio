@@ -22,6 +22,7 @@
 // in the decoded source itself, so this file's array order matches the
 // numbering, and each entry's `id` is what joins it back to its seed/cell
 // geometry in voronoi.ts.
+import type { Localized } from '../../i18n/types';
 import anfecaScan from '../../assets/plates/certificates/anfeca.png';
 import notaScan from '../../assets/plates/certificates/nota.png';
 import exaverScan from '../../assets/plates/certificates/exaver.png';
@@ -32,14 +33,34 @@ import aiScan from '../../assets/plates/certificates/ai.png';
 import aiInitScan from '../../assets/plates/certificates/aiinit.png';
 import propadeuticScan from '../../assets/plates/certificates/propadeutic.png';
 
+/** The 9 real certification ids -- a closed union (Phase 4.2) so a typo in a
+ *  new cert's id, or a stale id at a call site, is a compile error rather
+ *  than a silent `undefined` lookup. See `distinctionsData.typecheck.ts` for
+ *  the compile-time proof (tsconfig excludes `*.test.ts` from `tsc -b`, per
+ *  the Phase 1 config note). `CERTIFICATIONS_BY_ID` itself stays keyed by
+ *  plain `string` -- callers (Distinctions.tsx, VoronoiCellField.tsx) look
+ *  cells up by a dynamically-typed DOM/seed id, not a `CertId` literal. */
+export type CertId =
+  | 'anfeca'
+  | 'nota'
+  | 'exaver'
+  | 'english'
+  | 'toefl'
+  | 'powerbi'
+  | 'ai'
+  | 'aiinit'
+  | 'propadeutic';
+
 export interface CertCell {
-  id: string;
+  id: CertId;
   number: string;
-  title: string;
+  /** Phase 4.2: localized. Proper nouns/institution names that are already
+   *  Spanish or acronym-only stay byte-identical across locales. */
+  title: Localized<string>;
   /** Always-visible JetBrains Mono caption on the colony field itself. */
-  labelMeta: string;
+  labelMeta: Localized<string>;
   /** Shown in the lightbox footer (`openMeta`) -- template.html line 485. */
-  lightboxMeta: string;
+  lightboxMeta: Localized<string>;
   /** `undefined` when no scan has been captured yet for this cert -- see
    *  the mapping note below. ScanModal renders its own "no scan yet"
    *  placeholder state for these, it does not fabricate or reuse a
@@ -82,77 +103,89 @@ export interface CertCell {
  *   placeholder (the decoded `<image-slot placeholder="Drop the scan">`
  *   empty state) stays as the fallback for any future cell without one.
  */
+// Phase 4.2 (decision #522, neutral LatAm Spanish): institution names,
+// place names and acronym-only metas are already Spanish or locale-neutral
+// and stay byte-identical; titles with a generic English word (Introduction,
+// Fundamentals, Certificate) get a real translation. `english`'s and
+// `toefl`'s es titles use the REAL document names from the provenance
+// comment above, not a back-translation of the English paraphrase.
 export const CERTIFICATIONS: CertCell[] = [
   {
     id: 'anfeca',
     number: '01',
-    title: 'ANFECA Academic Recognition',
-    labelMeta: 'ANFECA · 2025 · honors',
-    lightboxMeta: 'ANFECA · 2025',
+    title: { en: 'ANFECA Academic Recognition', es: 'Reconocimiento Académico ANFECA' },
+    labelMeta: { en: 'ANFECA · 2025 · honors', es: 'ANFECA · 2025 · honores' },
+    lightboxMeta: { en: 'ANFECA · 2025', es: 'ANFECA · 2025' },
     certificateImage: anfecaScan,
   },
   {
     id: 'nota',
     number: '02',
-    title: 'Nota Laudatoria',
-    labelMeta: 'Universidad Veracruzana · 2025',
-    lightboxMeta: 'Universidad Veracruzana · 2025',
+    title: { en: 'Nota Laudatoria', es: 'Nota Laudatoria' },
+    labelMeta: { en: 'Universidad Veracruzana · 2025', es: 'Universidad Veracruzana · 2025' },
+    lightboxMeta: { en: 'Universidad Veracruzana · 2025', es: 'Universidad Veracruzana · 2025' },
     certificateImage: notaScan,
   },
   {
     id: 'exaver',
     number: '03',
-    title: 'EXAVER Proficiency',
-    labelMeta: 'Universidad Veracruzana · 2022',
-    lightboxMeta: 'Universidad Veracruzana · 2022',
+    title: { en: 'EXAVER Proficiency', es: 'Suficiencia EXAVER' },
+    labelMeta: { en: 'Universidad Veracruzana · 2022', es: 'Universidad Veracruzana · 2022' },
+    lightboxMeta: { en: 'Universidad Veracruzana · 2022', es: 'Universidad Veracruzana · 2022' },
     certificateImage: exaverScan,
   },
   {
     id: 'english',
     number: '04',
-    title: 'ICT Training Diploma',
-    labelMeta: 'Anglo Mexicano · 2021',
-    lightboxMeta: 'Colegio Anglo-Mexicano · Coatzacoalcos · 2021',
+    title: {
+      en: 'ICT Training Diploma',
+      es: 'Diploma de Capacitación en TIC',
+    },
+    labelMeta: { en: 'Anglo Mexicano · 2021', es: 'Anglo Mexicano · 2021' },
+    lightboxMeta: {
+      en: 'Colegio Anglo-Mexicano · Coatzacoalcos · 2021',
+      es: 'Colegio Anglo-Mexicano · Coatzacoalcos · 2021',
+    },
     certificateImage: angloScan,
   },
   {
     id: 'toefl',
     number: '05',
-    title: 'SEP English Diploma',
-    labelMeta: 'SEP · 2018',
-    lightboxMeta: 'SEP · Coatzacoalcos · 2018',
+    title: { en: 'SEP English Diploma', es: 'Diploma SEP de Inglés' },
+    labelMeta: { en: 'SEP · 2018', es: 'SEP · 2018' },
+    lightboxMeta: { en: 'SEP · Coatzacoalcos · 2018', es: 'SEP · Coatzacoalcos · 2018' },
     certificateImage: sepToelfScan,
   },
   {
     id: 'powerbi',
     number: '06',
-    title: 'Introduction to Power BI',
-    labelMeta: 'CONISOFT · 2025',
-    lightboxMeta: 'CONISOFT · 2025',
+    title: { en: 'Introduction to Power BI', es: 'Introducción a Power BI' },
+    labelMeta: { en: 'CONISOFT · 2025', es: 'CONISOFT · 2025' },
+    lightboxMeta: { en: 'CONISOFT · 2025', es: 'CONISOFT · 2025' },
     certificateImage: powerbiScan,
   },
   {
     id: 'ai',
     number: '07',
-    title: 'AI Fundamentals',
-    labelMeta: 'DataCamp · 2026',
-    lightboxMeta: 'DataCamp · 2026',
+    title: { en: 'AI Fundamentals', es: 'Fundamentos de IA' },
+    labelMeta: { en: 'DataCamp · 2026', es: 'DataCamp · 2026' },
+    lightboxMeta: { en: 'DataCamp · 2026', es: 'DataCamp · 2026' },
     certificateImage: aiScan,
   },
   {
     id: 'aiinit',
     number: '08',
-    title: 'AI Initiation',
-    labelMeta: 'MoureDev · 2026',
-    lightboxMeta: 'MoureDev · 2026',
+    title: { en: 'AI Initiation', es: 'Iniciación al Desarrollo con IA' },
+    labelMeta: { en: 'MoureDev · 2026', es: 'MoureDev · 2026' },
+    lightboxMeta: { en: 'MoureDev · 2026', es: 'MoureDev · 2026' },
     certificateImage: aiInitScan,
   },
   {
     id: 'propadeutic',
     number: '09',
-    title: 'Propadeutic Certificate',
-    labelMeta: 'TecNM · CCPIA · 2026',
-    lightboxMeta: 'TecNM · CCPIA · 2026',
+    title: { en: 'Propadeutic Certificate', es: 'Certificado Propedéutico' },
+    labelMeta: { en: 'TecNM · CCPIA · 2026', es: 'TecNM · CCPIA · 2026' },
+    lightboxMeta: { en: 'TecNM · CCPIA · 2026', es: 'TecNM · CCPIA · 2026' },
     certificateImage: propadeuticScan,
   },
 ];
@@ -160,12 +193,3 @@ export const CERTIFICATIONS: CertCell[] = [
 export const CERTIFICATIONS_BY_ID: Record<string, CertCell> = Object.fromEntries(
   CERTIFICATIONS.map((cert) => [cert.id, cert]),
 );
-
-/** Distinctions' own H2 heading + intro copy (template.html lines 401-405)
- *  -- real content, not decorative, even though it lives inside the same
- *  Voronoi "title" cell shape as everything else on the colony field. */
-export const TITLE_CELL = {
-  heading: 'Distinctions',
-  intro:
-    'Honors, language certification and coursework, packed as one colony. Each cell holds its own scan.',
-};

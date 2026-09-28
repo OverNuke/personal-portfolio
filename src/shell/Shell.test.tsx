@@ -1,8 +1,10 @@
-import { act, render, screen, within } from '@testing-library/react';
+import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ComponentType } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { installLayoutStubs, restoreLayoutStubs } from '../test/layoutStubs';
+import { renderWithLang } from '../test/renderWithLang';
+import type { Lang } from '../i18n/types';
 import type { PageId } from '../routes/registry';
 import { useSectionNav } from './SectionNavContext';
 import { useSectionVisible } from './SectionVisibilityContext';
@@ -109,11 +111,16 @@ describe('Shell (continuous scroll)', () => {
     setHash('');
   });
 
-  function setup(reducedMotion = false, hash = '', pages: Record<PageId, ComponentType> = PAGES) {
+  function setup(
+    reducedMotion = false,
+    hash = '',
+    pages: Record<PageId, ComponentType> = PAGES,
+    lang: Lang = 'en',
+  ) {
     setHash(hash);
     installLayoutStubs({ reducedMotion });
     installObservers();
-    return render(<Shell pages={pages} />);
+    return renderWithLang(<Shell pages={pages} />, { lang });
   }
 
   it('stacks all 5 screens in one page under a single <main>, each a named section', () => {
@@ -309,6 +316,48 @@ describe('Shell (continuous scroll)', () => {
     const nav = screen.getByRole('navigation', { name: 'Screens' });
     const main = screen.getByRole('main');
     expect(nav.compareDocumentPosition(main) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('translates every section aria-label and the pill labels when mounted in the es locale', () => {
+    setup(false, '', PAGES, 'es');
+
+    const regions = within(screen.getByRole('main')).getAllByRole('region');
+    expect(regions.map((r) => r.getAttribute('aria-label'))).toEqual([
+      'Inicio',
+      'Perfil',
+      'Distinciones',
+      'Proyectos',
+      'Contacto',
+    ]);
+    expect(
+      within(screen.getByRole('navigation', { name: 'Pantallas' }))
+        .getAllByRole('button')
+        .map((b) => b.textContent),
+    ).toEqual(['Inicio', 'Perfil', 'Distinciones', 'Proyectos', 'Contacto']);
+  });
+
+  it('announces the translated section name in es too', async () => {
+    const user = userEvent.setup();
+    const { container } = setup(false, '', PAGES, 'es');
+
+    await user.click(screen.getByRole('button', { name: 'Proyectos' }));
+
+    expect(liveRegion(container)).toHaveTextContent('Proyectos.');
+  });
+
+  it('toggling the language mid-session does not re-trigger a scroll or refocus a section heading (the hash hook reads navigate through a ref)', async () => {
+    const user = userEvent.setup();
+    setup(false, '#projects');
+    scrollIntoView.mockClear();
+
+    const esButton = screen.getByRole('button', { name: 'ES' });
+    await user.click(esButton);
+
+    expect(scrollIntoView).not.toHaveBeenCalled();
+    // Native click focus lands on the button itself, not back on a heading --
+    // proof `navigateToSection` (whose identity changes with `t`) was not
+    // re-invoked by the toggle.
+    expect(esButton).toHaveFocus();
   });
 
   it('a pill activation scrolls THAT section to the top, focuses ITS heading and announces it', async () => {

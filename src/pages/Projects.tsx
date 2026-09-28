@@ -1,3 +1,4 @@
+import { useLang } from '../shell/LangContext';
 import { PROJECTS } from './projects/projectsData';
 import ProjectCard from './projects/ProjectCard';
 import StrokeGlyphTitle from './projects/StrokeGlyphTitle';
@@ -25,18 +26,19 @@ const HOT_COLOR = '#c9351d';
 // title, since the visible "PROJECTS" lettering is decorative SVG strokes
 // (docs/04, docs/05) that a screen reader gets nothing from directly.
 function Projects() {
+  const { t } = useLang();
   const { containerRef, valuesRef, handlePointerOver, handlePointerOut, bindFocus } =
     useCardHover(PROJECT_IDS);
 
   return (
     <div data-testid="screen-projects" className="projects-screen">
       <h2 data-screen-heading tabIndex={-1} className="projects-sr-heading">
-        Projects
+        {t.projects.heading}
       </h2>
 
       <div className="projects-eyebrow">
         <span className="projects-eyebrow__rule" aria-hidden="true" />
-        <span>selected work</span>
+        <span>{t.projects.eyebrow}</span>
         <span className="projects-eyebrow__index">03</span>
       </div>
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CHAMBERS, buildZones } from './chambersData';
+import { CHAMBERS, buildZones, chamberAriaLabel, chamberDotLabels } from './chambersData';
 import type { ChamberDot } from './chambersData';
 
 // Skill names are hardcoded on purpose: the owner's local metadata file is
@@ -29,7 +29,11 @@ const ALL_LABELS = [
 const NEW_SKILLS = ['TypeScript', 'HTML', 'CSS', 'Node.js', 'Git', 'VS Code', 'Figma'];
 const REMOVED_SKILLS = ['React', 'Next.js', 'Tailwind CSS'];
 
-const allDotLabels = () => CHAMBERS.flatMap((chamber) => chamber.dots.map((dot) => dot.label));
+// `dot.label` is `Localized<string>` (Phase 4.1) -- most skill dots are
+// proper nouns kept byte-identical in both locales; `.en` is the stable
+// value these membership/geometry checks were always written against.
+const allDotLabels = () => CHAMBERS.flatMap((chamber) => chamber.dots.map((dot) => dot.label.en));
+const allDots = () => CHAMBERS.flatMap((chamber) => chamber.dots);
 
 // Geometry helpers. Rest radius is size / 2; fused radius is 0.57 * size
 // (diameter scaled by 1.14 in Chamber.tsx, then halved).
@@ -96,35 +100,151 @@ describe('chambersData', () => {
       expect(allDotLabels()).not.toContain(skill);
     });
 
-    it('keeps the approved membership and order per chamber', () => {
+    it('keeps the approved membership and order per chamber (fused words are the final KEVIN acrostic set)', () => {
       expect(
-        CHAMBERS.map((chamber) => [chamber.fused, chamber.dots.map((dot) => dot.label)]),
+        CHAMBERS.map((chamber) => [chamber.fused, chamber.dots.map((dot) => dot.label.en)]),
       ).toEqual([
-        ['Software', ['Java', 'JavaScript', 'TypeScript', 'Python']],
-        ['Systems', ['SQL', 'UML', 'Node.js', 'Git']],
-        ['Tools', ['HTML', 'CSS', 'Figma', 'VS Code']],
-        ['Anywhere', ['Spanish', 'English B1+', 'French basics']],
-        ['Dependable', ['Responsible', 'Hardworking', 'Teamwork', 'Dedicated']],
+        ['Key languages', ['Java', 'JavaScript', 'TypeScript', 'Python']],
+        ['Environment', ['SQL', 'UML', 'Node.js', 'Git']],
+        ['Versatile', ['HTML', 'CSS', 'Figma', 'VS Code']],
+        ['International', ['Spanish', 'English B1+', 'French basics']],
+        ['Networked', ['Responsible', 'Hardworking', 'Teamwork', 'Dedicated']],
       ]);
     });
   });
 
-  describe('ariaLabel', () => {
-    it('is derived as "<fused> — <labels joined by comma>" for every chamber', () => {
+  // Spec `profile-acrostic` / decision #522: the 5 fused words are decorative,
+  // aria-hidden, and stay English in both locales -- they are the acrostic
+  // itself, not translatable content.
+  describe('KEVIN acrostic', () => {
+    it("spells KEVIN top-to-bottom from each chamber's first letter", () => {
+      expect(CHAMBERS.map((chamber) => chamber.fused[0]).join('')).toBe('KEVIN');
+    });
+
+    it.each([
+      [0, 'Key languages'],
+      [1, 'Environment'],
+      [2, 'Versatile'],
+      [3, 'International'],
+      [4, 'Networked'],
+    ])('chamber %i fused word is %s', (index, fused) => {
+      expect(CHAMBERS[index].fused).toBe(fused);
+    });
+  });
+
+  // Design: the old static `ariaLabel` field became `chamberAriaLabel(chamber,
+  // lang)`, built from a new translated `name` (what the chamber represents,
+  // e.g. "programming languages") -- decoupled from the now-decorative,
+  // English-only `fused` acrostic word.
+  describe('chamberDotLabels', () => {
+    it('resolves each dot label for the given locale, in dot order', () => {
       for (const chamber of CHAMBERS) {
-        expect(chamber.ariaLabel).toBe(
-          `${chamber.fused} — ${chamber.dots.map((dot) => dot.label).join(', ')}`,
-        );
+        expect(chamberDotLabels(chamber, 'en')).toEqual(chamber.dots.map((dot) => dot.label.en));
+        expect(chamberDotLabels(chamber, 'es')).toEqual(chamber.dots.map((dot) => dot.label.es));
+      }
+    });
+  });
+
+  describe('chamberAriaLabel', () => {
+    it('is derived as "<localized name> — <localized labels joined by comma>"', () => {
+      for (const chamber of CHAMBERS) {
+        for (const lang of ['en', 'es'] as const) {
+          const labels = chamber.dots.map((dot) => dot.label[lang]).join(', ');
+          expect(chamberAriaLabel(chamber, lang)).toBe(`${chamber.name[lang]} — ${labels}`);
+        }
       }
     });
 
-    it('reads as the approved text for the Tools chamber', () => {
-      expect(CHAMBERS[2].ariaLabel).toBe('Tools — HTML, CSS, Figma, VS Code');
+    it('reads as the approved text for the first two chambers', () => {
+      expect(chamberAriaLabel(CHAMBERS[0], 'en')).toBe(
+        'Programming languages — Java, JavaScript, TypeScript, Python',
+      );
+      expect(chamberAriaLabel(CHAMBERS[1], 'en')).toBe('Development tools — SQL, UML, Node.js, Git');
     });
 
-    it('reads as the approved text for the merged Software and Systems chambers', () => {
-      expect(CHAMBERS[0].ariaLabel).toBe('Software — Java, JavaScript, TypeScript, Python');
-      expect(CHAMBERS[1].ariaLabel).toBe('Systems — SQL, UML, Node.js, Git');
+    it('varies with locale while the fused acrostic word does not', () => {
+      for (const chamber of CHAMBERS) {
+        expect(chamberAriaLabel(chamber, 'en')).not.toBe(chamberAriaLabel(chamber, 'es'));
+        // The label text never contains the (English-only, decorative) fused
+        // word -- it describes the chamber's contents instead.
+        expect(chamberAriaLabel(chamber, 'en')).not.toContain(chamber.fused);
+        expect(chamberAriaLabel(chamber, 'es')).not.toContain(chamber.fused);
+      }
+    });
+
+    it('never leaves an empty name in either locale', () => {
+      for (const chamber of CHAMBERS) {
+        expect(chamber.name.en.length).toBeGreaterThan(0);
+        expect(chamber.name.es.length).toBeGreaterThan(0);
+      }
+    });
+  });
+
+  describe('dot ids (stable React keys, independent of the label text)', () => {
+    it('gives every dot a non-empty id', () => {
+      for (const dot of allDots()) {
+        expect(dot.id.length).toBeGreaterThan(0);
+      }
+    });
+
+    it('keeps every id unique across all 19 dots', () => {
+      const ids = allDots().map((dot) => dot.id);
+      expect(new Set(ids).size).toBe(ids.length);
+    });
+
+    it.each([
+      ['Java', 'java'],
+      ['Node.js', 'node-js'],
+      ['English B1+', 'english-b1'],
+      ['VS Code', 'vs-code'],
+    ])('slugifies %s to %s (derived from the English label, independent of es)', (label, id) => {
+      const dot = allDots().find((candidate) => candidate.label.en === label);
+      expect(dot?.id).toBe(id);
+    });
+  });
+
+  // Phase 4.1: proper-noun dots (tech/tool names) stay byte-identical across
+  // locales; the non-proper-noun dots (spoken languages, chamber 5's soft
+  // skills) get real, neutral-LatAm-Spanish translations (decision #522).
+  describe('translated dot labels (Phase 4.1)', () => {
+    const PROPER_NOUNS = [
+      'Java',
+      'JavaScript',
+      'TypeScript',
+      'Python',
+      'SQL',
+      'UML',
+      'Node.js',
+      'Git',
+      'HTML',
+      'CSS',
+      'Figma',
+      'VS Code',
+    ];
+
+    it.each(PROPER_NOUNS)('%s is identical in en and es (proper noun)', (label) => {
+      const dot = allDots().find((candidate) => candidate.label.en === label);
+      expect(dot?.label.es).toBe(label);
+    });
+
+    it.each([
+      ['Spanish', 'Español'],
+      ['English B1+', 'Inglés B1+'],
+      ['French basics', 'Francés básico'],
+      ['Responsible', 'Responsable'],
+      ['Hardworking', 'Trabajador'],
+      ['Teamwork', 'Trabajo en equipo'],
+      ['Dedicated', 'Dedicado'],
+    ])('%s translates to %s in es', (en, es) => {
+      const dot = allDots().find((candidate) => candidate.label.en === en);
+      expect(dot?.label.es).toBe(es);
+    });
+
+    it('every dot has a non-empty label in both locales', () => {
+      for (const dot of allDots()) {
+        expect(dot.label.en.length).toBeGreaterThan(0);
+        expect(dot.label.es.length).toBeGreaterThan(0);
+      }
     });
   });
 
@@ -223,10 +343,10 @@ describe('chambersData', () => {
   describe('mockup tuples stay verbatim', () => {
     const tupleOf = (label: string) => {
       const dot = CHAMBERS.flatMap((chamber) => chamber.dots).find(
-        (candidate) => candidate.label === label,
+        (candidate) => candidate.label.en === label,
       );
       if (!dot) throw new Error(`missing dot ${label}`);
-      return [dot.label, dot.size, dot.baseX, dot.baseY, dot.fusedX, dot.fusedY];
+      return [dot.label.en, dot.size, dot.baseX, dot.baseY, dot.fusedX, dot.fusedY];
     };
     const fusedOf = (label: string) => tupleOf(label).slice(4);
 

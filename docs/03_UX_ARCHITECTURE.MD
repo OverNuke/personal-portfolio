@@ -78,10 +78,16 @@ keeps its designed size and position. `z-index: 9000` is unchanged. It is a
 stateless `<nav aria-label="Screens">` of five real `<button type="button">`s
 (Enter and Space both activate — native links would only take Enter);
 `aria-current="page"` and `data-active` mark the section currently under the
-viewport midline. **Observation (not changed by this task, flagged for a
-decision):** `<PillNav>` is rendered _after_ the `<main>` in DOM order, so
-Tab reaches it only after the focusable content of all five sections; it is
-visually first, but not first in the tab order.
+viewport midline. **Corrected 2026-09-27 (`profile-acrostic-i18n`, Phase 5):**
+the earlier text here said `<PillNav>` was rendered _after_ `<main>`, flagging
+a decision. Verified directly against the shipped `src/shell/Shell.tsx`: the
+pill chrome (now a `<div className="pill-chrome">` wrapping both the
+five-button `<nav>` and the EN/ES toggle group, see "Two label sets" below) is
+the **first** child of `.stage-viewport`, ahead of `<main className="stage">`.
+Because it is `position: fixed` (`z-index: 9000`), DOM order has no visual
+effect either way, but it does mean the pill chrome IS the first Tab stop and
+the first landmark a screen reader meets — the opposite of what this doc used
+to say. No open decision remains; this was a stale doc claim, not a real gap.
 
 ## Home's keyboard arrow-key nav-focus cycling
 
@@ -301,13 +307,13 @@ the shipped scroll shell, item by item:
    reason:** all five sections are mounted at once and are all real,
    reachable page content.
 
-## Two label sets — don't conflate them
+## Two label sets — resolved 2026-09-27 (`profile-acrostic-i18n`)
 
-The decoded script defines **two separate label dictionaries**, and they
-disagree with each other, so the registry needs two label fields, not one:
+The decoded script defines **two separate label dictionaries**, and they used
+to disagree with each other:
 
 ```js
-NAV = [Home, Profile, Distinctions, Projects, Contact]; // pill nav — English only, no ES strings exist
+NAV = [Home, Profile, Distinctions, Projects, Contact]; // pill nav — as decoded, English only, no ES strings exist
 COPY = {
   EN: { about: 'Who me?', distinction: 'Distinction', projects: 'Projects', contact: 'Reach out' },
   ES: { about: '¿Yo?', distinction: 'Distinción', projects: 'Proyectos', contact: 'Contacto' },
@@ -315,15 +321,31 @@ COPY = {
 // Home's own numbered list — localized
 ```
 
-Two things a build agent must not miss: `NAV` says **"Distinctions"**
-(plural) while `COPY.distinction` says **"Distinction"** (singular) — these
-are two different display strings for the same screen, not a typo. And
-`NAV` has **no Spanish strings at all** — the pill nav renders `Home /
-Profile / Distinctions / Projects / Contact` regardless of the EN/ES toggle
-in the decoded mockup. Carrying that forward as-is (English-only pill nav)
-is a legitimate reading of the source; localizing the pill nav too would be
-a deliberate _addition_ beyond the mockup, not a faithful port — pick one
-explicitly rather than leaving it ambiguous.
+The open question this doc left ("pick one explicitly rather than leaving it
+ambiguous") is **resolved: the pill nav is now localized too**, not carried
+forward as English-only. Rationale (design `sdd/profile-acrostic-i18n`): an
+English pill label read in an `es`-locale screen-reader voice is an
+accessibility failure, and this project's non-negotiable conflict order ranks
+Accessibility above Project Vision/mockup fidelity (root `CLAUDE.md`).
+
+Both label sets moved out of the registry entirely and now live in the
+central UI dictionary, keyed by `pageId`:
+
+- **Pill nav** — `t.nav.pill: Record<PageId, string>` (`src/i18n/{en,es}.ts`).
+  `NAV`'s **"Distinctions"** (plural) is preserved as the `distinction` key's
+  value (`t.nav.pill.distinction === 'Distinctions'`) — the plural/singular
+  distinction from `COPY.distinction`'s **"Distinction"** (singular) is
+  likewise preserved as `t.nav.homeList.distinction`. These remain two
+  different display strings for the same screen, not a typo, exactly as
+  originally documented — only their storage location changed.
+- **Home's numbered list** — `t.nav.homeList: Record<Exclude<PageId, 'home'>, string>`,
+  same as before, still excluding Home itself.
+
+`src/routes/registry.ts` is now structural only (`{ hash, pageId }` per
+entry) — it lost `navLabel`, `labelEn` and `labelEs` entirely, not just had
+the two sets merged into one. See `src/shell/PillNav.tsx` (reads
+`t.nav.pill[route.pageId]`) and `src/pages/Home.tsx` (reads
+`t.nav.homeList[route.pageId]`).
 
 ## The five-section table (was: the five-route table)
 
@@ -337,17 +359,20 @@ explicitly rather than leaving it ambiguous.
 > renames `certifications` to `distinction` to match the mockup's own naming
 > (`docs/_decoded/index/template.html`'s `screen: 'distinction'`).
 
-| Hash (`routes[].hash`) | `pageId` / section DOM id             | Screen       | Pill-nav label (`navLabel`, EN only) | Home-list `labelEn`                | Home-list `labelEs` |
-| ---------------------- | ------------------------------------- | ------------ | ------------------------------------ | ---------------------------------- | ------------------- |
-| `#home`                | `home` / `section-home`               | Home         | `Home`                               | _(n/a — Home doesn't list itself)_ | _(n/a)_             |
-| `#profile`             | `profile` / `section-profile`         | Profile      | `Profile`                            | `Who me?`                          | `¿Yo?`              |
-| `#distinctions`        | `distinction` / `section-distinction` | Distinctions | `Distinctions`                       | `Distinction`                      | `Distinción`        |
-| `#projects`            | `projects` / `section-projects`       | Projects     | `Projects`                           | `Projects`                         | `Proyectos`         |
-| `#contact`             | `contact` / `section-contact`         | Contact      | `Contact`                            | `Reach out`                        | `Contacto`          |
+| Hash (`routes[].hash`) | `pageId` / section DOM id             | Screen       | Pill-nav label (`t.nav.pill[pageId]`) | Home-list `t.nav.homeList[pageId]` EN | Home-list ES |
+| ---------------------- | ------------------------------------- | ------------ | -------------------------------------- | --------------------------------------- | ------------------- |
+| `#home`                | `home` / `section-home`               | Home         | `Home`                                  | _(n/a — Home doesn't list itself)_      | _(n/a)_             |
+| `#profile`             | `profile` / `section-profile`         | Profile      | `Profile`                               | `Who me?`                               | `¿Yo?`              |
+| `#distinctions`        | `distinction` / `section-distinction` | Distinctions | `Distinctions`                          | `Distinction`                           | `Distinción`        |
+| `#projects`            | `projects` / `section-projects`       | Projects     | `Projects`                              | `Projects`                              | `Proyectos`         |
+| `#contact`             | `contact` / `section-contact`         | Contact      | `Contact`                               | `Reach out`                             | `Contacto`          |
 
-The registry carries a `navLabel` field alongside `labelEn`/`labelEs` to hold
-both label dictionaries without collapsing them. The `PageId` union
-(`'home' | 'profile' | 'distinction' | 'projects' | 'contact'`) is
+**Corrected 2026-09-27 (`profile-acrostic-i18n`, Phase 5):** this table used
+to cite registry fields `navLabel`/`labelEn`/`labelEs`. Those fields no
+longer exist — see "Two label sets" above. `src/routes/registry.ts` now
+carries only `hash` and `pageId` per entry; both label columns above are read
+live from `src/i18n/{en,es}.ts` at render time, keyed by `pageId`. The
+`PageId` union (`'home' | 'profile' | 'distinction' | 'projects' | 'contact'`) is
 five-member; note the hash is plural (`#distinctions`) while the `PageId` and
 section DOM id are singular (`distinction`, `section-distinction`). The old
 path URLs are unsupported (see "Hash deep links" above).
@@ -360,15 +385,26 @@ shell level, passed down as a prop) hold the EN/ES toggle **above** any
 individual screen, not inside one. This carries forward: `lang` lives in
 shell-level state, not inside `Home.tsx` or any other page component, so
 toggling it on Home and then navigating to Profile doesn't reset it back to
-English. **Updated 2026-09-23:** it lives in `src/App.tsx`
-(`useState<Lang>('en')`), which wraps `<Shell/>` in
-`LangContext.Provider` (`src/shell/LangContext.tsx`); the five pages read it
-with `useLang()` (React context rather than props, because the shell renders
-the pages as opaque components). The pages are never unmounted any more, so
-it survives navigation trivially. Home's own list uses it via `COPY` above,
-and any other screen with bilingual copy reads the same context. (Before this
-change it sat "beside `<Routes>`"; there is no `<Routes>` now, so the
-position is "above `<Shell/>`".)
+English. **Updated 2026-09-23, corrected 2026-09-27
+(`profile-acrostic-i18n`, Phase 5):** it lives in `src/shell/LangContext.tsx`'s
+`LangProvider` component (`useState<Lang>('en')` inside `LangProvider`, not in
+`App.tsx` itself — the earlier text here was imprecise about which file owns
+the `useState`). `src/App.tsx` only mounts `<LangProvider><Shell .../></LangProvider>`;
+it doesn't hold any state of its own. `LangProvider` also owns the
+`<html lang>` sync (`useEffect(() => { document.documentElement.lang = lang },
+[lang])`) — one owner, so `index.html` only needs to be correct for first
+paint (`lang="en"`). The five pages read the locale with `useLang()` (React
+context rather than props, because the shell renders the pages as opaque
+components), which now returns `{ lang, setLang, t }` — `t` is the active
+locale's dictionary (`src/i18n/{en,es}.ts`), not a `toggleLang` function (that
+binary toggle was replaced by `setLang(lang)` in Phase 1 of
+`sdd/profile-acrostic-i18n`, so any page or test still calling `toggleLang`
+is stale). The pages are never unmounted any more, so the locale survives
+navigation trivially. Home's own list and the pill nav's own toggle both call
+the same `setLang` (decision #522 keeps both toggles; see "Two label sets"
+above for where the label dictionaries themselves live). (Before the
+scroll-shell reset this state sat "beside `<Routes>`"; there is no `<Routes>`
+now, so the position is "above `<Shell/>`", inside `LangProvider`.)
 
 ## What this doc is not
 

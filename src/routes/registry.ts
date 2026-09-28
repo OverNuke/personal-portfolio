@@ -4,6 +4,14 @@
 // (matching the mockup's own `screen: 'distinction'` naming) and adds the
 // `home` entry the old registry didn't need (Home was an implicit base
 // layer under the old overlay shell; it's a real peer section now).
+//
+// Structural only (design `sdd/profile-acrostic-i18n`, Phase 2): the pill-nav
+// label, the section `aria-label`/live-announcement text, and Home's own
+// numbered-list label all used to live here as `navLabel`/`labelEn`/`labelEs`.
+// They now live in the central dictionary (`src/i18n/{en,es}.ts`, `t.nav.pill`
+// and `t.nav.homeList`), keyed by `pageId` -- an English label read in an es
+// screen-reader voice was an a11y failure. This registry stays the single
+// source of truth for the section LIST and its order, not for copy.
 export type PageId = 'home' | 'profile' | 'distinction' | 'projects' | 'contact';
 
 export interface RouteEntry {
@@ -15,42 +23,12 @@ export interface RouteEntry {
    */
   hash: string;
   pageId: PageId;
-  /**
-   * Pill-nav label -- English only. The decoded mockup's `NAV` dictionary
-   * has no Spanish strings at all; the pill nav renders these labels
-   * regardless of the EN/ES toggle. Do not conflate with `labelEn`/`labelEs`
-   * below, which is a *different*, bilingual dictionary for Home's own
-   * numbered list (see docs/03's "Two label sets" section).
-   */
-  navLabel: string;
-  /** Home's numbered-list label (English). Home has no self-referential entry. */
-  labelEn?: string;
-  /** Home's numbered-list label (Spanish). Home has no self-referential entry. */
-  labelEs?: string;
 }
 
 export const routes: RouteEntry[] = [
-  { hash: '#home', pageId: 'home', navLabel: 'Home' },
-  { hash: '#profile', pageId: 'profile', navLabel: 'Profile', labelEn: 'Who me?', labelEs: '¿Yo?' },
-  {
-    hash: '#distinctions',
-    pageId: 'distinction',
-    navLabel: 'Distinctions',
-    labelEn: 'Distinction',
-    labelEs: 'Distinción',
-  },
-  {
-    hash: '#projects',
-    pageId: 'projects',
-    navLabel: 'Projects',
-    labelEn: 'Projects',
-    labelEs: 'Proyectos',
-  },
-  {
-    hash: '#contact',
-    pageId: 'contact',
-    navLabel: 'Contact',
-    labelEn: 'Reach out',
-    labelEs: 'Contacto',
-  },
+  { hash: '#home', pageId: 'home' },
+  { hash: '#profile', pageId: 'profile' },
+  { hash: '#distinctions', pageId: 'distinction' },
+  { hash: '#projects', pageId: 'projects' },
+  { hash: '#contact', pageId: 'contact' },
 ];

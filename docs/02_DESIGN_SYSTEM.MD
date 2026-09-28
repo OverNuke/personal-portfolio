@@ -28,7 +28,7 @@
 | Screen           | Background                                                                                                                                                                            | Surface / card                                                             | Accent (default)                                                                                                                                                                         | Ink / text                                                                                                                                                                                                                                                                                                                                                                    | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Home**         | `#f6f4ea` (opaque cream paper, painted by the Ink Flow Background layer — the shell's own `#0e0f0b` never composites under it; **corrected 2026-09-21**, was documented as `#0e0f0b`) | — (no card surfaces)                                                       | `#6f7f45` (options: `#14150f`, `#0c0d0a`, `#3a3f2a`, `#6f7f45`)                                                                                                                          | `#14150f` for all real text/UI elements — the "Kevin." wordmark, nav-list numbers, non-focused nav-list labels, the inactive EN/ES toggle label, and the EN/ES toggle's 2px border — the decoded literal, unmodified (see Corrected Contrast Pairings, Fix 1, now retired). The active EN/ES toggle's own solid dark box paired with `#f6f4ea` text is unaffected either way. | `index/template.html` and `main-page-standalone` agree once you read the _nested_ Ink Flow Background component: both `dc-import` the same real, opaque, cream-paper effect — see `01_ART_DIRECTION.MD`.                                                                                                                                                                                                                                                                                                                           |
-| **Profile**      | `linear-gradient(97deg, #f6f3e9 0%, #f2eee1 22%, #dfdaca 40%, #a9a59a 47%, #33332d 55%, #101010 64%, #0a0a09 100%)` (paper → near-black, left → right)                                | —                                                                          | `#8b9c56` (options: `#8b9c56`, `#6f7f45`, `#f3f1e8`, `#c9d49a`) — note this is a **lighter, more yellow-green olive** than the other screens' accent, used only for the chamber dot fill | `#14150f` (headline), `#25241e` (body copy), `#4d4c44` (eyebrow labels) on the paper side; `#f3f1e8` (chamber labels/status) on the dark side                                                                                                                                                                                                                                 | The `html,body{background:#f4f1e6}` fallback in this file's `<helmet>` is a solid-color fallback behind the real gradient — not itself a rendered color.                                                                                                                                                                                                                                                                                                                                                                           |
+| **Profile**      | `linear-gradient(97deg, #f6f3e9 0%, #f2eee1 22%, #dfdaca 40%, #a9a59a 47%, #33332d 55%, #101010 64%, #0a0a09 100%)` (paper → near-black, left → right)                                | —                                                                          | `#8b9c56` (options: `#8b9c56`, `#6f7f45`, `#f3f1e8`, `#c9d49a`) — note this is a **lighter, more yellow-green olive** than the other screens' accent, used only for the chamber dot fill. Acrostic first-letter accent (`--color-profile-initial`, added 2026-09-27, Fix 4 below): `#c9d49a` — a separate token, not a repoint of this accent. | `#14150f` (headline), `#25241e` (body copy), `#4d4c44` (eyebrow labels) on the paper side; `#f3f1e8` (chamber labels/status) on the dark side                                                                                                                                                                                                                                 | The `html,body{background:#f4f1e6}` fallback in this file's `<helmet>` is a solid-color fallback behind the real gradient — not itself a rendered color.                                                                                                                                                                                                                                                                                                                                                                           |
 | **Distinctions** | `#f6f4ea` (outer wrapper)                                                                                                                                                             | `#f4f1e6` (the `PAPER` JS constant — cell fill, lightbox modal background) | `#586a30` (options: `#586a30`, `#6f7f45`, `#4f5c2f`, `#8a9a55`) — used as the fill for the one "accent"-kind cell                                                                        | `#14150f`                                                                                                                                                                                                                                                                                                                                                                     | **Two distinct near-identical paper tones coexist** (`#f6f4ea` wrapper vs. `#f4f1e6` cell/lightbox) — confirm this is intentional layering (a slightly warmer cell-paper on a slightly cooler page-paper) before unifying them into one token. Doodle ink defaults to `#2b39c7` (blue) **but the app shell overrides it to `#e0452b`** (warm red-orange) via `doodle-color="#e0452b"` in `docs/_decoded/index/template.html` — `#e0452b` is the color that actually ships; `#2b39c7` only appears in the standalone/default state. |
 | **Projects**     | `#f6f4ea` (+ subtle repeating-linear-gradient paper-grain hatch)                                                                                                                      | `#f4f1e6` (polaroid card fill)                                             | `#586a30` (link/doodle color — the app shell import passes `doodle-color="#586a30" hot-color="#c9351d"`, matching this screen's own internal defaults exactly, no override)              | `#14150f`                                                                                                                                                                                                                                                                                                                                                                     | Secondary "hot" annotation color `#c9351d` (options: `#e0452b`, `#c9351d`, `#e07b2b`, `#2b39c7`) is used for the doodle arrows/rings/underlines that point at hovered project details.                                                                                                                                                                                                                                                                                                                                             |
 | **Contact**      | `#0a0a0a`                                                                                                                                                                             | `#f4f1e6` (light cards: Email, WhatsApp, LinkedIn, Book a call)            | `#6f7f45` (options: `#6f7f45`, `#b9c98a`, `#4f5c2f`, `#8a9a55`) — also used as the GitHub card's own background (`background: var(--olive, #6f7f45)`)                                    | `#14150f` (text on light cards), `#f6f4ea` (text on the accent-colored GitHub card), `#f3f2ef` (headline/quote on dark bg), `#9c9b94` (secondary labels)                                                                                                                                                                                                                      | The background photo is shown desaturated/dimmed (`filter:grayscale(1) contrast(1.32) brightness(.52)`, default opacity 30%) under a dot-grid overlay (`radial-gradient` dots, `24px` grid) and two darkening gradients — I could not identify the specific source photo asset from the template alone (that's the parallel asset-extraction phase's job, not this doc's).                                                                                                                                                         |
@@ -156,3 +156,68 @@ Architecture → Developer Experience → Implementation Speed), mockup fidelity
 does not override an AA failure. All three fixes above reuse a value already
 present somewhere in this same design system rather than introducing a new
 color, per this rebuild's stated preference for the smallest correct change.
+
+**Fix 4 (2026-09-27, `sdd/profile-acrostic-i18n`, decision #522) — Profile
+chamber acrostic first-letter accent.** Spec `profile-acrostic` required an
+accent color reading ≥4.5:1 "against every stop of the actual Profile
+background gradient." That literal wording turned out to be mathematically
+impossible for any single static color: the gradient's lightest stop
+(`#f6f3e9`, relative luminance ≈0.896) and darkest stop (`#0a0a09`, ≈0.003)
+require non-overlapping candidate-luminance bands (≤0.16 vs. ≥0.19) to clear
+4.5:1 against both at once. The requirement was corrected (decision #522,
+spec amended the same day) to the only sane reading: **measure at each of
+the 5 chambers' actual rendered position on the gradient, composited with the
+`.profile-bg__glow` radial overlay** (a static `radial-gradient(128% 96% at
+22% 44%, rgba(246,243,233,0.34) 0%, transparent 46%)` sitting between the
+base gradient and the chamber text, which this change's design-stage contrast
+methodology had not accounted for) — not every raw CSS stop in isolation,
+most of which nothing is ever rendered against.
+
+- **Methodology:** Profile's `.profile-screen` is invariantly 1440×900
+  design-px (every child is `position: absolute`, so `min-height: 900px` is
+  never stretched taller, at any viewport width — the stage scales width
+  only). Each chamber's fused word (where its first letter renders) sits at
+  design-px `x=812`, `y=108/270/432/594/756` for chambers 1–5
+  (`.profile-chambers`' `gap:30px` + each chamber's 132px height + the fused
+  word's `top:48px`). Projecting those points onto the 97deg linear-gradient
+  (CSS "magic corners" formula) gives `t≈0.532` (chamber 1) up to `t≈0.584`
+  (chamber 5); interpolating the gradient stops at those `t` values, then
+  alpha-compositing with the glow overlay's color/alpha at that same point,
+  gives the real backdrop each chamber's initial letter sits on. Both the
+  gradient interpolation and the glow composite are quantized to 8-bit after
+  each layer, matching how a browser actually paints one layer atop another.
+  This math is implemented (not just hand-computed) in
+  `src/pages/profile/contrast.ts`, and `src/pages/profile/contrast.test.ts`
+  parses the real `--color-profile-bg` / `--color-profile-initial` /
+  `.profile-bg__glow` values out of the actual stylesheets at test time, so
+  the pinned ratios below can't silently drift from what ships.
+- **Real backdrop colors and measured ratios** (accent candidate
+  `#c9d49a` — already cataloged in this doc's Profile accent-options list
+  above, not a new invention):
+
+  | Chamber | Real backdrop | `#c9d49a` ratio |
+  | --- | --- | --- |
+  | 1 | `#515049` | 5.15:1 |
+  | 2 | `#4f4f49` | 5.25:1 |
+  | 3 | `#4c4b45` | 5.57:1 |
+  | 4 | `#3b3b35` | 7.18:1 |
+  | 5 | `#262622` | 9.67:1 |
+
+  All 5 clear AA's 4.5:1 normal-text floor, worst case (chamber 1) with a
+  comfortable ≈14% margin.
+- **Why not `--color-profile-accent` (`#8b9c56`):** under this same corrected
+  reading, `#8b9c56` measures 2.69 / 2.74 / 2.91 / 3.75 / 5.05:1 across
+  chambers 1–5 — it **fails 4 of the 5 chamber positions**, only clearing AA
+  at chamber 5. This is why the acrostic initial got its own new token,
+  `--color-profile-initial`, rather than reusing or repointing
+  `--color-profile-accent` (which stays exactly as-is for the chamber-dot
+  fill, unaffected by this fix).
+- **Not measured here:** the dynamic ink-bloom exclusion-blend canvas
+  (`.profile-ink-canvas`, `mix-blend-mode: exclusion`) also sits over this
+  backdrop but is excluded from this static calculation — matching this
+  change's design-stage contrast methodology (the canvas's live-rendered
+  contribution is a real-browser-only measurement, deferred to the e2e
+  contrast pin, `sdd/profile-acrostic-i18n` task 6.2).
+- Token: `--color-profile-initial: #c9d49a` (`src/styles/index.css`), applied
+  via `.profile-chamber__initial { color: var(--color-profile-initial); }`
+  (`src/pages/profile/profile.css`).

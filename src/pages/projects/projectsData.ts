@@ -26,6 +26,7 @@
 // - odoo: placeholder "Odoo — module screen" -> access.png (a document
 //   sharing/access-groups dialog inside the ERP's file manager -- the
 //   clearest match for "document management module").
+import type { Localized } from '../../i18n/types';
 import barbershopPhoto from '../../assets/plates/projects/barbershop/user.png';
 import acopiatechPhoto from '../../assets/plates/projects/acopiatech/main.png';
 import odooPhoto from '../../assets/plates/projects/odoo/access.png';
@@ -44,10 +45,13 @@ export interface ProjectRepo {
 
 export interface ProjectData {
   id: ProjectMarkId;
+  /** The project's own brand/slug name (e.g. "barbershop") -- a proper
+   *  noun, deliberately NOT `Localized` (Phase 4.3, design's File Changes
+   *  table). */
   name: string;
-  metaLine: string;
+  metaLine: Localized<string>;
   photo: string;
-  photoAlt: string;
+  photoAlt: Localized<string>;
   rotation: number;
   lift: number;
   cardZIndex: number;
@@ -57,30 +61,35 @@ export interface ProjectData {
   top: number;
   flagship?: boolean;
   eyebrowIndex: string;
-  eyebrowLabel: string;
-  title: string;
+  eyebrowLabel: Localized<string>;
+  title: Localized<string>;
   titleFontSize: number;
-  description: string;
+  description: Localized<string>;
   descriptionFontSize: number;
   copyLeft: number;
   copyTop: number;
   copyWidth: number;
+  /** Tech/tool names -- proper nouns, plain strings identical regardless of
+   *  locale (Phase 4.3: never wrapped in `Localized`, nothing to pick). */
   tags: string[];
   tagsLeft: number;
   tagsTop: number;
   tagsWidth?: number;
   repo?: ProjectRepo;
   privateLabel?: { left: number; top: number; width: number };
-  annotation: { text: string; left: number; top: number; width: number };
+  annotation: { text: Localized<string>; left: number; top: number; width: number };
 }
 
 export const PROJECTS: ProjectData[] = [
   {
     id: 'p1',
     name: 'barbershop',
-    metaLine: 'web-dev final · 2025',
+    metaLine: { en: 'web-dev final · 2025', es: 'proyecto final · 2025' },
     photo: barbershopPhoto,
-    photoAlt: 'Barbershop employee record screen',
+    photoAlt: {
+      en: 'Barbershop employee record screen',
+      es: 'Pantalla de registro de empleados de Barbershop',
+    },
     rotation: -2.2,
     lift: 9,
     cardZIndex: 8,
@@ -90,11 +99,13 @@ export const PROJECTS: ProjectData[] = [
     top: 232,
     flagship: true,
     eyebrowIndex: '01',
-    eyebrowLabel: 'backend',
-    title: 'Barbershop',
+    eyebrowLabel: { en: 'backend', es: 'backend' },
+    title: { en: 'Barbershop', es: 'Barbershop' },
     titleFontSize: 42,
-    description:
-      'Employee and appointment records, built end to end for the web development course — full CRUD, containerised, shipped to production.',
+    description: {
+      en: 'Employee and appointment records, built end to end for the web development course — full CRUD, containerised, shipped to production.',
+      es: 'Registro de empleados y citas, construido de principio a fin para el curso de desarrollo web — CRUD completo, contenerizado y llevado a producción.',
+    },
     descriptionFontSize: 14,
     copyLeft: 76,
     copyTop: 620,
@@ -109,7 +120,10 @@ export const PROJECTS: ProjectData[] = [
       hoverRadius: '62% 38% 55% 45% / 45% 60% 40% 55%',
     },
     annotation: {
-      text: 'Focus on backend logic, but involved in all steps of the development lifecycle',
+      text: {
+        en: 'Focus on backend logic, but involved in all steps of the development lifecycle',
+        es: 'Enfocado en la lógica del backend, pero involucrado en todas las etapas del ciclo de desarrollo',
+      },
       left: 430,
       top: 300,
       width: 150,
@@ -118,9 +132,12 @@ export const PROJECTS: ProjectData[] = [
   {
     id: 'p2',
     name: 'acopiatech',
-    metaLine: 'routing · 2025',
+    metaLine: { en: 'routing · 2025', es: 'rutas · 2025' },
     photo: acopiatechPhoto,
-    photoAlt: 'Acopiatech pickup request screen',
+    photoAlt: {
+      en: 'Acopiatech pickup request screen',
+      es: 'Pantalla de solicitud de recolección de Acopiatech',
+    },
     rotation: 2.4,
     lift: 9,
     cardZIndex: 8,
@@ -129,11 +146,13 @@ export const PROJECTS: ProjectData[] = [
     left: 648,
     top: 120,
     eyebrowIndex: '02',
-    eyebrowLabel: 'mobile',
-    title: 'Acopiatech',
+    eyebrowLabel: { en: 'mobile', es: 'móvil' },
+    title: { en: 'Acopiatech', es: 'Acopiatech' },
     titleFontSize: 30,
-    description:
-      'Mobile app for e-waste donation and collection routing, field-tested on local routes.',
+    description: {
+      en: 'Mobile app for e-waste donation and collection routing, field-tested on local routes.',
+      es: 'Aplicación móvil para donación y recolección de residuos electrónicos, probada en rutas reales.',
+    },
     descriptionFontSize: 13.5,
     copyLeft: 600,
     copyTop: 470,
@@ -149,7 +168,10 @@ export const PROJECTS: ProjectData[] = [
       hoverRadius: '55% 45% 62% 38% / 40% 55% 45% 60%',
     },
     annotation: {
-      text: 'We actually did it! Got third place in the ANFECA 2025!',
+      text: {
+        en: 'We actually did it! Got third place in the ANFECA 2025!',
+        es: '¡Lo logramos! Tercer lugar en ANFECA 2025',
+      },
       left: 952,
       top: 142,
       width: 170,
@@ -158,9 +180,12 @@ export const PROJECTS: ProjectData[] = [
   {
     id: 'p3',
     name: 'odoo module',
-    metaLine: 'private · 2025',
+    metaLine: { en: 'private · 2025', es: 'privado · 2025' },
     photo: odooPhoto,
-    photoAlt: 'Odoo document access-groups screen',
+    photoAlt: {
+      en: 'Odoo document access-groups screen',
+      es: 'Pantalla de grupos de acceso a documentos de Odoo',
+    },
     rotation: -1.6,
     lift: 9,
     cardZIndex: 9,
@@ -169,22 +194,40 @@ export const PROJECTS: ProjectData[] = [
     left: 820,
     top: 372,
     eyebrowIndex: '03',
-    eyebrowLabel: 'module',
-    title: 'Odoo Custom Module',
+    eyebrowLabel: { en: 'module', es: 'módulo' },
+    title: { en: 'Odoo Custom Module', es: 'Módulo Personalizado de Odoo' },
     titleFontSize: 30,
-    description:
-      'Document management module built for a local company, folded into their existing ERP.',
+    description: {
+      en: 'Document management module built for a local company, folded into their existing ERP.',
+      es: 'Módulo de gestión documental construido para una empresa local, integrado a su ERP existente.',
+    },
     descriptionFontSize: 13.5,
     copyLeft: 1108,
     copyTop: 400,
     copyWidth: 250,
     tags: ['Odoo', 'Python', 'PostgreSQL'],
     tagsLeft: 1108,
-    tagsTop: 536,
+    // 565 = 558.125 (es description's real rendered bottom edge at this
+    // column's 250px width, measured live via Playwright -- the es TITLE
+    // "Módulo Personalizado de Odoo" wraps to 2 lines here, not the
+    // description itself, pushing the description 28.8px lower than en's
+    // single-line title) + 6.67 (this card's own EN copy-to-tags gap:
+    // 536 - 529.328, the same "intended" gap the other two cards use,
+    // preserved rather than invented). Batch 6's audit found 3 occlusion
+    // findings, es-only -- all 3 turned out to be THIS card's 3 tag pills
+    // overlapping the description (p1/p2 have 4 tags each and were never
+    // exceeded: es clears them by 8.77px/5.08px respectively, confirmed by
+    // measurement, left untouched). privateLabel.top (606) still clears the
+    // new tags row with ~13px to spare. Change `profile-acrostic-i18n`,
+    // batch 6b.
+    tagsTop: 565,
     tagsWidth: 250,
     privateLabel: { left: 1108, top: 606, width: 250 },
     annotation: {
-      text: 'Giving maintenance and new features to a private codebase, with no public repository',
+      text: {
+        en: 'Giving maintenance and new features to a private codebase, with no public repository',
+        es: 'Dando mantenimiento y nuevas funciones a un código privado, sin repositorio público',
+      },
       left: 820,
       top: 672,
       width: 200,

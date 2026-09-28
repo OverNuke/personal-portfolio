@@ -55,21 +55,33 @@
   animation-play-state: paused !important;
 }
 
-/* Persistent pill nav. Fixed to the VIEWPORT, so it lives outside `.stage`
+/* Persistent pill chrome. Fixed to the VIEWPORT, so it lives outside `.stage`
    (a fixed element inside a transformed ancestor is positioned against that
    ancestor and would scroll away). It keeps the size it had as part of the
    scaled stage by carrying the same uniform scale from its top-left corner;
    `left`/`top` are the same 20px, scaled. Exact values verified against
    docs/_decoded/index/template.html line ~544 and docs/02's Fix 2 corrected
    active-state accent (#8b9c56, not the raw #6f7f45 default -- see
-   02_DESIGN_SYSTEM.MD's Corrected Contrast Pairings). */
-.pill-nav {
+   02_DESIGN_SYSTEM.MD's Corrected Contrast Pairings).
+   `.pill-chrome` wraps two pill surfaces -- the section `<nav>` and the
+   sibling EN/ES toggle group (design `sdd/profile-acrostic-i18n`, Phase 2) --
+   so both scale and reposition together as one fixed overlay. */
+.pill-chrome {
   position: fixed;
   left: calc(20px * var(--stage-scale, 1));
   top: calc(20px * var(--stage-scale, 1));
   transform: scale(var(--stage-scale, 1));
   transform-origin: top left;
   z-index: 9000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* The two pill surfaces share this background/shape; only their content
+   differs (5 section buttons vs. the 2-button language toggle). */
+.pill-nav,
+.pill-lang-toggle {
   display: flex;
   gap: 6px;
   padding: 6px;

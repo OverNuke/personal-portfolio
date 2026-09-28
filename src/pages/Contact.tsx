@@ -1,4 +1,5 @@
 import backgroundPhoto from '../assets/contact/background.jpg';
+import { useLang } from '../shell/LangContext';
 import Dock from './contact/Dock';
 import './contact/contact.css';
 
@@ -10,6 +11,8 @@ import './contact/contact.css';
 // focus-management contract (src/shell/Shell.tsx), carried over from the
 // Phase 7 stub as-is.
 function Contact() {
+  const { t } = useLang();
+
   return (
     <div data-testid="screen-contact" className="contact-screen">
       {/* Background photo + gradients + dot grid -- fully decorative, one
@@ -24,7 +27,7 @@ function Contact() {
       <div className="contact-header">
         <span className="contact-rule" aria-hidden="true" />
         <h2 data-screen-heading tabIndex={-1} className="contact-headline">
-          Reach out
+          {t.contact.headline}
         </h2>
       </div>
 
@@ -32,14 +35,12 @@ function Contact() {
           real content and stays reachable (docs/05). */}
       <div className="contact-status">
         <span className="contact-status__dot" aria-hidden="true" />
-        <span className="contact-status__label">open to work</span>
+        <span className="contact-status__label">{t.contact.status}</span>
       </div>
 
       <Dock />
 
-      <p className="contact-quote">
-        The smallest acts of kindness can change someone’s day.
-      </p>
+      <p className="contact-quote">{t.contact.quote}</p>
 
       <div className="contact-footer-rule" aria-hidden="true">
         <span className="contact-rule" />

@@ -38,6 +38,13 @@
     #0a0a09 100%
   );
   --color-profile-accent: #8b9c56;
+  /* First-letter acrostic accent (spec `profile-acrostic`, decision #522,
+     2026-09-27): a SEPARATE token from --color-profile-accent above, not a
+     repoint -- the accent fails AA at 4 of the 5 chambers' real rendered
+     positions under the corrected contrast reading (see
+     docs/02_DESIGN_SYSTEM.MD's dated entry and src/pages/profile/
+     contrast.test.ts, which pins the measured ratios). */
+  --color-profile-initial: #c9d49a;
 
   /* Shared paper tones (Distinctions/Projects) */
   --color-paper-bg: #f6f4ea;

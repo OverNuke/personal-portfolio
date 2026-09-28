@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { CDPSession, Page } from '@playwright/test';
+import { en } from '../src/i18n/en';
 import { routes } from '../src/routes/registry';
 import type { PageId } from '../src/routes/registry';
 import { sectionId, waitForScrollSettled } from './helpers';
@@ -171,7 +172,8 @@ test('a touch scroll top to bottom and back never leaves a collapsed region or a
             .filter(([, off]) => !off)
             .map(([id]) => id);
           const current = await NAV(page).locator('[aria-current]').allTextContents();
-          const expected = routes.find((r) => sectionId(r.pageId) === state.midline)!.navLabel;
+          const expectedPageId = routes.find((r) => sectionId(r.pageId) === state.midline)!.pageId;
+          const expected = en.nav.pill[expectedPageId];
           const problems: string[] = [];
           if (notOffscreen.length < 1) problems.push('every section is flagged off-screen');
           else if (!notOffscreen.includes(state.midline))

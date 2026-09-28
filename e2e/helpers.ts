@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { routes } from '../src/routes/registry';
+import { en } from '../src/i18n/en';
 import type { PageId } from '../src/routes/registry';
 
 /**
@@ -80,12 +80,17 @@ export async function expectSectionAtTop(page: Page, pageId: PageId): Promise<vo
   expect(Math.abs(await sectionTop(page, pageId))).toBeLessThanOrEqual(2);
 }
 
-/** Click a pill-nav button by its registry label. */
+/**
+ * Click a pill-nav button by its dictionary label. The pill label is now
+ * translated (`src/i18n`, design `sdd/profile-acrostic-i18n`) -- these specs
+ * exercise the default EN locale only (there is no lang persistence to carry
+ * across page loads), so `en.nav.pill` is the right lookup here, not the
+ * (now label-less) registry.
+ */
 export async function clickPill(page: Page, pageId: PageId): Promise<void> {
-  const route = routes.find((r) => r.pageId === pageId)!;
   await page
-    .getByRole('navigation', { name: 'Screens' })
-    .getByRole('button', { name: route.navLabel, exact: true })
+    .getByRole('navigation', { name: en.shell.screens })
+    .getByRole('button', { name: en.nav.pill[pageId], exact: true })
     .click();
 }
 

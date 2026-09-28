@@ -1,11 +1,17 @@
 import { Fragment } from 'react';
+import { pick } from '../../i18n/types';
+import { useLang } from '../../shell/LangContext';
 import { channels } from './channels';
 import { useMagneticDock } from './useMagneticDock';
 
 // Render-only per docs/04_COMPONENT_RULES.MD's bucket-2 contract -- all
 // effect logic lives in useMagneticDock, this component only maps channel
-// data to real elements and wires up the refs the hook needs.
+// data to real elements and wires up the refs the hook needs. Phase 4.4:
+// `label`/`ctaLabel`/`detailLines` are `Localized`, resolved here via
+// `pick(field, lang)` -- Dock itself has no other dictionary-owned chrome
+// strings of its own.
 function Dock() {
+  const { lang } = useLang();
   const { containerRef, cardRefs } = useMagneticDock(channels.length);
 
   return (
@@ -25,7 +31,7 @@ function Dock() {
 
             <div className="contact-dock__header">
               <span className="contact-dock__label" style={{ fontSize: channel.headlineSize }}>
-                {channel.label}
+                {pick(channel.label, lang)}
               </span>
               <span className="contact-dock__index" aria-hidden="true">
                 ({channel.index})
@@ -52,7 +58,7 @@ function Dock() {
             <div className="contact-dock__footer">
               {channel.detailLines && (
                 <span className="contact-dock__detail">
-                  {channel.detailLines.map((line, lineIndex) => (
+                  {pick(channel.detailLines, lang).map((line, lineIndex) => (
                     <Fragment key={line}>
                       {lineIndex > 0 && <br />}
                       {line}
@@ -62,7 +68,7 @@ function Dock() {
               )}
               <span className="contact-dock__divider" aria-hidden="true" />
               <div className="contact-dock__cta">
-                <span className="contact-dock__cta-label">{channel.ctaLabel}</span>
+                <span className="contact-dock__cta-label">{pick(channel.ctaLabel, lang)}</span>
                 <span
                   className="contact-dock__badge"
                   aria-hidden="true"

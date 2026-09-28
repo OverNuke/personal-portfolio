@@ -212,6 +212,18 @@ browser rather than a fourth bucket:
 - **Contract, as implemented by `Chamber.tsx`:**
   - Props: `chamber` (data: index, dot labels, fused word), `state`
     (`ChamberState`), `onEnter`, `onLeave`, `onToggleBonded`.
+  - **Added 2026-09-27 (`profile-acrostic-i18n`, Phase 4.1) — three
+    caller-computed props, same pattern each time:** `ariaLabel: string`
+    (`chamberAriaLabel(chamber, lang)`), `dotLabels: Record<string, string>`
+    (`chamberDotLabels(chamber, lang)`), and `statusLabel: string`
+    (`t.profile.chamberStatus[state]`). All three are computed by the caller
+    (`Profile.tsx`) from the active `lang`/`t`, then passed down as plain
+    props — `Chamber` itself never calls `useLang()` and stays lang-agnostic,
+    consistent with this doc's page-vs-leaf-component split (pages own
+    `useLang()`, most leaf components stay render-only). This is the same
+    reason `chamber.ariaLabel` couldn't be a static field on the chamber data
+    object once ariaLabel needed to vary by locale — a lang-dependent string
+    can't be precomputed at import time.
   - Markup: `role="button"`, `tabIndex={0}`, `aria-pressed={state === 'bonded'}`.
   - Interaction: `onPointerEnter`/`onFocus` → `onEnter`; `onPointerLeave`/`onBlur`
     → `onLeave`; `onClick` → `onToggleBonded`; `onKeyDown` handles `Enter` and
@@ -224,11 +236,21 @@ browser rather than a fourth bucket:
     (`status: locked ? 'bonded' : on ? 'binding' : 'separate'`), so this was
     never meant to be a hover-only decorative flourish.
 - **Data shape (`src/pages/profile/chambersData.ts`):** **Updated
-  2026-09-26** — five chambers (01 Software, 02 Systems, 03 Tools, 04
-  Anywhere, 05 Dependable), each with at most four dots (19 dot labels in
+  2026-09-26** — five chambers, each with at most four dots (19 dot labels in
   total). `Chamber.tsx`'s contract is unchanged; only the data grew. Zone
   geometry comes from the exported `buildZones` and the named constants
   `ZONE_LEFT`, `CHAMBER_WIDTH`, `ZONE_SPAN` rather than inline magic numbers.
+  **Corrected 2026-09-27 (`profile-acrostic-i18n`, Phase 3/5):** the fused
+  words listed here as "01 Software, 02 Systems, 03 Tools, 04 Anywhere, 05
+  Dependable" are stale — the `profile-acrostic` spec renamed all five so
+  their first letters spell "KEVIN" top to bottom: **01 Key languages, 02
+  Environment, 03 Versatile, 04 International, 05 Networked** (each chamber's
+  `fused` field; `name: Localized<string>` carries the accessible description
+  instead — e.g. chamber 01's `name` is "Programming languages" / "Lenguajes
+  de programación" — see the prop-contract note above (this doc) and
+  `chambersData.ts`'s own provenance comment for the full per-chamber
+  content and dot-label details). The dot content and 19-dot-total count are
+  unaffected by the rename.
 - **The SVG goo filter is shared, not per-chamber.** One `<filter id="profileGoo">`
   (`feGaussianBlur` + `feColorMatrix`) is defined once at the Profile page
   level (matching the decoded template's single `<svg>` `<defs>` block); each

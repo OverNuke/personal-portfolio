@@ -1,10 +1,15 @@
-import { act, render, within } from '@testing-library/react';
+import { act, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { es } from '../../i18n/es';
+import { format, pick } from '../../i18n/types';
 import { installLayoutStubs, restoreLayoutStubs } from '../../test/layoutStubs';
 import type { LayoutStubs } from '../../test/layoutStubs';
+import { renderWithLang } from '../../test/renderWithLang';
+import { CERTIFICATIONS, CERTIFICATIONS_BY_ID } from './distinctionsData';
 import VoronoiCellField from './VoronoiCellField';
 import { DOODLE_PATH_IDS } from './doodleStrokes';
 import { MOLECULAR_PATH_IDS, buildMolecularStrokes } from './molecularDoodles';
+import { CERT_CELL_IDS } from './voronoi';
 
 // Component-level proof of verify-report W2 / spec "VoronoiCellField's SVG
 // MUST NOT stretch non-uniformly once height is dynamic": BOTH the cells svg
@@ -20,8 +25,8 @@ afterEach(() => {
   restoreLayoutStubs();
 });
 
-function renderField() {
-  const { container } = render(<VoronoiCellField onOpenCell={() => {}} />);
+function renderField(lang: 'en' | 'es' = 'en') {
+  const { container } = renderWithLang(<VoronoiCellField onOpenCell={() => {}} />, { lang });
   const cellsSvg = container.querySelector('svg.distinctions-cells-svg') as SVGSVGElement;
   const doodleSvg = container.querySelector('svg[aria-hidden="true"]') as SVGSVGElement;
   return { container, cellsSvg, doodleSvg };
@@ -133,5 +138,43 @@ describe('VoronoiCellField molecular doodle wiring', () => {
       expect(first[id]?.startsWith('M')).toBe(true);
       expect(nodes[id].getAttribute('d')).not.toBe(first[id]);
     });
+  });
+});
+
+// Phase 4.2: localized title/intro, cert title/labelMeta, and the per-cell
+// "Open scan" aria-label. Without these, switching `pick(cert.title, lang)`
+// back to `.en` (or reverting the heading) would leave every other test in
+// this file green -- these are the only assertions with teeth on the es
+// output specifically.
+describe('VoronoiCellField localized content (Phase 4.2, es)', () => {
+  it('renders the es heading and intro', () => {
+    renderField('es');
+    expect(screen.getByRole('heading', { name: es.distinctions.heading })).toBeInTheDocument();
+    expect(screen.getByText(es.distinctions.intro)).toBeInTheDocument();
+  });
+
+  it('gives every cert cell an es "Open scan" aria-label with no leftover {title} token', () => {
+    renderField('es');
+    for (const id of CERT_CELL_IDS) {
+      const cert = CERTIFICATIONS_BY_ID[id];
+      const expected = format(es.distinctions.openScanAriaLabel, { title: pick(cert.title, 'es') });
+      expect(screen.getByRole('button', { name: expected })).toBeInTheDocument();
+      expect(expected).not.toContain('{title}');
+    }
+  });
+
+  it('shows each cert label in es (title + labelMeta), not the en fallback', () => {
+    const { container } = renderField('es');
+    for (const cert of CERTIFICATIONS) {
+      const label = Array.from(container.querySelectorAll('.distinctions-label--cert')).find(
+        (el) => el.querySelector('.distinctions-label__number')?.textContent === cert.number,
+      );
+      expect(label, cert.id).toBeTruthy();
+      expect(within(label as HTMLElement).getByText(cert.title.es)).toBeInTheDocument();
+      expect(within(label as HTMLElement).getByText(cert.labelMeta.es)).toBeInTheDocument();
+      if (cert.title.es !== cert.title.en) {
+        expect(within(label as HTMLElement).queryByText(cert.title.en)).toBeNull();
+      }
+    }
   });
 });

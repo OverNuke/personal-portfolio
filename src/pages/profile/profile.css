@@ -268,11 +268,17 @@
   color: #f3f1e8;
 }
 
+/* No max-width (dropped 2026-09-27, sdd/profile-acrostic-i18n Phase 3): the
+   KEVIN acrostic's "Key languages" and "International" are ~186px wide at
+   34px Instrument Serif, wider than the old 160px cap -- a max-width would
+   wrap or clip them. `white-space: nowrap` keeps every fused word on one
+   line instead; it still clears the fused-dot cluster (x≈290, see
+   chambersData.ts's fused-geometry tests). */
 .profile-chamber__fused {
   position: absolute;
   left: 0;
   top: 48px;
-  max-width: 160px;
+  white-space: nowrap;
   font-family: 'Instrument Serif', serif;
   font-style: italic;
   font-size: 34px;
@@ -282,6 +288,19 @@
   transition:
     opacity 0.5s ease 0.2s,
     transform 0.6s var(--ease-house-overshoot) 0.16s;
+}
+
+/* `.profile-chamber__initial` (spec profile-acrostic, Chamber.tsx): first
+   letter of each fused word, wrapped for the KEVIN acrostic. Colored with
+   `--color-profile-initial` (#c9d49a, decision #522, 2026-09-27) -- measured
+   >=4.5:1 at all 5 chambers' real rendered positions on the gradient,
+   composited with `.profile-bg__glow` (the corrected contrast reading; see
+   docs/02_DESIGN_SYSTEM.MD's dated entry and contrast.test.ts, which pins
+   the exact ratios as a regression guard). A separate token from
+   `--color-profile-accent` (the chamber-dot fill), not a repoint -- the
+   accent fails this reading at 4 of the 5 chambers. */
+.profile-chamber__initial {
+  color: var(--color-profile-initial);
 }
 
 .profile-chamber__status {

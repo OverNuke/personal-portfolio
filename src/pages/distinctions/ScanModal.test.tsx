@@ -1,6 +1,7 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import type { ComponentProps } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { renderWithLang } from '../../test/renderWithLang';
 import ScanModal from './ScanModal';
 
 // The lightbox is `position: fixed` (distinctions.css). Inside the scrolling
@@ -22,7 +23,7 @@ describe('ScanModal placement', () => {
   });
 
   it('renders the open dialog on <body>, outside the (transformed) tree that hosts it', () => {
-    const { container } = render(
+    const { container } = renderWithLang(
       <div data-testid="transformed-host">
         <ScanModal
           isOpen
@@ -40,7 +41,7 @@ describe('ScanModal placement', () => {
   });
 
   it('renders nothing (anywhere) while closed', () => {
-    render(
+    renderWithLang(
       <ScanModal
         isOpen={false}
         title="AWS Cloud Practitioner"
@@ -69,9 +70,12 @@ describe('ScanModal dialog contract', () => {
     vi.unstubAllGlobals();
   });
 
-  function setup(props: Partial<ComponentProps<typeof ScanModal>> = {}) {
+  function setup(
+    props: Partial<ComponentProps<typeof ScanModal>> = {},
+    lang: 'en' | 'es' = 'en',
+  ) {
     const onClose = vi.fn();
-    render(
+    renderWithLang(
       <ScanModal
         isOpen
         title="AWS Cloud Practitioner"
@@ -81,6 +85,7 @@ describe('ScanModal dialog contract', () => {
         onClose={onClose}
         {...props}
       />,
+      { lang },
     );
     return { onClose, dialog: screen.getByRole('dialog', { name: 'AWS Cloud Practitioner' }) };
   }
@@ -169,6 +174,27 @@ describe('ScanModal dialog contract', () => {
       // Shift+Tab from the first (link) wraps to the last (close).
       expect(fireEvent.keyDown(window, { key: 'Tab', shiftKey: true })).toBe(false);
       expect(closeButton()).toHaveFocus();
+    });
+  });
+
+  // Phase 4.2: ScanModal's own chrome strings (everything except the
+  // caller-supplied title/meta/imageAlt, already localized by
+  // Distinctions.tsx) come from the dictionary via its own useLang() call --
+  // same leaf-level pattern PillNav uses.
+  describe('localized chrome (es)', () => {
+    it('translates the close button, footer label, and placeholder text', () => {
+      setup({ imageSrc: undefined }, 'es');
+      expect(screen.getByRole('button', { name: 'Cerrar visor de documentos' })).toHaveTextContent(
+        'cerrar · esc',
+      );
+      expect(screen.getByText('visor de documentos')).toBeInTheDocument();
+      expect(screen.getByText('Documento aún no disponible')).toBeInTheDocument();
+    });
+
+    it('translates the "Open full size" link and its sr-only new-tab text', () => {
+      setup({}, 'es');
+      const link = screen.getByRole('link', { name: /Ver tamaño completo/ });
+      expect(link.querySelector('.sr-only')).toHaveTextContent('(se abre en una pestaña nueva)');
     });
   });
 });

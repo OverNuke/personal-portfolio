@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
+import { pick } from '../i18n/types';
+import { useLang } from '../shell/LangContext';
 import { useSectionNav } from '../shell/SectionNavContext';
 import { sectionHash } from '../shell/sectionHash';
 import InkBloomCanvas from './profile/InkBloomCanvas';
 import Chamber from './profile/Chamber';
 import type { ChamberState } from './profile/Chamber';
-import { CHAMBERS } from './profile/chambersData';
+import { CHAMBERS, chamberAriaLabel } from './profile/chambersData';
 import './profile/profile.css';
 
 // Real Profile screen (Phase 8). Layout, copy, and effect math verified
@@ -22,6 +24,7 @@ import './profile/profile.css';
 // instead of one class field.
 function Profile() {
   const { goToSection } = useSectionNav();
+  const { lang, t } = useLang();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [bonded, setBonded] = useState<Record<number, boolean>>({});
 
@@ -50,21 +53,19 @@ function Profile() {
         </div>
 
         <h2 data-screen-heading tabIndex={-1} className="profile-headline">
-          Junior
-          <br />
-          software
-          <br />
-          engineer
+          {t.profile.headline.map((line, index) => (
+            <Fragment key={index}>
+              {line}
+              {index < t.profile.headline.length - 1 && <br />}
+            </Fragment>
+          ))}
         </h2>
 
-        <p className="profile-bio">
-          Just graduated from Universidad Veracruzana. Small projects so far — and the appetite for
-          one that makes a change.
-        </p>
+        <p className="profile-bio">{t.profile.bio}</p>
 
         <div className="profile-footer">
           <span className="profile-footer__rule" aria-hidden="true" />
-          <span className="profile-footer__note">Always learning · open to travel</span>
+          <span className="profile-footer__note">{t.profile.footerNote}</span>
           {/* Decoded source is a plain `<a href="#">` placeholder (a
               standalone mockup has nowhere real to link to) -- in this
               scrolling app "Get in touch" has a real destination, so this is
@@ -79,7 +80,7 @@ function Profile() {
             }}
             className="profile-footer__cta"
           >
-            Get in touch →
+            {t.profile.cta}
           </a>
         </div>
       </div>
@@ -88,7 +89,7 @@ function Profile() {
           label text is real content and stays reachable (docs/05). */}
       <div className="profile-status">
         <span className="profile-status__dot" aria-hidden="true" />
-        <span>Looking for an opportunity</span>
+        <span>{t.profile.status}</span>
       </div>
 
       {/* Shared SVG goo filter (docs/04: "defined once at the Profile page
@@ -115,6 +116,11 @@ function Profile() {
           <Chamber
             key={chamber.index}
             chamber={chamber}
+            ariaLabel={chamberAriaLabel(chamber, lang)}
+            dotLabels={Object.fromEntries(
+              chamber.dots.map((dot) => [dot.id, pick(dot.label, lang)]),
+            )}
+            statusLabel={t.profile.chamberStatus[chamberState(index)]}
             state={chamberState(index)}
             onEnter={() => setHoveredIndex(index)}
             onLeave={() => setHoveredIndex((current) => (current === index ? null : current))}

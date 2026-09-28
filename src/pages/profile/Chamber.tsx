@@ -8,6 +8,21 @@ export type ChamberState = 'separate' | 'binding' | 'bonded';
 
 interface ChamberProps {
   chamber: ChamberData;
+  /** The chamber's accessible name, e.g. `"Programming languages — Java,
+   *  JavaScript, TypeScript, Python"`. Computed by the caller via
+   *  `chamberAriaLabel(chamber, lang)` (chambersData.ts) so this component
+   *  itself stays lang-agnostic -- it never calls `useLang()`. */
+  ariaLabel: string;
+  /** Each dot's localized label, keyed by `dot.id` (Phase 4.1). Computed by
+   *  the caller via `chamberDotLabels`/`pick` -- Chamber itself stays
+   *  `useLang()`-free, same reasoning as `ariaLabel` above. */
+  dotLabels: Record<string, string>;
+  /** The chamber's localized `separate`/`binding`/`bonded` status word
+   *  (`t.profile.chamberStatus[state]`), rendered as the small aria-hidden
+   *  corner label -- visible chrome text, so it needs translating too
+   *  (Phase 4.1), even though it's redundant with `aria-pressed` for
+   *  assistive tech. */
+  statusLabel: string;
   state: ChamberState;
   onEnter: () => void;
   onLeave: () => void;
@@ -30,13 +45,29 @@ interface ChamberProps {
  * decoded template's own `aria-pressed="{{ cell.pressed }}"` uses (`pressed`
  * is driven by `locked`, never by hover alone).
  *
- * The always-derivable text equivalent for the fusion effect lives in
- * `chamber.ariaLabel` (`"<fused> — <dot>, <dot>, ..."`) on the button root,
+ * The always-derivable text equivalent for the fusion effect lives in the
+ * `ariaLabel` prop (`"<fused> — <dot>, <dot>, ..."`) on the button root,
  * independent of hover/bonded state -- the dot labels and fused word inside
  * are marked `aria-hidden` so they never double- or conflict-announce
- * against that single accessible name.
+ * against that single accessible name. **Corrected 2026-09-27
+ * (`profile-acrostic-i18n`, Phase 5):** this used to read `chamber.ariaLabel`,
+ * as if it were a static field on the chamber data object -- stale since the
+ * i18n work made it a caller-computed prop instead (`chamberAriaLabel(chamber,
+ * lang)`, `chambersData.ts`), because a lang-dependent string can't be
+ * precomputed at import time. `dotLabels` and `statusLabel` (see the prop
+ * doc comments above) follow the exact same caller-computes pattern for the
+ * same reason -- `Chamber` itself never calls `useLang()`.
  */
-function Chamber({ chamber, state, onEnter, onLeave, onToggleBonded }: ChamberProps) {
+function Chamber({
+  chamber,
+  ariaLabel,
+  dotLabels,
+  statusLabel,
+  state,
+  onEnter,
+  onLeave,
+  onToggleBonded,
+}: ChamberProps) {
   const bonded = state === 'bonded';
   const fused = state !== 'separate';
 
@@ -53,7 +84,7 @@ function Chamber({ chamber, state, onEnter, onLeave, onToggleBonded }: ChamberPr
       role="button"
       tabIndex={0}
       aria-pressed={bonded}
-      aria-label={chamber.ariaLabel}
+      aria-label={ariaLabel}
       onClick={onToggleBonded}
       onKeyDown={handleKeyDown}
       onFocus={onEnter}
@@ -71,7 +102,7 @@ function Chamber({ chamber, state, onEnter, onLeave, onToggleBonded }: ChamberPr
           const scale = fused ? 1.14 : 1;
           return (
             <span
-              key={dot.label}
+              key={dot.id}
               className="profile-chamber__dot-wrap"
               style={{ left: restLeft, top: restTop, animation: dot.drift }}
             >
@@ -109,23 +140,32 @@ function Chamber({ chamber, state, onEnter, onLeave, onToggleBonded }: ChamberPr
         <span className="profile-chamber__index">({chamber.index})</span>
         <div className="profile-chamber__labels" style={{ opacity: fused ? 0 : 1 }}>
           {chamber.dots.map((dot) => (
-            <span key={dot.label} className="profile-chamber__label">
-              {dot.label}
+            <span key={dot.id} className="profile-chamber__label">
+              {dotLabels[dot.id]}
             </span>
           ))}
         </div>
       </div>
 
+      {/* Spec `profile-acrostic`: the fused word's first letter is wrapped so
+          the 5 chambers' initials read K-E-V-I-N top-to-bottom. Still inside
+          the aria-hidden fused word -- the initial has no independent
+          accessible meaning, it's a visual-only accent on decorative text
+          (docs/05); the real accessible name is `ariaLabel` above, unaffected
+          by this span. Colored via `.profile-chamber__initial` in profile.css
+          (`--color-profile-initial`, decision #522) -- see that file's
+          comment and contrast.test.ts for the measured ratios. */}
       <div
         className="profile-chamber__fused"
         aria-hidden="true"
         style={{ opacity: fused ? 1 : 0, transform: fused ? 'translateY(0)' : 'translateY(10px)' }}
       >
-        {chamber.fused}
+        <span className="profile-chamber__initial">{chamber.fused[0]}</span>
+        {chamber.fused.slice(1)}
       </div>
 
       <div className="profile-chamber__status" aria-hidden="true">
-        {state}
+        {statusLabel}
       </div>
     </div>
   );

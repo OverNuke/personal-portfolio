@@ -24,6 +24,7 @@
 import { useEffect, useRef } from 'react';
 import type { MouseEvent } from 'react';
 import { createPortal } from 'react-dom';
+import { useLang } from '../../shell/LangContext';
 import { usePrefersReducedMotion } from '../../shell/usePrefersReducedMotion';
 import { blink } from './strokeMath';
 
@@ -88,6 +89,10 @@ export interface ScanModalProps {
 }
 
 function ScanModal({ isOpen, title, meta, imageSrc, imageAlt, onClose }: ScanModalProps) {
+  // Own chrome strings (everything but the caller-supplied title/meta/
+  // imageAlt, already localized by Distinctions.tsx) come straight from the
+  // dictionary -- same leaf-level `useLang()` pattern PillNav uses, Phase 4.2.
+  const { t } = useLang();
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const lidRef = useRef<SVGGElement | null>(null);
@@ -223,7 +228,7 @@ function ScanModal({ isOpen, title, meta, imageSrc, imageAlt, onClose }: ScanMod
                   informational text behind hover here would be a real a11y
                   regression rather than a faithful port (judgment call,
                   disclosed in the final report). */}
-              <p className="distinctions-modal__placeholder-text">Scan not yet available</p>
+              <p className="distinctions-modal__placeholder-text">{t.distinctions.scanNotAvailable}</p>
               <svg
                 viewBox="0 0 260 150"
                 className="distinctions-modal__eye"
@@ -256,7 +261,7 @@ function ScanModal({ isOpen, title, meta, imageSrc, imageAlt, onClose }: ScanMod
         </div>
 
         <div className="distinctions-modal__footer">
-          <span className="distinctions-modal__footer-label">scan viewer</span>
+          <span className="distinctions-modal__footer-label">{t.distinctions.scanViewerLabel}</span>
           <div className="distinctions-modal__actions">
             {/* Escape hatch for phones, where the scaled-down plate is hard to
                 read: the imported (base-prefixed) asset URL in a new tab, where
@@ -270,8 +275,8 @@ function ScanModal({ isOpen, title, meta, imageSrc, imageAlt, onClose }: ScanMod
                 rel="noopener noreferrer"
                 className="distinctions-modal__open"
               >
-                Open full size <span aria-hidden="true">↗</span>
-                <span className="sr-only">(opens in new tab)</span>
+                {t.distinctions.openFullSize} <span aria-hidden="true">↗</span>
+                <span className="sr-only">{t.distinctions.opensInNewTab}</span>
               </a>
             )}
             {/* Real, native <button> -- Enter/Space activation needs no
@@ -281,10 +286,10 @@ function ScanModal({ isOpen, title, meta, imageSrc, imageAlt, onClose }: ScanMod
               ref={closeButtonRef}
               type="button"
               className="distinctions-modal__close"
-              aria-label="Close scan viewer"
+              aria-label={t.distinctions.closeViewer}
               onClick={onClose}
             >
-              close · esc
+              {t.distinctions.closeViewerShort}
             </button>
           </div>
         </div>

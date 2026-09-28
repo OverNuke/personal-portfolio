@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { en } from '../src/i18n/en';
 import { routes } from '../src/routes/registry';
 import { clickPill, expectSectionAtTop, sectionId } from './helpers';
 
@@ -56,7 +57,7 @@ test('pill nav reaches every screen', async ({ page }) => {
     await expect(page).toHaveURL(new RegExp(`${route.hash}$`));
     await expectSectionAtTop(page, route.pageId);
     await expect(
-      pillNav(page).getByRole('button', { name: route.navLabel, exact: true }),
+      pillNav(page).getByRole('button', { name: en.nav.pill[route.pageId], exact: true }),
     ).toHaveAttribute('aria-current', 'page');
     await expect(page.locator(`#${sectionId(route.pageId)} [data-screen-heading]`)).toBeFocused();
   }
@@ -66,8 +67,18 @@ test('Home nav list navigates and EN/ES toggle switches language', async ({ page
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
 
-  // Scoped to Home's own language group: 'EN'/'ES' also match unrelated buttons' names as substrings (e.g. "Open scan").
-  const languageToggle = page.getByRole('group', { name: 'Language' });
+  // Scoped to Home's own language group by CLASS, not accessible name: Home's
+  // `.home-lang-toggle` and the site-wide pill chrome's `.pill-lang-toggle`
+  // (src/shell/PillNav.tsx, design `sdd/profile-acrostic-i18n`) both carry
+  // `role="group"` with the SAME `aria-label={t.shell.language}` ("Language")
+  // -- both toggles are mounted on every page load (Shell.tsx mounts all 5
+  // screens at once), so `getByRole('group', { name: 'Language' })` resolves
+  // to 2 elements and any chained `.getByRole('button', ...)` click below
+  // would be a Playwright strict-mode violation. This test is specifically
+  // about HOME's own toggle (the pill chrome's site-wide toggle isn't
+  // exercised by any e2e spec yet -- see the risk note this fix carries
+  // forward).
+  const languageToggle = page.locator('.home-lang-toggle');
   const enButton = languageToggle.getByRole('button', { name: 'EN', exact: true });
   const esButton = languageToggle.getByRole('button', { name: 'ES', exact: true });
   await expect(enButton).toHaveAttribute('aria-pressed', 'true');

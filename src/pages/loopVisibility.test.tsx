@@ -1,4 +1,3 @@
-import { render } from '@testing-library/react';
 import { createRef } from 'react';
 import type { ReactElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -6,6 +5,7 @@ import { installLayoutStubs, restoreLayoutStubs } from '../test/layoutStubs';
 import type { LayoutStubs } from '../test/layoutStubs';
 import { installRafSpy } from '../test/rafSpy';
 import type { RafSpy } from '../test/rafSpy';
+import { renderWithLang } from '../test/renderWithLang';
 import { SectionVisibilityContext } from '../shell/SectionVisibilityContext';
 import VoronoiCellField from './distinctions/VoronoiCellField';
 import InkBloomCanvas from './profile/InkBloomCanvas';
@@ -78,19 +78,19 @@ const inSection = (ui: ReactElement, visible: boolean) => (
 
 describe.each(OWNERS)('%s', (_name, make) => {
   it('runs its loop while visible (and by default, outside a shell)', () => {
-    render(make());
+    renderWithLang(make());
     expect(raf.pending()).toBe(1);
   });
 
   it('never schedules a frame when it mounts hidden', () => {
-    render(inSection(make(), false));
+    renderWithLang(inSection(make(), false));
     expect(raf.scheduled).not.toHaveBeenCalled();
     expect(raf.pending()).toBe(0);
   });
 
   it('cancels its pending frame when the section scrolls out of view, and stays quiet', () => {
     const ui = make();
-    const { rerender } = render(inSection(ui, true));
+    const { rerender } = renderWithLang(inSection(ui, true));
     // (a loop may legitimately go idle after a frame -- useCardHover does once
     // it settles -- so the pending frame is checked straight after mount)
     expect(raf.pending()).toBe(1);
@@ -103,7 +103,7 @@ describe.each(OWNERS)('%s', (_name, make) => {
 
   it('resumes when the section scrolls back into view', () => {
     const ui = make();
-    const { rerender } = render(inSection(ui, false));
+    const { rerender } = renderWithLang(inSection(ui, false));
     expect(raf.pending()).toBe(0);
     rerender(inSection(ui, true));
     expect(raf.pending()).toBe(1);
@@ -116,7 +116,7 @@ describe('a paused screen still tracks its geometry', () => {
     // must paint once itself, or a height change while off-screen leaves the
     // paths on the old geometry (the viewBox, being React state, would still move).
     stubs.setHeight(900);
-    const { container } = render(inSection(mascot(), false));
+    const { container } = renderWithLang(inSection(mascot(), false));
     const bodyD = () => {
       const paths = Array.from(
         (container.querySelector('svg.projects-mascot') as SVGSVGElement).querySelectorAll('path'),
@@ -135,7 +135,7 @@ describe('resuming is seamless (a pause must not be visible)', () => {
   it('InkBloomCanvas keeps its blooms across a pause instead of re-rolling them', () => {
     const random = vi.spyOn(Math, 'random');
     const ui = <InkBloomCanvas />;
-    const { rerender } = render(inSection(ui, true));
+    const { rerender } = renderWithLang(inSection(ui, true));
     const afterMount = random.mock.calls.length;
     expect(afterMount).toBeGreaterThan(0); // the initial blooms were rolled
 
@@ -148,7 +148,7 @@ describe('resuming is seamless (a pause must not be visible)', () => {
     const now = vi.spyOn(performance, 'now');
     now.mockReturnValue(1000);
     const ui = <VoronoiCellField onOpenCell={() => {}} />;
-    const { container, rerender } = render(inSection(ui, true));
+    const { container, rerender } = renderWithLang(inSection(ui, true));
 
     raf.frame(3000); // t = (3000 - 1000) / 1000 = 2s
     const atTwoSeconds = container.innerHTML;

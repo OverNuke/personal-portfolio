@@ -45,10 +45,14 @@
  *      `.stage` isn't measured at scale 1, the numbers this script would
  *      produce are meaningless, so it refuses to report findings from them.
  *      Scope of each section's pass: that section's subtree PLUS the fixed
- *      pill nav (it overlays whichever section is scrolled to the top, so it
- *      is the one element that can genuinely occlude another section's
- *      content). The other four sections are off-screen and excluded --
- *      including them would re-report the same findings five times.
+ *      `.pill-chrome` (it overlays whichever section is scrolled to the top,
+ *      so it is the one element that can genuinely occlude another section's
+ *      content) -- widened from `.pill-nav` alone to the whole chrome wrapper
+ *      (change `sdd/profile-acrostic-i18n`, Phase 6) so the sibling
+ *      `.pill-lang-toggle` EN/ES buttons get the same occlusion/target-size/
+ *      clipped-text coverage as the section nav buttons. The other four
+ *      sections are off-screen and excluded -- including them would
+ *      re-report the same findings five times.
  *   2. The old "horizontal-scroll at 390px" check becomes "the scaled stage
  *      never leaks horizontally at ANY viewport width" -- swept across the
  *      same four reference widths as before (1440/1280/1100/390) for every
@@ -100,6 +104,17 @@
  * are printed but do not count), 1 = gating findings reported, 2 = tool/infra error
  * (so CI/tasks can tell "the gate ran and found problems" apart from
  * "the gate itself is broken").
+ *
+ * Bilingual (change `sdd/profile-acrostic-i18n`, Phase 6): every pass above
+ * (1, 2, 3) runs once in English, then again in Spanish -- language is not
+ * persisted (no localStorage/URL param), so `setPageLang` clicks the
+ * site-wide `.pill-chrome .pill-lang-toggle` "ES" button once per fresh page
+ * load. This is the design's own "Spanish overflow gate": Spanish content
+ * (cert titles, chamber dot labels, the Profile headline/bio) generally
+ * translates LONGER than its English source, and none of it had been
+ * measured in a real browser before this change -- `computeLabelSizing`
+ * (src/pages/distinctions/labelSizing.ts) is pure geometry and has no
+ * awareness of text length or content at all.
  */
 
 import path from 'node:path';
@@ -151,11 +166,23 @@ async function loadSections(server) {
   }));
 }
 
+// Phase 6 (`sdd/profile-acrostic-i18n`) bilingual audit: language is NOT
+// persisted (no localStorage/URL param, per that change's design) -- every
+// fresh `loadFresh` page load defaults to English, so every pass below runs
+// once per entry here, toggling to Spanish via `setPageLang` right after each
+// load. Order matches the design's own testing-strategy row ("audit at every
+// breakpoint in BOTH locales, Spanish overflow gate"): English first (the
+// pre-existing, already-clean pass), Spanish second (translated copy is
+// generally LONGER -- cert titles, chamber dot labels, the Profile
+// headline/bio -- so this is the first real-browser check of whether any of
+// it clips/overflows/occludes at any of the three passes below).
+const LANGS = ['en', 'es'];
+
 async function main() {
   let server;
   let browser;
   const findings = [];
-  let lightboxRuns;
+  const lightboxRuns = {};
 
   try {
     server = await createServer({
@@ -187,41 +214,57 @@ async function main() {
     const sections = await loadSections(server);
     const page = await browser.newPage();
 
-    // Pass 1: occlusion / target-size / clipped-text, once per section, at the
-    // stage's native 1440x900 size (scale === 1 -- see module doc comment).
-    for (const section of sections) {
-      await page.setViewportSize({ width: STAGE_WIDTH, height: STAGE_HEIGHT });
-      await loadFresh(page, `${baseUrl}${section.url}`);
-      await waitForStable(page, section);
-      await assertNativeScale(page, section.hash);
-      await assertSectionAtTop(page, section);
-
-      const snapshot = await page.evaluate(collectSnapshot, section.sectionId);
-      findings.push(...runContentChecks(section.hash, snapshot));
-    }
-
-    // Pass 2: horizontal-containment sweep across the reference viewport
-    // widths -- cheap (no DOM snapshot walk), just overflow signals.
-    for (const section of sections) {
-      for (const width of VIEWPORT_WIDTHS) {
-        await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
+    // Pass 1: occlusion / target-size / clipped-text, once per section per
+    // locale, at the stage's native 1440x900 size (scale === 1 -- see module
+    // doc comment).
+    for (const lang of LANGS) {
+      for (const section of sections) {
+        await page.setViewportSize({ width: STAGE_WIDTH, height: STAGE_HEIGHT });
         await loadFresh(page, `${baseUrl}${section.url}`);
         await waitForStable(page, section);
+        await setPageLang(page, lang);
+        await assertNativeScale(page, `${section.hash} (${lang})`);
+        await assertSectionAtTop(page, section);
 
-        const overflow = await page.evaluate(collectOverflowSnapshot);
-        findings.push(...runOverflowChecks(section.hash, width, overflow));
+        const snapshot = await page.evaluate(collectSnapshot, section.sectionId);
+        findings.push(...runContentChecks(section.hash, snapshot, lang));
       }
     }
 
-    // Pass 3: phone width. Report-only pill-nav / Voronoi target sizes, then
-    // every Distinctions lightbox opened and checked as a real-px dialog.
+    // Pass 2: horizontal-containment sweep across the reference viewport
+    // widths and both locales -- cheap (no DOM snapshot walk), just overflow
+    // signals. This is the "Spanish overflow gate" the design calls out by
+    // name: the scaled stage must not leak horizontally at any width in
+    // either locale.
+    for (const lang of LANGS) {
+      for (const section of sections) {
+        for (const width of VIEWPORT_WIDTHS) {
+          await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
+          await loadFresh(page, `${baseUrl}${section.url}`);
+          await waitForStable(page, section);
+          await setPageLang(page, lang);
+
+          const overflow = await page.evaluate(collectOverflowSnapshot);
+          findings.push(...runOverflowChecks(section.hash, width, overflow, lang));
+        }
+      }
+    }
+
+    // Pass 3: phone width, both locales. Report-only pill-nav / Voronoi
+    // target sizes, then every Distinctions lightbox opened and checked as a
+    // real-px dialog (the es cert titles/aria-labels are longer than their en
+    // originals -- see docs/i18n data -- so this is also where a translated
+    // dialog title clipping would first show up).
     const distinctions = sections.find((s) => s.pageId === 'distinction');
     if (!distinctions) throw new Error('src/routes/registry.ts has no "distinction" section.');
-    await page.setViewportSize(PHONE_VIEWPORT);
-    await loadFresh(page, `${baseUrl}${distinctions.url}`);
-    await waitForStable(page, distinctions);
-    findings.push(...runPhoneTargetReport(await page.evaluate(collectPhoneTargets)));
-    lightboxRuns = await auditLightboxes(page, distinctions, findings);
+    for (const lang of LANGS) {
+      await page.setViewportSize(PHONE_VIEWPORT);
+      await loadFresh(page, `${baseUrl}${distinctions.url}`);
+      await waitForStable(page, distinctions);
+      await setPageLang(page, lang);
+      findings.push(...runPhoneTargetReport(await page.evaluate(collectPhoneTargets), lang));
+      lightboxRuns[lang] = await auditLightboxes(page, distinctions, findings, lang);
+    }
   } finally {
     await browser?.close();
     await server?.close();
@@ -232,14 +275,62 @@ async function main() {
 }
 
 /**
+ * Sets the app's language for the CURRENT page load (Phase 6 bilingual
+ * audit). There is no persisted language state (no localStorage/URL param,
+ * per the `sdd/profile-acrostic-i18n` design), so every fresh `loadFresh`
+ * call resets to English -- this must run once per load to audit the Spanish
+ * pass. No-op for `'en'` (the default on every fresh load).
+ *
+ * Scoped to the SITE-WIDE toggle specifically -- `.pill-chrome
+ * .pill-lang-toggle` (src/shell/PillNav.tsx) -- not Home's own separate
+ * EN/ES buttons (`.home-lang-toggle`, src/pages/Home.tsx). Both toggles are
+ * mounted on every page load (Shell.tsx mounts all five screens at once, not
+ * just the one the hash points at), so an unscoped "ES" button locator would
+ * be ambiguous on every section, Home included.
+ */
+async function setPageLang(page, lang) {
+  if (lang === 'en') return;
+  await page
+    .locator('.pill-chrome .pill-lang-toggle')
+    .getByRole('button', { name: lang.toUpperCase(), exact: true })
+    .click({ force: true }); // matches auditLightboxes' own `force` reasoning: the toggle is
+  // scaled/positioned identically to other fixed chrome, no actionability
+  // hazard here, but consistent with this file's established pattern for
+  // clicks against the always-mounted chrome.
+  await page.waitForFunction(
+    (expected) => document.documentElement.lang === expected,
+    lang,
+    { timeout: 5000 },
+  );
+  // Translated strings can be longer or shorter than their English source
+  // (Spanish cert titles, chamber dot labels, the Profile headline/bio) --
+  // give layout two animation frames to settle after the toggle-driven
+  // re-render before measuring, the same pattern `waitForStable` uses after
+  // its own font-load reflow.
+  await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(resolve));
+      }),
+  );
+}
+
+/**
  * Pass 3, lightbox half. For each interactive Voronoi cell: scroll it into view,
  * activate it, wait for the dialog (and its scan, if any), measure, close with
  * Escape. A cell whose activation opens no dialog yields a gating
  * `lightbox-not-opened` finding (checkLightbox with no dialogRect). Returns one
  * `{ id, opened }` per cell for the summary line. A dialog that does not close
  * on Escape throws (infra error, exit 2): every later measurement would be stale.
+ *
+ * `lang` is the locale already active on `page` (set by `setPageLang` before
+ * this runs) -- used only to tag messages/findings for the report, not to
+ * change any behavior here. `lightboxMatchesCell` (audit-checks.mjs) already
+ * handles both locales' aria-label prefixes ("Open scan — " / "Ver
+ * documento — ") via the shared em-dash separator, so no locale branching is
+ * needed in the matching logic itself.
  */
-async function auditLightboxes(page, section, findings) {
+async function auditLightboxes(page, section, findings, lang) {
   const ids = await page.evaluate(() =>
     Array.from(document.querySelectorAll('[data-card]')).map((el) => el.dataset.card),
   );
@@ -289,8 +380,9 @@ async function auditLightboxes(page, section, findings) {
       if (!lightboxMatchesCell(cellLabel, snapshot.dialogTitle)) {
         findings.push({
           type: 'lightbox-wrong-dialog',
+          lang,
           message:
-            `[${section.hash} @ ${PHONE_VIEWPORT.width}px, lightbox "${id}"] opened the dialog ` +
+            `[${section.hash} @ ${PHONE_VIEWPORT.width}px, ${lang}, lightbox "${id}"] opened the dialog ` +
             `"${snapshot.dialogTitle}" but the cell is labelled "${cellLabel}"`,
         });
       }
@@ -298,8 +390,9 @@ async function auditLightboxes(page, section, findings) {
     for (const f of checkLightbox(snapshot, PHONE_VIEWPORT.width)) {
       findings.push({
         type: f.type,
+        lang,
         message:
-          `[${section.hash} @ ${PHONE_VIEWPORT.width}px, lightbox "${id}"] ${f.detail}` +
+          `[${section.hash} @ ${PHONE_VIEWPORT.width}px, ${lang}, lightbox "${id}"] ${f.detail}` +
           (clickError && !opened ? ` (${clickError})` : ''),
       });
     }
@@ -427,11 +520,12 @@ function collectLightboxSnapshot() {
 
 // Turns the phone pass's scaled pill-nav / cell rects into REPORT-ONLY target-size
 // findings (never gating -- see shouldFailRun).
-function runPhoneTargetReport({ pillNav, cells }) {
-  const at = (message) => `[@ ${PHONE_VIEWPORT.width}px, scaled with the stage] ${message}`;
+function runPhoneTargetReport({ pillNav, cells }, lang) {
+  const at = (message) => `[@ ${PHONE_VIEWPORT.width}px, scaled with the stage, ${lang}] ${message}`;
   return [...findSmallTargets(pillNav), ...findSmallTargets(cells)].map((el) => ({
     type: 'target-size',
     reportOnly: true,
+    lang,
     message: at(
       `${el.selector} is ${Math.round(el.rect.width)}x${Math.round(el.rect.height)}px, ` +
         `below ${MIN_TARGET_SIZE}x${MIN_TARGET_SIZE}px`,
@@ -654,10 +748,15 @@ function collectSnapshot(sectionId) {
   // dialog-scoping is needed: the Distinctions lightbox is never opened in this
   // pass (it is audited at 390px by pass 3 -- collectLightboxSnapshot).
   const sectionRoot = document.getElementById(sectionId);
-  const pillNav = document.querySelector('.pill-nav');
+  // Scoped to `.pill-chrome` (src/shell/PillNav.tsx), not just `.pill-nav` --
+  // the wrapper also contains the sibling `.pill-lang-toggle` (the site-wide
+  // EN/ES toggle, design `sdd/profile-acrostic-i18n`), which is just as much
+  // a fixed overlay as the section nav buttons and needs the same
+  // occlusion/target-size/clipped-text coverage (Phase 6 task 6.1).
+  const pillChrome = document.querySelector('.pill-chrome');
   if (!sectionRoot) throw new Error(`#${sectionId} not found -- cannot audit this section.`);
-  if (!pillNav) throw new Error('.pill-nav not found -- cannot audit the fixed nav overlay.');
-  const scopes = [sectionRoot, pillNav];
+  if (!pillChrome) throw new Error('.pill-chrome not found -- cannot audit the fixed nav overlay.');
+  const scopes = [sectionRoot, pillChrome];
 
   // Text-bearing elements: elements whose OWN direct text (not a
   // descendant's) is non-empty. Normal in-flow layout never overlaps two
@@ -805,9 +904,9 @@ function comparableRects(a, b, rotationGroups) {
   ];
 }
 
-function runContentChecks(hash, snapshot) {
+function runContentChecks(hash, snapshot, lang) {
   const results = [];
-  const at = (message) => `[${hash} @ ${STAGE_WIDTH}x${STAGE_HEIGHT} (native)] ${message}`;
+  const at = (message) => `[${hash} @ ${STAGE_WIDTH}x${STAGE_HEIGHT} (native), ${lang}] ${message}`;
 
   const relatedPairKeys = new Set((snapshot.relatedPairs ?? []).map(([i, j]) => `${i}-${j}`));
   for (let i = 0; i < snapshot.textEls.length; i++) {
@@ -819,6 +918,7 @@ function runContentChecks(hash, snapshot) {
       if (rectsIntersect(rectA, rectB)) {
         results.push({
           type: 'occlusion',
+          lang,
           message: at(`"${a.selector}" overlaps "${b.selector}"`),
         });
       }
@@ -829,6 +929,7 @@ function runContentChecks(hash, snapshot) {
     if (!meetsMinTargetSize(el.rect, MIN_TARGET_SIZE)) {
       results.push({
         type: 'target-size',
+        lang,
         message: at(
           `"${el.selector}" is ${Math.round(el.rect.width)}x${Math.round(el.rect.height)}px, ` +
             `below ${MIN_TARGET_SIZE}x${MIN_TARGET_SIZE}px`,
@@ -841,6 +942,7 @@ function runContentChecks(hash, snapshot) {
     if (isTextClipped(el)) {
       results.push({
         type: 'clipped-text',
+        lang,
         message: at(
           `"${el.selector}" clips its own text (overflow ${el.overflowX}/${el.overflowY})`,
         ),
@@ -851,9 +953,9 @@ function runContentChecks(hash, snapshot) {
   return results;
 }
 
-function runOverflowChecks(hash, width, snapshot) {
+function runOverflowChecks(hash, width, snapshot, lang) {
   const results = [];
-  const at = (message) => `[${hash} @ ${width}px] ${message}`;
+  const at = (message) => `[${hash} @ ${width}px, ${lang}] ${message}`;
 
   const {
     documentScrollWidth,
@@ -867,16 +969,18 @@ function runOverflowChecks(hash, width, snapshot) {
   if (hasHorizontalOverflow(documentScrollWidth, documentClientWidth)) {
     results.push({
       type: 'horizontal-scroll',
+      lang,
       message: at(
         `document scrollWidth ${documentScrollWidth} > clientWidth ${documentClientWidth}`,
       ),
     });
   }
   if (!stageViewportExists) {
-    results.push({ type: 'horizontal-scroll', message: at('.stage-viewport not found') });
+    results.push({ type: 'horizontal-scroll', lang, message: at('.stage-viewport not found') });
   } else if (!meetsStageViewportOverflowContract(stageViewportOverflowX, stageViewportOverflowY)) {
     results.push({
       type: 'horizontal-scroll',
+      lang,
       message: at(
         `.stage-viewport overflow is "${stageViewportOverflowX}/${stageViewportOverflowY}", expected "clip/visible" (or "clip/clip") -- ` +
           `the shipped contract (src/shell/shell.css .stage-viewport, task 7.1): clip horizontally, and never become a scroll ` +
@@ -885,10 +989,11 @@ function runOverflowChecks(hash, width, snapshot) {
     });
   }
   if (!stageExists) {
-    results.push({ type: 'horizontal-scroll', message: at('.stage not found') });
+    results.push({ type: 'horizontal-scroll', lang, message: at('.stage not found') });
   } else if (hasHorizontalOverflow(stagePaintedRight, documentClientWidth)) {
     results.push({
       type: 'horizontal-scroll',
+      lang,
       message: at(
         `painted .stage right edge ${Math.round(stagePaintedRight)}px exceeds the viewport width ${documentClientWidth}px -- ` +
           `the width-derived stage scale is not fitting the stage (the clipped wrapper would hide the overflow)`,
@@ -899,7 +1004,7 @@ function runOverflowChecks(hash, width, snapshot) {
   return results;
 }
 
-function report(findings, lightboxRuns) {
+function report(findings, lightboxRunsByLang) {
   const real = findings.filter((f) => !f.skipped && !f.reportOnly);
   const reported = findings.filter((f) => !f.skipped && f.reportOnly);
   const skipped = findings.filter((f) => f.skipped);
@@ -935,15 +1040,21 @@ function report(findings, lightboxRuns) {
     console.log('No occlusion/target-size/clipped-text/horizontal-scroll/lightbox findings.');
   }
 
-  // Always printed, clean or not, so a green run shows the lightbox WAS exercised.
-  const opened = lightboxRuns.filter((r) => r.opened).length;
-  const count = (prefix) => real.filter((f) => f.type === `lightbox-${prefix}`).length;
-  console.log(
-    `\nLightbox @ ${PHONE_VIEWPORT.width}px: ${opened}/${lightboxRuns.length} opened ` +
-      `(${lightboxRuns.map((r) => r.id).join(', ')}) — ` +
-      `${count('not-opened')} not opened, ${count('wrong-dialog')} wrong dialog, ${count('overflow')} overflow, ` +
-      `${count('clipped-text')} clipped text, ${count('target-size')} target-size`,
-  );
+  // Always printed per locale, clean or not, so a green run shows the
+  // lightbox WAS exercised in BOTH languages (Phase 6 bilingual audit), not
+  // just the pre-existing English pass.
+  for (const lang of LANGS) {
+    const runs = lightboxRunsByLang[lang] ?? [];
+    const opened = runs.filter((r) => r.opened).length;
+    const count = (prefix) =>
+      real.filter((f) => f.type === `lightbox-${prefix}` && f.lang === lang).length;
+    console.log(
+      `\nLightbox @ ${PHONE_VIEWPORT.width}px [${lang}]: ${opened}/${runs.length} opened ` +
+        `(${runs.map((r) => r.id).join(', ')}) — ` +
+        `${count('not-opened')} not opened, ${count('wrong-dialog')} wrong dialog, ${count('overflow')} overflow, ` +
+        `${count('clipped-text')} clipped text, ${count('target-size')} target-size`,
+    );
+  }
 
   if (reported.length > 0) {
     console.log(
